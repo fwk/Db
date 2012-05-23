@@ -1,0 +1,18 @@
+{
+    "hash": "f0cd3c1d72c8f4ea6f98ca1068422692",
+    "packages": [
+        {
+            "package": "fwk/Events",
+            "version": "dev-master",
+            "source-reference": "bf4296af760f7fd51ab1ec33678ce9be176d6515"
+        }
+    ],
+    "packages-dev": null,
+    "aliases": [
+
+    ],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "fwk/events": 20
+    }
+}

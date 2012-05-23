@@ -1,0 +1,22 @@
+{
+    "name": "fwk/Db",
+    "description": "Fwk Database Tool",
+    "type": "library",
+    "keywords": ["framework", "orm", "database", "mysql", "tool"],
+    "license": "BSD",
+    "authors": [
+        {
+            "name": "neiluJ",
+            "email": "julien@nitronet.org"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "fwk/Events": "dev-master"
+    },
+    "autoload": {
+        "psr-0": {
+            "Fwk\\Db": "src/Db"
+        }
+    }
+}
