@@ -46,7 +46,7 @@ class Table {
     /**
      * Columns
      * 
-     * @var array<DbColumn>
+     * @var array<Column>
      */
     protected $columns;
 
@@ -90,10 +90,10 @@ class Table {
     /**
      * Adds a column to this table;
      *
-     * @param Schema\DbColumn $column
+     * @param Column $column
      * @return Table
      */
-    public function addColumn(Schema\DbColumn $column) {
+    public function addColumn(Column $column) {
         $this->columns[$column->getName()]      = $column;
 
         return $this;
@@ -269,7 +269,7 @@ class Table {
      * Returns an object representation of a given column
      *
      * @param string $columnName
-     * @return Schema\DbColumn
+     * @return Column
      */
     public function getColumn($columnName) {
         if(!isset($this->columns[$columnName]))

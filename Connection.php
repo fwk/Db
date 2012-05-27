@@ -38,7 +38,7 @@ use Fwk\Events\Dispatcher;
  * Represents a Connection to a database
  *
  */
-class Connection extends Dispatcher implements ServiceContainer
+class Connection extends Dispatcher 
 {
     const STATE_INITIALIZED     = 0;
     const STATE_CONNECTED       = 1;
@@ -90,17 +90,18 @@ class Connection extends Dispatcher implements ServiceContainer
      * Constructor with generic configuration parameters (array)
      * 
      * options description:
-     *      - driver:       (string)    driver's full classname
      *      - autoConnect:  (boolean)   should connect on construct (defaults to false)
      *      - throwExceptions: (boolean)should we throw exceptions or silently fail ?
      *      - transactionnal: (boolean) should we save/delete entities ondemand or within a final transaction ?
      * 
+     * @param Driver $driver
      * @param Schema $schema
      * @param array $options
      */
-    public function __construct(Schema $schema, array $options = array()) {
+    public function __construct(Driver $driver, Schema $schema, array $options = array()) {
         $this->options      = $options;
         $this->schema       = $schema;
+        $this->driver       = $driver;
         
         $this->throwExceptions((bool)$this->get('throwExceptions', true));
         
@@ -182,14 +183,19 @@ class Connection extends Dispatcher implements ServiceContainer
      * @return Driver
      */
     public function getDriver() {
+        
+        return $this->driver;
+        
+        /**
+         * 
         if(!isset($this->driver)) {
             $driverClassName    = $this->get('driver');
             if(empty($driverClassName))
-                throw new \RuntimeException (sprintf('No driver defined (in options) for this connection'));
+                throw new Exception(sprintf('No driver defined'));
             
-            $new                = new $driverClassName; /** @TODO find better solution */
+            $new                = new $driverClassName; 
             if(!$new instanceof Driver)
-                throw new \RuntimeException (sprintf('%s does not implement Driver interface'));
+                throw new Exception (sprintf('%s does not implement Driver interface'));
 
             $new->setConnection($this);
             $this->driver       = $new;
@@ -213,6 +219,7 @@ class Connection extends Dispatcher implements ServiceContainer
                         $connection->setErrorException($event->exception);
             });
         }
+        */
 
         return $this->driver;
     }
@@ -299,13 +306,23 @@ class Connection extends Dispatcher implements ServiceContainer
      * Returns a table object representing a database table
      * 
      * @param string $tableName
+     * 
+     * @throws Exceptions\TableNotFound if inexistant table
+     * 
      * @return Table
      */
     public function table($tableName) {
         if(!isset($this->tables[$tableName])) {
             $table      = $this->getSchema()->getTable($tableName);
+            if(!$table instanceof Table) {
+                $this->setErrorException(
+                    new Exceptions\TableNotFound(
+                        sprintf('Inexistant table "%s"', $tableName)
+                    )
+                );
+            }
+            
             $table->setConnection($this);
-
             $this->tables[$tableName]   = $table;
         }
 

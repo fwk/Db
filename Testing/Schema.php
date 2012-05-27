@@ -25,39 +25,46 @@
  * 
  * @package    Fwk
  * @subpackage Db
- * @subpackage Tests
+ * @subpackage Testing
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link       http://www.phpfwk.com
  */
-namespace Fwk\Db\Tests;
+namespace Fwk\Db\Testing;
 
-use Fwk\Db\Driver,
-    Fwk\Db\Query,
-    Fwk\Db\Connection;
+use Fwk\Db\AbstractSchema,
+    Fwk\Db\Schema as SchemaInterface,
+    Fwk\Db\Table;
 
-class Driver implements Driver
+class Schema extends AbstractSchema implements SchemaInterface 
 {
-    public function connect() {
-        ;
+    protected $tables = array();
+    
+    /**
+     *
+     * @param string $tableName
+     * @return Table 
+     */
+    public function getTable($tableName)
+    {
+        if(!array_key_exists($tableName, $this->tables))
+                return false;
+        
+        return $this->tables[$tableName];
     }
     
-    public function getConnection() {
-        ;
+    public function addTable(Table $table) {
+        $this->tables[$table->getName()] = $table;
     }
     
-    public function getEventDispatcher() {
-        ;
+    public function getTables()
+    {
+        return array();
     }
     
-    public function query(Query $query, array $params = array(), array $options = array()) {
-        ;
-    }
-    public function rawQuery($query) {
-        ;
-    }
-    public function setConnection(Connection $connection) {
-        ;
+    public function getDeclaredEntity($tableName)
+    {
+        return '\stdClass';
     }
 }

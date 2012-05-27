@@ -35,14 +35,7 @@ namespace Fwk\Db;
 use Fwk\Db\Connection;
 use Fwk\Events\Event;
 
-abstract class AbstractPDO {
-
-    /**
-     * The connection
-     *
-     * @var Connection
-     */
-    protected $connection;
+abstract class AbstractPDODriver extends AbstractDriver {
 
     /**
      * The PDO handle
@@ -65,31 +58,6 @@ abstract class AbstractPDO {
 
         return false;
     }
-
-    /**
-     * Returns the connection
-     *
-     * @return Connection
-     */
-    public function getConnection() {
-        if(!isset($this->connection))
-                    throw new \RuntimeException (sprintf('No connection defined for this driver'));
-        
-        return $this->connection;
-    }
-
-    /**
-     * Defines a connection to handle
-     *
-     * @param Connection $connection
-     * @return AbstractPDO
-     */
-    public function setConnection(Connection $connection) {
-        $this->connection   = $connection;
-
-        return $this;
-    }
-
 
     /**
      * Executes a plain SQL query and return results without transformation
@@ -118,7 +86,7 @@ abstract class AbstractPDO {
             $charset        = $connection->get('charset', null);
 
             if(empty($dsn))
-                throw new \RuntimeException (sprintf('A dsn is required to connect to a database'));
+                throw new Exception(sprintf('A dsn is required to connect to a database'));
 
             try {
                 $pdo        = new \PDO($dsn, $user, $password);

@@ -25,60 +25,14 @@
  * 
  * @package    Fwk
  * @subpackage Db
+ * @subpackage Exceptions
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link       http://www.phpfwk.com
  */
-namespace Fwk\Db;
+namespace Fwk\Db\Exceptions;
 
-/**
- * Represents a database driver
- * 
- */
-interface Driver
-{
-    const EVENT_CONNECT     = 'connect';
-    const EVENT_DISCONNECT  = 'disconnect';
-    const EVENT_ERROR       = 'error';
+use Fwk\Db\Exception;
 
-    /**
-     * Connects to the database and fires EVENT_CONNECT on connection
-     * success, EVENT_ERROR otherwise.
-     *
-     * @return boolean true on success
-     */
-    public function connect();
-
-    /**
-     * Defines the connection for this driver
-     * 
-     * @param \Fwk\Db\Connection $connection The connection object
-     * @return void
-     */
-    public function setConnection(\Fwk\Db\Connection $connection);
-
-    /**
-     * Returns the connection defined for this driver
-     *
-     * @return \Fwk\Db\Connection
-     */
-    public function getConnection();
-
-    /**
-     * Returns this driver's EventDispatcher
-     *
-     * @return \Fwk\Events\EventDispatcher
-     */
-    public function getEventDispatcher();
-
-    /**
-     * Executes a query in raw format and return results without transformation
-     *
-     * @param mixed $query  Raw query
-     * @return mixed
-     */
-    public function rawQuery($query);
-
-    public function query(\Fwk\Db\Query $query, array $params = array(), array $options = array());
-}
+class TableNotFound extends Exception { }

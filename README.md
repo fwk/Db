@@ -1,6 +1,6 @@
 # Fwk Database Tools
 
-Powerfull yet simple ORM for PHP 5.3+
+Powerfull yet Simple ORM for PHP 5.3+
 
 ## Installation
 
@@ -19,7 +19,9 @@ to your ```include_path``` [PSR-0 compatible](https://github.com/php-fig/fig-sta
 
 ## Usage
 
-This is really simple and straightforward. Please refer to the [Usage Wiki Page](https://github.com/fwk/Events/wiki/Usage)
+```
+@TODO Documentation
+```
 
 ## BSD Licence
 

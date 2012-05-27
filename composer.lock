@@ -1,10 +1,10 @@
 {
-    "hash": "f0cd3c1d72c8f4ea6f98ca1068422692",
+    "hash": "44e9ec02cbf345d9348b390662181bd7",
     "packages": [
         {
             "package": "fwk/Events",
             "version": "dev-master",
-            "source-reference": "bf4296af760f7fd51ab1ec33678ce9be176d6515"
+            "source-reference": "ec4880335a20bb45b4ae25d8a9e6317681d00c67"
         }
     ],
     "packages-dev": null,
