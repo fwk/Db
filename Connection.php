@@ -32,7 +32,8 @@
  */
 namespace Fwk\Db;
 
-use Fwk\Events\Dispatcher;
+use Fwk\Events\Dispatcher,
+    Fwk\Events\Event;
 
 /**
  * Represents a Connection to a database
@@ -50,18 +51,18 @@ class Connection extends Dispatcher
      * 
      * @var array
      */
-    protected $options;
+    protected $options = array();
     /**
      * Driver object
      * 
-     * @var Fwk\Db\Driver
+     * @var Driver
      */
     protected $driver;
 
     /**
      * Database Schema
      * 
-     * @var Schema\DbSchema
+     * @var Schema
      */
     protected $schema;
 
@@ -87,23 +88,33 @@ class Connection extends Dispatcher
     protected $tables;
     
     /**
+     * Are we connected yet ?
+     * 
+     * @var boolean
+     */
+    protected $connected;
+    
+    /**
      * Constructor with generic configuration parameters (array)
      * 
-     * options description:
+     * options:
      *      - autoConnect:  (boolean)   should connect on construct (defaults to false)
      *      - throwExceptions: (boolean)should we throw exceptions or silently fail ?
-     *      - transactionnal: (boolean) should we save/delete entities ondemand or within a final transaction ?
      * 
      * @param Driver $driver
      * @param Schema $schema
      * @param array $options
+     * 
+     * @return void
      */
-    public function __construct(Driver $driver, Schema $schema, array $options = array()) {
+    public function __construct(Driver $driver, Schema $schema, 
+        array $options = array())
+    {
         $this->options      = $options;
         $this->schema       = $schema;
         $this->driver       = $driver;
         
-        $this->throwExceptions((bool)$this->get('throwExceptions', true));
+        $this->throwExceptions($this->get('throwExceptions', true));
         
         if(true === $this->get('autoConnect', false)) {
             $this->connect();
@@ -111,33 +122,50 @@ class Connection extends Dispatcher
     }
 
     /**
-     * Destructor
-     *
-     */
-    public function __destruct() {
-        /**
-         * @todo EntityManager transaction ?
-         */
-    }
-    
-    /**
      * Establish connection with database
      * 
      * @return boolean
      */
-    public function connect() {
-
-        return $this->getDriver()->connect();
+    public function connect()
+    {
+        $connected = $this->getDriver()->connect();
+        if($connected && !$this->isConnected()) {
+            $this->state = self::STATE_CONNECTED;
+        }
+        
+        return $connected;
     }
 
+    /**
+     * Ends connection to database
+     * 
+     * @return boolean
+     */
+    public function disconnect()
+    {
+        if(!$this->isConnected())
+        {
+            return true;
+        }
+        
+        $closed = $this->getDriver()->disconnect();
+        if($closed) {
+            $this->state = self::STATE_DISCONNECTED;
+        }
+        
+        return $closed;
+    }
+    
     /**
      * Sets an option value
      *
      * @param string $option
      * @param mixed $value
+     * 
      * @return Connection
      */
-    public function set($option, $value) {
+    public function set($option, $value)
+    {
         $this->options[$option] = $value;
 
         return $this;
@@ -148,11 +176,15 @@ class Connection extends Dispatcher
      * 
      * @param string $option
      * @param mixed $default
+     * 
      * @return mixed
      */
-    public function get($option, $default = null) {
+    public function get($option, $default = null)
+    {
 
-        return (\array_key_exists($option, $this->options) ? $this->options[$option] : null);
+        return (\array_key_exists($option, $this->options) ? 
+                $this->options[$option] : 
+                $default);
     }
 
     /**
@@ -160,7 +192,8 @@ class Connection extends Dispatcher
      * 
      * @return array
      */
-    public function getOptions() {
+    public function getOptions()
+    {
         
         return $this->options;
     }
@@ -171,7 +204,8 @@ class Connection extends Dispatcher
      * @param array $options
      * @return Connection
      */
-    public function setOptions(array $options = array()) {
+    public function setOptions(array $options = array())
+    {
         $this->options = \array_merge($this->options, $options);
 
         return $this;
@@ -182,45 +216,9 @@ class Connection extends Dispatcher
      * 
      * @return Driver
      */
-    public function getDriver() {
+    public function getDriver()
+    {
         
-        return $this->driver;
-        
-        /**
-         * 
-        if(!isset($this->driver)) {
-            $driverClassName    = $this->get('driver');
-            if(empty($driverClassName))
-                throw new Exception(sprintf('No driver defined'));
-            
-            $new                = new $driverClassName; 
-            if(!$new instanceof Driver)
-                throw new Exception (sprintf('%s does not implement Driver interface'));
-
-            $new->setConnection($this);
-            $this->driver       = $new;
-            $evd                = $new->getEventDispatcher();
-
-            // register events
-            $connection         = $this;
-            
-            $evd->on(Driver::EVENT_CONNECT, function() use ($connection) {
-                $connection->setState(Connection::STATE_CONNECTED);
-            });
-
-            $evd->on(Driver::EVENT_DISCONNECT, function() use ($connection) {
-                $connection->setState(Connection::STATE_DISCONNECTED);
-            });
-
-            $evd->on(Driver::EVENT_ERROR, function($event) use ($connection) {
-                $connection->setState(Connection::STATE_ERROR);
-
-                if(isset($event->exception))
-                        $connection->setErrorException($event->exception);
-            });
-        }
-        */
-
         return $this->driver;
     }
 
@@ -233,35 +231,80 @@ class Connection extends Dispatcher
 
         return $this->schema;
     }
+    
     /**
      * Tells if the connection is established
      * 
      * @return boolean
      */
-    public function isConnected() {
+    public function isConnected()
+    {
         
         return ($this->state === self::STATE_CONNECTED);
     }
 
+    
+    /**
+     * Tells if the connection is in error state
+     * 
+     * @return boolean
+     */
+    public function isError()
+    {
+        
+        return ($this->state === self::STATE_ERROR);
+    }
+    
     /**
      * Executes a query and return results
      *
      * @param Query $query
      * @param array $params Query values (if any)
+     * 
      * @return mixed
      */
-    public function execute(Query $query, array $params = array(), array $options = array()) {
-        return $this->getDriver()->query($query, $params, $options);
+    public function execute(Query $query, array $params = array(), 
+        array $options = array())
+    {
+        $event = new Event(ConnectionEvents::BEFORE_QUERY, array(
+            'query'     => $query,
+            'results'   => null
+        ));
+        
+        $this->notify($event);
+        
+        if($event->isStopped()) {
+            
+            return $event->results;
+        }
+        
+        $results = $this->getDriver()->query($query, $params, $options);
+        $event->results = $results;
+        $afterEvent = new Event(ConnectionEvents::AFTER_QUERY, $event->getData());
+        $this->notify($afterEvent);
+        
+        return $afterEvents->results;
     }
 
     /**
      * Defines current state
      * 
      * @param integer $state
+     * 
      * @return Connection
      */
-    public function setState($state) {
-        $this->state        = $state;
+    public function setState($state)
+    {
+        $newState       = (int)$state;
+        
+        if($newState != $this->state) {
+            $this->notify(new Event(ConnectionEvents::STATE_CHANGE, array(
+                'beforeState' => $this->state,
+                'state'  => $state
+            )));
+        }
+        
+        $this->state    = $newState;
 
         return $this;
     }
@@ -271,7 +314,8 @@ class Connection extends Dispatcher
      * 
      * @return integer
      */
-    public function getState() {
+    public function getState()
+    {
 
         return $this->state;
     }
@@ -293,13 +337,21 @@ class Connection extends Dispatcher
      *
      * @see throwExceptions
      * @param \Exception $e
-     * @return void
+     * 
+     * @return Connection
      */
     public function setErrorException(\Exception $e) {
         $this->setState(self::STATE_ERROR);
         
-        if($this->throwExceptions)
-                throw $e;
+        $this->notify(new Event(ConnectionEvents::ERROREXCEPTION, array(
+            'exception' => $e
+        )));
+        
+        if($this->throwExceptions) {
+            throw $e;
+        }
+        
+        return $this;
     }
 
     /**
@@ -314,12 +366,15 @@ class Connection extends Dispatcher
     public function table($tableName) {
         if(!isset($this->tables[$tableName])) {
             $table      = $this->getSchema()->getTable($tableName);
+            
             if(!$table instanceof Table) {
                 $this->setErrorException(
                     new Exceptions\TableNotFound(
                         sprintf('Inexistant table "%s"', $tableName)
                     )
                 );
+                
+                return false;
             }
             
             $table->setConnection($this);
@@ -329,33 +384,48 @@ class Connection extends Dispatcher
         return $this->tables[$tableName];
     }
 
-    public function lastInsertId() {
+    public function lastInsertId()
+    {
 
         return $this->getDriver()->getLastInsertId();
     }
     
     /**
+     * Starts a new transaction
      * 
-     * @return boolean
+     * @return Connection 
      */
-    public function isTransactionnal() {
+    public function beginTransaction()
+    {
+
+        $this->getDriver()->beginTransaction();
         
-        return $this->get('transactionnal', false);
-    }
-    
-    public function beginTransaction() {
-
-        return $this->getDriver()->beginTransaction();
+        return $this;
     }
 
-    public function commit() {
-
-        return $this->getDriver()->commit();	
+    /**
+     * Commits the current transaction
+     * 
+     * @return Connection 
+     */
+    public function commit()
+    {
+        $this->getDriver()->commit();	
+        
+        return $this;
     }
 
-    public function rollBack() {
+    /**
+     * Cancels the current transaction
+     * 
+     * @return Connection 
+     */
+    public function rollBack()
+    {
 
-        return $this->getDriver()->rollBack();
+        $this->getDriver()->rollBack();
+        
+        return $this;
     }
 
 }

@@ -32,81 +32,96 @@
  */
 namespace Fwk\Db;
 
-/**
- * Represents a database driver
- * 
- */
-interface Driver
+
+class Finder implements \Countable
 {
     /**
-     * Connects to the database 
      *
-     * @return boolean true on success
+     * @var array 
      */
-    public function connect();
+    protected $resultSet;
     
     /**
-     * Ends connection to database
-     *
-     * @return boolean true on success
-     */
-    public function disconnect();
-
-    /**
-     * Defines the connection for this driver
+     * Table to navigate
      * 
-     * @param \Fwk\Db\Connection $connection The connection object
-     * @return void
+     * @var Table 
      */
-    public function setConnection(\Fwk\Db\Connection $connection);
-
-    /**
-     * Returns the connection defined for this driver
-     *
-     * @return \Fwk\Db\Connection
-     */
-    public function getConnection();
-
-    /**
-     * Executes a query in raw format and return results without transformation
-     *
-     * @param mixed $query  Raw query
-     * @return mixed
-     */
-    public function rawQuery($query);
-
-    /**
-     * Returns last insert ID if supported by the DB server
-     * 
-     * @return integer
-     */
-    public function getLastInsertId();
+    protected $table;
     
     /**
-     * Executes an ORM query
+     * Current Connection
      * 
-     * @return mixed
+     * @var Connection
      */
-    public function query(\Fwk\Db\Query $query, array $params = array(), array $options = array());
-
+    protected $connection;
+    
     /**
-     * Begins a transaction
+     * Current query
+     * 
+     * @var Query
+     */
+    protected $query;
+    
+    /**
+     * Constructor
+     * 
+     * @param Table $table
+     * @param Connection $connection 
      * 
      * @return void
      */
-    public function beginTransaction();
+    public function __construct(Table $table, Connection $connection = null)
+    {
+        $this->table = $table;
+        $this->connection = $connection;
+    }
     
     /**
-     * Commits a transaction
+     * Defines a connection
      * 
-     * @return void
+     * @param Connection $connection
+     * 
+     * @return Finder
      */
-    public function commit();
-    
+    public function setConnection(Connection $connection) {
+        $this->connection   = $connection;
+
+        return $this;
+    }
+
     /**
-     * Cancel a transaction
+     * Returns current connection
      * 
-     * @return void
+     * @throws Exception
+     * 
+     * @return Connection
      */
-    public function rollBack();
+    public function getConnection()
+    {
+        if(!isset($this->connection)) {
+            throw new Exception(sprintf('No connection is defined'));
+        }
+        
+        return $this->connection;
+    }
+    
+    public function find($identifiers) 
+    {
+        
+    }
+    
+    public function one($identifier)
+    {
+        
+    }
+    
+    public function all()
+    {
+        
+    }
+    
+    public function count()
+    {
+        
+    }
 }

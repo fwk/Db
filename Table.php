@@ -34,8 +34,8 @@ namespace Fwk\Db;
 
 use Fwk\Db\Entity\Registry;
 
-class Table {
-
+class Table
+{
     /**
      * Table name
      * 
@@ -48,7 +48,7 @@ class Table {
      * 
      * @var array<Column>
      */
-    protected $columns;
+    protected $columns = array();
 
     /**
      * Connection
@@ -83,7 +83,8 @@ class Table {
      *
      * @param string $tableName
      */
-    public function __construct($tableName) {
+    public function __construct($tableName)
+    {
         $this->name     = $tableName;
     }
 
@@ -91,9 +92,22 @@ class Table {
      * Adds a column to this table;
      *
      * @param Column $column
+     * 
+     * @throws Exceptions\DuplicateTableColumn
+     * 
      * @return Table
      */
-    public function addColumn(Column $column) {
+    public function addColumn(Column $column)
+    {
+        if($this->hasColumn($column->getName())) {
+            throw new Exceptions\DuplicateTableColumn(
+                sprintf('Column "%s" already exists on table "%s"', 
+                    $column->getName(), 
+                    $this->getName()
+                )
+            );
+        }
+        
         $this->columns[$column->getName()]      = $column;
 
         return $this;
@@ -141,99 +155,39 @@ class Table {
      * @return Connection
      */
     public function getConnection() {
-        if(!isset($this->connection))
-                throw new \RuntimeException (sprintf('No connection defined for table "%s"', $this->name));
-
+        if(!isset($this->connection)) {
+            throw new Exception(sprintf('No connection defined for table "%s"', $this->name));
+        }
+        
         return $this->connection;
     }
 
     /**
-     * Tries to find one entry in the table matching submitted identifier.
-     *
-     * Identifier can be a single parameter (integer, string) using primary key
-     * or an array
-     *
-     * @param mixed $identifier
-     * @return mixed
+     * Returns a Finder instance to navigate into this table
+     * 
+     * @return Finder
      */
-    public function findOne($identifier, $entityClass = null) {
-        if(null === $entityClass)
-            $entityClass    = $this->getDefaultEntity();
-
-        $idents     = $this->getIdentifiersKeys();
-        $query      = new Query();
-        $query->entity($entityClass);
-        $query->select()->from($this->getName(), 'f');
-
-        $params     = array();
-
-        if(!count($idents))
-            throw new \RuntimeException (sprintf('table %s lacks primary key(s)', $this->name));
+    public function finder()
+    {
         
-        if(!is_array($identifier) && count($idents) == 1) {
-            $query->where('f.'. $idents[0] .' = ?');
-            $params[]   = $identifier;
-        }
-        
-        elseif(is_array($idents) && count($idents) == count($identifier)) {
-            foreach($idents as $key) {
-                if(!isset($identifier[$key]))
-                    throw new \LogicException(sprintf('Missing required identifier %s', $key));
-
-                $query->where('f.'. $key .' = ?');
-                $params[]   = $identifier[$key];
-            }
-        }
-        
-        elseif(is_array($identifier)) {
-            foreach($idents as $key  => $value) {
-                if(!\is_int($key))
-                    throw new \LogicException(sprintf('Array identifier should have named column names', $key));
-
-                $query->where('f.'. $key .' = ?');
-                $params[]   = $value;
-            }
-        }
-        
-        else
-            throw new \LogicException (sprintf('Invalid identifier %s', $identifier));
-
-        $results    = $this->getConnection()->execute($query, $params);
-        if(count($results) == 1)
-            return $results[0];
-
-        return null;
+        return new Finder($this, $this->connection);
     }
 
-    public function find($identifiers, $entityClass = null, $maxCount = 0) {
-        if(null === $entityClass)
-            $entityClass    = $this->getDefaultEntity ();
-
-        
-    }
-
-    public function count() {
-
-    }
-
-    public function findAll($entityClass = null) {
-        if(null === $entityClass)
-            $entityClass    = $this->getDefaultEntity ();
-
-        $query  = Query::factory()->select()
-                                  ->from($this->getName())
-                                  ->entity($entityClass);
-
-        return $this->getConnection()->execute($query);
-    }
-
-    public function getName() {
+    /**
+     * Returns this table's name
+     * 
+     * @return string 
+     */
+    public function getName()
+    {
         
         return $this->name;
     }
 
     /**
      * Returns primary identifiers key for this table
+     * 
+     * @throws Exceptions\TableLacksIdentifiers
      * 
      * @return array
      */
@@ -247,8 +201,15 @@ class Table {
                 }
             }
 
+            if(!count($final)) {
+                throw new Exceptions\TableLacksIdentifiers(
+                    sprintf('"%s" has no identifiers key(s)', $this->name)
+                );
+            }
+            
             $this->identifiersKey = $final;
         }
+        
         return $this->identifiersKey;
     }
 
@@ -272,32 +233,44 @@ class Table {
      * @return Column
      */
     public function getColumn($columnName) {
-        if(!isset($this->columns[$columnName]))
-                throw new \RuntimeException (sprintf('Unknown column "%s" on table %s', $columnName, $this->name));
-
+        if(!isset($this->columns[$columnName])) {
+            throw new Exceptions\TableColumnNotFound(
+                sprintf('Unknown Column "%s" on table %s', 
+                    $columnName, 
+                    $this->name
+                )
+            );
+        }
+        
         return $this->columns[$columnName];
     }
 
-    public function isColumn($columnName) {
+    public function hasColumn($columnName)
+    {
 
         return isset($this->columns[$columnName]);
     }
     
-    public function setDefaultEntity($entityClass) {
+    public function setDefaultEntity($entityClass)
+    {
         $this->defaultEntity    = $entityClass;
 
         return $this;
     }
 
-    public function getDefaultEntity() {
+    public function getDefaultEntity()
+    {
         if(!isset($this->defaultEntity)) {
-            $schema                 = $this->getConnection()->getSchema();
-            $this->defaultEntity    = $schema->getDeclaredEntity($this->name);
+            $this->defaultEntity = $this->getConnection()
+                                       ->getSchema()
+                                       ->getDeclaredEntity($this->name);
         }
+        
         return $this->defaultEntity;
     }
 
-    public function save($entity) {
+    public function save($entity)
+    {
         if(is_null($entity))
             return;
         
@@ -315,12 +288,11 @@ class Table {
         }
         
         $connection     = $this->getConnection();
-        if(!$connection->isTransactionnal()) {
-            $this->work();
-        }
+        $this->work();
     }
 
-    public function delete($entity) {
+    public function delete($entity)
+    {
         if(is_null($entity))
             return;
 
@@ -338,12 +310,11 @@ class Table {
         }
         
         $connection     = $this->getConnection();
-        if(!$connection->isTransactionnal()) {
-            $this->work();
-        }
+        $this->work();
     }
 
-    protected function work() {
+    protected function work()
+    {
         $queue          = $this->getRegistry()->getWorkersQueue();
         $connection     = $this->getConnection();
         
@@ -352,13 +323,8 @@ class Table {
         }
     }
     
-    public function destruct() {
-        $connection     = $this->getConnection();
-        if($connection->isTransactionnal())
-            $this->work();
-    }
-    
-    public function deleteAll() {
+    public function deleteAll()
+    {
         $query = Query::factory()->delete($this->getName());
         $res = $this->getConnection()->execute($query);
         

@@ -25,78 +25,14 @@
  * 
  * @package    Fwk
  * @subpackage Db
- * @subpackage Testing
+ * @subpackage Exceptions
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link       http://www.phpfwk.com
  */
-namespace Fwk\Db\Testing;
+namespace Fwk\Db\Exceptions;
 
-use Fwk\Db\Driver as DriverInterface,
-    Fwk\Db\Query,
-    Fwk\Db\Connection,
-    Fwk\Db\AbstractDriver;
+use Fwk\Db\Exception;
 
-class Driver extends AbstractDriver implements DriverInterface
-{
-    protected $connected;
-    
-    public function connect()
-    {
-        $this->connected = true;
-        
-        return $this->connected;
-    }
-    
-    public function disconnect()
-    {
-        if(true === $this->connected) {
-            $this->connected = false;
-            return true;
-        }
-        
-        return true;
-    }
-    
-    public function query(Query $query, array $params = array(), array $options = array()) {
-        ;
-    }
-    
-    public function rawQuery($query) {
-        ;
-    }
-    
-    
-    /**
-     * Begins a transaction
-     * 
-     * @return void
-     */
-    public function beginTransaction()
-    {
-    }
-    
-    /**
-     * Commits a transaction
-     * 
-     * @return void
-     */
-    public function commit()
-    {
-    }
-    
-    /**
-     * Cancel a transaction
-     * 
-     * @return void
-     */
-    public function rollBack()
-    {
-    }
-    
-    public function getLastInsertId()
-    {
-        return 0;
-    }
-}
+class DuplicateTableColumn extends Exception { }

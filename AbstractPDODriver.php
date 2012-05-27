@@ -51,13 +51,37 @@ abstract class AbstractPDODriver extends AbstractDriver {
      * @return boolean
      */
     public function connect() {
-        $handle     = $this->getHandle();
-        if($handle instanceof \PDO) {
-            return true;
+        if(!isset($this->handle)) {
+            $handle     = $this->getHandle();
+            
+            if($handle instanceof \PDO) {
+                $this->notify(new Event(ConnectionEvents::CONNECT));
+                return true;
+            }
+            
+            return false;
         }
 
-        return false;
+        return true;
     }
+    
+     /**
+     * Ends connection to database
+     *
+     * @return boolean
+     */
+    public function disconnect() {
+        if(!$this->handle instanceof \PDO)
+        {
+            return true;
+        }
+        
+        $this->notify(new Event(ConnectionEvents::DISCONNECT));
+        unset($this->handle);
+
+        return true;
+    }
+
 
     /**
      * Executes a plain SQL query and return results without transformation
@@ -66,8 +90,13 @@ abstract class AbstractPDODriver extends AbstractDriver {
      * @return mixed
      */
     public function rawQuery($query) {
-
-        return $this->getHandle()->query($query);
+        try {
+            return $this->getHandle()->query($query);
+        } catch(\PDOException $exc) {
+            $this->getConnection()->setErrorException($exc);
+        }
+        
+        return null;
     }
 
 
@@ -92,17 +121,16 @@ abstract class AbstractPDODriver extends AbstractDriver {
                 $pdo        = new \PDO($dsn, $user, $password);
                 $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
                 
-                $connection->set('password', '******');
-
                 if(!empty($charset)) {
                     $pdo->exec(sprintf("SET NAMES %s", $pdo->quote($charset)));
                 }
                 
                 $this->handle = $pdo;
-                $this->getConnection()->notify(new Event(Driver::EVENT_CONNECT, array('driver' => $this)));
+                $this->getConnection()
+                        ->notify(new Event(ConnectionEvents::CONNECT));
                 
-            } catch(\PDOException $e) {
-                $this->getConnection()->notify(new Event(Driver::EVENT_ERROR, array('exception' => $e)));
+            } catch(\PDOException $exc) {
+                $this->getConnection()->setErrorException($exc);
             }
         }
 
@@ -126,16 +154,32 @@ abstract class AbstractPDODriver extends AbstractDriver {
     }
     
     public function beginTransaction() {
-
-        $this->getHandle()->beginTransaction();
+        try {
+            return $this->getHandle()->beginTransaction();
+        } catch(\PDOException $exc) {
+            $this->getConnection()->setErrorException($exc);
+        }
+        
+        return false;
     }
 
     public function commit() {
-
-        $this->getHandle()->commit();
+        try {
+            return $this->getHandle()->commit();
+        } catch(\PDOException $exc) {
+            $this->getConnection()->setErrorException($exc);
+        }
+        
+        return false;
     }
 
     public function rollBack() {
-        $this->getHandle()->rollBack();
+        try {
+            return $this->getHandle()->rollBack();
+        } catch(\PDOException $exc) {
+            $this->getConnection()->setErrorException($exc);
+        }
+        
+        return false;
     }
 }
