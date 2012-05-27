@@ -124,11 +124,9 @@ class TableTest extends \PHPUnit_Framework_TestCase {
     
     /**
      */
-    public function testGetRegistry() {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-                'This test has not been implemented yet.'
-        );
+    public function testGetRegistry()
+    {
+        $this->assertInstanceOf('\Fwk\Db\Registry', $this->object->getRegistry());
     }
 
     /**

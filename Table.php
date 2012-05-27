@@ -32,8 +32,6 @@
  */
 namespace Fwk\Db;
 
-use Fwk\Db\Entity\Registry;
-
 class Table
 {
     /**
@@ -287,7 +285,6 @@ class Table
             $this->getRegistry()->markForAction($object, Registry::ACTION_SAVE);
         }
         
-        $connection     = $this->getConnection();
         $this->work();
     }
 
@@ -309,7 +306,6 @@ class Table
             $this->getRegistry()->markForAction($object, Registry::ACTION_DELETE);
         }
         
-        $connection     = $this->getConnection();
         $this->work();
     }
 
