@@ -1,7 +1,7 @@
 <?php
 namespace Fwk\Db;
 
-if(!defined("TEST_TABLE_1")) {
+if (!defined("TEST_TABLE_1")) {
     define("TEST_TABLE_1", "testTableOne");
 }
 

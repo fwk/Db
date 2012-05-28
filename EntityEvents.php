@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -40,6 +40,6 @@ class EntityEvents
     const AFTER_UPDATE    = 'afterUpdate';
     const BEFORE_DELETE   = 'beforeDelete';
     const AFTER_DELETE    = 'afterDelete';
-    
+
     const FRESH        = 'fresh';
 }

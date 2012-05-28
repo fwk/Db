@@ -12,26 +12,28 @@ class TableTest extends \PHPUnit_Framework_TestCase {
      * @var Table
      */
     protected $object;
-    
+
     /**
      *
      * @var Connection
      */
     protected $connection;
- 
-    public function __construct() {
+
+    public function __construct()
+    {
         $schema = require __DIR__ .'/resources/testDatabaseSchema.php';
         $driver = new Testing\Driver();
-        
+
         $this->connection = new Connection($driver, $schema, array(
-            
+
         ));
     }
     /**
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
      */
-    protected function setUp() {
+    protected function setUp()
+    {
         $this->object = new Table('testTable');
     }
 
@@ -39,13 +41,15 @@ class TableTest extends \PHPUnit_Framework_TestCase {
      * Tears down the fixture, for example, closes a network connection.
      * This method is called after a test is executed.
      */
-    protected function tearDown() {
+    protected function tearDown()
+    {
         unset($this->object);
     }
 
     /**
      */
-    public function testAddColumn() {
+    public function testAddColumn()
+    {
         $this->assertEquals($this->object, $this->object->addColumn(new Columns\TextColumn('test', 'varchar')));
         $this->setExpectedException('\Fwk\Db\Exceptions\DuplicateTableColumn');
         $this->object->addColumn(new Columns\TextColumn('test', 'varchar'));
@@ -65,7 +69,8 @@ class TableTest extends \PHPUnit_Framework_TestCase {
     }
     /**
      */
-    public function testGetColumns() {
+    public function testGetColumns()
+    {
         $this->assertEquals(array(), $this->object->getColumns());
         $this->object->addColumn(new Columns\TextColumn('test', 'varchar'));
         $this->assertEquals(1, count($this->object->getColumns()));
@@ -73,17 +78,19 @@ class TableTest extends \PHPUnit_Framework_TestCase {
 
     /**
      */
-    public function testSetConnection() {
+    public function testSetConnection()
+    {
         $this->assertEquals($this->object, $this->object->setConnection($this->connection));
     }
 
     /**
      */
-    public function testGetConnectionFail() {
+    public function testGetConnectionFail()
+    {
         $this->setExpectedException("\Fwk\Db\Exception");
         $this->object->getConnection();
     }
-    
+
     /**
      */
     public function testGetConnection()
@@ -96,17 +103,18 @@ class TableTest extends \PHPUnit_Framework_TestCase {
     {
         $this->assertInstanceOf('\Fwk\Db\Finder', $this->object->finder());
     }
-    
+
     /**
      */
     public function testGetName()
     {
-        $this->assertEquals('testTable', $this->object->getName()); 
+        $this->assertEquals('testTable', $this->object->getName());
     }
 
     /**
      */
-    public function testGetIdentifiersKeysFail() {
+    public function testGetIdentifiersKeysFail()
+    {
         $this->setExpectedException('\Fwk\Db\Exceptions\TableLacksIdentifiers');
         $this->object->getIdentifiersKeys();
     }
@@ -121,7 +129,7 @@ class TableTest extends \PHPUnit_Framework_TestCase {
 
         $this->assertEquals(array('id'), $this->object->getIdentifiersKeys());
     }
-    
+
     /**
      */
     public function testGetRegistry()
@@ -143,7 +151,7 @@ class TableTest extends \PHPUnit_Framework_TestCase {
         $this->object->addColumn($col);
         $this->assertEquals($col, $this->object->getColumn('test'));
     }
-    
+
     /**
      */
     public function testHasColumn()
@@ -156,7 +164,8 @@ class TableTest extends \PHPUnit_Framework_TestCase {
 
     /**
      */
-    public function testDefaultEntity() {
+    public function testDefaultEntity()
+    {
         $this->object->setConnection($this->connection);
         $this->assertEquals('\stdClass', $this->object->getDefaultEntity());
         $this->object->setDefaultEntity('\MyTestEntity');
@@ -167,7 +176,8 @@ class TableTest extends \PHPUnit_Framework_TestCase {
      * @covers {className}::{origMethodName}
      * @todo Implement testSave().
      */
-    public function testSave() {
+    public function testSave()
+    {
         // Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
@@ -178,7 +188,8 @@ class TableTest extends \PHPUnit_Framework_TestCase {
      * @covers {className}::{origMethodName}
      * @todo Implement testDelete().
      */
-    public function testDelete() {
+    public function testDelete()
+    {
         // Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
@@ -189,7 +200,8 @@ class TableTest extends \PHPUnit_Framework_TestCase {
      * @covers {className}::{origMethodName}
      * @todo Implement testDeleteAll().
      */
-    public function testDeleteAll() {
+    public function testDeleteAll()
+    {
         // Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'

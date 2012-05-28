@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @subpackage Mysql
@@ -39,21 +39,23 @@ use Fwk\Db\Driver as DriverInterface,
 
 class MySQL extends AbstractPDODriver implements DriverInterface
 {
-    public function query(Query $query, array $params = array(), array $options = array()) {
+    public function query(Query $query, array $params = array(), array $options = array())
+    {
         try {
             $maker      = new QueryMaker($this);
             $results    = $maker->execute($query, $params, $options);
 
             if($query->getType() == \Fwk\Db\Query::TYPE_SELECT &&
                     $query->getFetchMode() == \Fwk\Db\Query::FETCH_SPECIAL) {
-                
+
                 $hydrator   = new Hydrator($query, $this, $maker->getColumnsAliases());
                 $results    = $hydrator->hydrate($results);
-            
+
                 unset($hydrator, $maker);
             }
+
             return $results;
-        } catch(\PDOException $exception) {
+        } catch (\PDOException $exception) {
             $this->getConnection()->setErrorException($exception);
         }
 

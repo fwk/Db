@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -31,7 +31,6 @@
  * @link       http://www.phpfwk.com
  */
 namespace Fwk\Db;
-
 
 interface Column {
 

@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @subpackage Testing
@@ -37,32 +37,34 @@ use Fwk\Db\AbstractSchema,
     Fwk\Db\Schema as SchemaInterface,
     Fwk\Db\Table;
 
-class Schema extends AbstractSchema implements SchemaInterface 
+class Schema extends AbstractSchema implements SchemaInterface
 {
     protected $tables = array();
-    
+
     /**
      *
-     * @param string $tableName
-     * @return Table 
+     * @param  string $tableName
+     * @return Table
      */
     public function getTable($tableName)
     {
         if(!array_key_exists($tableName, $this->tables))
+
                 return false;
-        
+
         return $this->tables[$tableName];
     }
-    
-    public function addTable(Table $table) {
+
+    public function addTable(Table $table)
+    {
         $this->tables[$table->getName()] = $table;
     }
-    
+
     public function getTables()
     {
         return array();
     }
-    
+
     public function getDeclaredEntity($tableName)
     {
         return '\stdClass';

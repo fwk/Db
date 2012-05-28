@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -36,14 +36,14 @@ class Table
 {
     /**
      * Table name
-     * 
+     *
      * @var string
      */
     protected $name;
 
     /**
      * Columns
-     * 
+     *
      * @var array<Column>
      */
     protected $columns = array();
@@ -57,21 +57,21 @@ class Table
 
     /**
      * Array of primary keys
-     * 
+     *
      * @var array
      */
     protected $identifiersKey;
 
     /**
      * Entity registry
-     * 
+     *
      * @var <type>
      */
     protected $registry;
 
     /**
      * Classname of the default entity for this table
-     * 
+     *
      * @var string
      */
     protected $defaultEntity;
@@ -90,22 +90,22 @@ class Table
      * Adds a column to this table;
      *
      * @param Column $column
-     * 
+     *
      * @throws Exceptions\DuplicateTableColumn
-     * 
+     *
      * @return Table
      */
     public function addColumn(Column $column)
     {
-        if($this->hasColumn($column->getName())) {
+        if ($this->hasColumn($column->getName())) {
             throw new Exceptions\DuplicateTableColumn(
-                sprintf('Column "%s" already exists on table "%s"', 
-                    $column->getName(), 
+                sprintf('Column "%s" already exists on table "%s"',
+                    $column->getName(),
                     $this->getName()
                 )
             );
         }
-        
+
         $this->columns[$column->getName()]      = $column;
 
         return $this;
@@ -113,12 +113,13 @@ class Table
 
     /**
      * Adds multiple columns at once
-     * 
-     * @param array $columns
+     *
+     * @param  array $columns
      * @return Table
      */
-    public function addColumns(array $columns) {
-        foreach($columns as $column) {
+    public function addColumns(array $columns)
+    {
+        foreach ($columns as $column) {
             $this->addColumn($column);
         }
 
@@ -127,21 +128,22 @@ class Table
 
     /**
      * Returns all columns from this table
-     * 
+     *
      * @return array
      */
-    public function getColumns() {
-
+    public function getColumns()
+    {
         return $this->columns;
     }
 
     /**
      * Defines a connection for this table
-     * 
-     * @param Connection $connection
+     *
+     * @param  Connection $connection
      * @return Table
      */
-    public function setConnection(Connection $connection) {
+    public function setConnection(Connection $connection)
+    {
         $this->connection   = $connection;
 
         return $this;
@@ -149,47 +151,49 @@ class Table
 
     /**
      * Returns current connection for this table
-     * 
+     *
      * @return Connection
      */
-    public function getConnection() {
-        if(!isset($this->connection)) {
+    public function getConnection()
+    {
+        if (!isset($this->connection)) {
             throw new Exception(sprintf('No connection defined for table "%s"', $this->name));
         }
-        
+
         return $this->connection;
     }
 
     /**
      * Returns a Finder instance to navigate into this table
-     * 
+     *
      * @return Finder
      */
     public function finder()
     {
-        
+
         return new Finder($this, $this->connection);
     }
 
     /**
      * Returns this table's name
-     * 
-     * @return string 
+     *
+     * @return string
      */
     public function getName()
     {
-        
+
         return $this->name;
     }
 
     /**
      * Returns primary identifiers key for this table
-     * 
+     *
      * @throws Exceptions\TableLacksIdentifiers
-     * 
+     *
      * @return array
      */
-    public function getIdentifiersKeys() {
+    public function getIdentifiersKeys()
+    {
         if (!isset($this->identifiersKey)) {
             $columns = $this->columns;
             $final = array();
@@ -199,15 +203,15 @@ class Table
                 }
             }
 
-            if(!count($final)) {
+            if (!count($final)) {
                 throw new Exceptions\TableLacksIdentifiers(
                     sprintf('"%s" has no identifiers key(s)', $this->name)
                 );
             }
-            
+
             $this->identifiersKey = $final;
         }
-        
+
         return $this->identifiersKey;
     }
 
@@ -216,30 +220,32 @@ class Table
      *
      * @return Registry
      */
-    public function getRegistry() {
-        if(!isset($this->registry)) {
+    public function getRegistry()
+    {
+        if (!isset($this->registry)) {
             $this->registry = new Registry($this->name);
         }
-        
+
         return $this->registry;
     }
 
     /**
      * Returns an object representation of a given column
      *
-     * @param string $columnName
+     * @param  string $columnName
      * @return Column
      */
-    public function getColumn($columnName) {
-        if(!isset($this->columns[$columnName])) {
+    public function getColumn($columnName)
+    {
+        if (!isset($this->columns[$columnName])) {
             throw new Exceptions\TableColumnNotFound(
-                sprintf('Unknown Column "%s" on table %s', 
-                    $columnName, 
+                sprintf('Unknown Column "%s" on table %s',
+                    $columnName,
                     $this->name
                 )
             );
         }
-        
+
         return $this->columns[$columnName];
     }
 
@@ -248,7 +254,7 @@ class Table
 
         return isset($this->columns[$columnName]);
     }
-    
+
     public function setDefaultEntity($entityClass)
     {
         $this->defaultEntity    = $entityClass;
@@ -258,39 +264,41 @@ class Table
 
     public function getDefaultEntity()
     {
-        if(!isset($this->defaultEntity)) {
+        if (!isset($this->defaultEntity)) {
             $this->defaultEntity = $this->getConnection()
                                        ->getSchema()
                                        ->getDeclaredEntity($this->name);
         }
-        
+
         return $this->defaultEntity;
     }
 
     public function save($entity)
     {
         if(is_null($entity))
+
             return;
-        
+
         if(!is_array($entity) && !\is_object($entity))
             throw new \InvalidArgumentException (sprintf("You can only save an object or a list of objects"));
 
         if(!\is_array($entity))
             $entity = array($entity);
 
-        foreach($entity as $object) {
+        foreach ($entity as $object) {
             if(is_null($object))
                 continue;
 
             $this->getRegistry()->markForAction($object, Registry::ACTION_SAVE);
         }
-        
+
         $this->work();
     }
 
     public function delete($entity)
     {
         if(is_null($entity))
+
             return;
 
         if(!is_array($entity) && !\is_object($entity))
@@ -299,13 +307,13 @@ class Table
         if(!\is_array($entity))
             $entity = array($entity);
 
-        foreach($entity as $object) {
+        foreach ($entity as $object) {
             if(is_null($object))
                 continue;
-            
+
             $this->getRegistry()->markForAction($object, Registry::ACTION_DELETE);
         }
-        
+
         $this->work();
     }
 
@@ -313,17 +321,17 @@ class Table
     {
         $queue          = $this->getRegistry()->getWorkersQueue();
         $connection     = $this->getConnection();
-        
-        foreach($queue as $worker) {
+
+        foreach ($queue as $worker) {
            $worker->execute($connection);
         }
     }
-    
+
     public function deleteAll()
     {
         $query = Query::factory()->delete($this->getName());
         $res = $this->getConnection()->execute($query);
-        
+
         return $this;
     }
 }

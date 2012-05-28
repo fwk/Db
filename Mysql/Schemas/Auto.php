@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @subpackage Mysql
@@ -43,13 +43,13 @@ class Auto extends AbstractSchema implements Schema
 {
     /**
      * Declared entities for tables
-     * 
+     *
      * @var array
      */
     protected $entities;
 
-
-    public function getTable($tableName) {
+    public function getTable($tableName)
+    {
         $query      = $this->getConnection()
                            ->getDriver()
                            ->rawQuery(sprintf('SHOW FULL FIELDS FROM %s', $tableName));
@@ -66,7 +66,7 @@ class Auto extends AbstractSchema implements Schema
 
             if (strpos($type, '(') != false) {
                 list($type, $size) = explode('(', $type);
-                $size = (int)rtrim($size, ')');
+                $size = (int) rtrim($size, ')');
             }
 
             if ($key == 'PRI')
@@ -89,12 +89,12 @@ class Auto extends AbstractSchema implements Schema
         $table      = new Table($tableName);
         $table->addColumns($columns);
         $table->setDefaultEntity($this->getDeclaredEntity($tableName));
-        
+
         return $table;
     }
 
-    public static function columnFactory($name, $columnTypeName, $size = null, $null = false, $default = null, $key = null, $autoIncrement = false) {
-
+    public static function columnFactory($name, $columnTypeName, $size = null, $null = false, $default = null, $key = null, $autoIncrement = false)
+    {
         $typename = strtolower($columnTypeName);
         switch ($typename) {
 
@@ -153,8 +153,8 @@ class Auto extends AbstractSchema implements Schema
         return $class;
     }
 
-    public function getTables() {
-
+    public function getTables()
+    {
         return array();
     }
 

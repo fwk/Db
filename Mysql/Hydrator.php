@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @subpackage Mysql
@@ -43,7 +43,8 @@ use Fwk\Db\Entity\Accessor;
  * entities.
  *
  */
-class Hydrator {
+class Hydrator
+{
     /**
      * The query
      *
@@ -67,7 +68,7 @@ class Hydrator {
 
     /**
      * Parsing stack informations
-     * 
+     *
      * @var array
      */
     protected $stack;
@@ -78,31 +79,32 @@ class Hydrator {
      * @var array
      */
     protected $markAsFresh;
-    
+
     /**
      * Constructor
-     * 
+     *
      * @param Driver $driver
-     * @param array $columns
+     * @param array  $columns
      */
-    public function __construct(Query $query, Driver $driver, array $columns) {
+    public function __construct(Query $query, Driver $driver, array $columns)
+    {
         $this->query        = $query;
         $this->columns      = $columns;
         $this->driver       = $driver;
 
-        $joins      = (array)$query['joins'];
+        $joins      = (array) $query['joins'];
         $tables     = array();
         $it         = 0;
 
-        foreach($columns as $column => $infos) {
+        foreach ($columns as $column => $infos) {
             $it++;
             $table          = $infos['table'];
 
-            if(!isset($tables[$table])) {
+            if (!isset($tables[$table])) {
                 $skipped    = false;
                 $jointure   = false;
                 $joinOpt       = false;
-                
+
                 foreach ($joins as $join) {
                     $jointure = false;
                     $skipped  = false;
@@ -114,7 +116,7 @@ class Hydrator {
                         $joinTable  = $join['table'];
                         $alias      = null;
                     }
-                    
+
                     if ($joinTable == $table) {
                         if($join['options']['skipped'] == true)
                             $skipped = true;
@@ -125,7 +127,7 @@ class Hydrator {
                     }
                 }
 
-                if($skipped && $jointure) {
+                if ($skipped && $jointure) {
                     continue;
                 }
 
@@ -137,22 +139,22 @@ class Hydrator {
             }
 
             $realColumnName = $infos['column'];
-            $function       = (bool)$infos['function'];
+            $function       = (bool) $infos['function'];
             $alias          = $infos['alias'];
 
             $tables[$table]['columns'][$column] =  $realColumnName;
         }
 
-        
         $this->stack    = $tables;
     }
 
     /**
-     * 
-     * @param array $results
+     *
+     * @param  array $results
      * @return array
      */
-    public function hydrate(array $results) {
+    public function hydrate(array $results)
+    {
         $final      = array();
         $joinData   = array();
         $mainObj    = null;
@@ -161,7 +163,7 @@ class Hydrator {
             $mainObj        = null;
             $mainObjRefs    = null;
             $mainObjTable   = null;
-            
+
             foreach ($this->stack as $tableName => $infos) {
                 $columns    = $infos['columns'];
                 $isJoin     = (isset($infos['join']) ? true : false);
@@ -172,18 +174,18 @@ class Hydrator {
                 $values     = $this->getValuesFromSet($columns, $result);
                 $access->setValues($values);
 
-                if(!$isJoin) {
+                if (!$isJoin) {
                     $mainObj        = $obj;
                     $mainObjTable   = $tableName;
                     $mainObjRefs    = $ids;
                     $idsHash        = $tableName . implode(':', $ids);
                     unset($access, $values, $isJoin, $columns);
-                    if(!in_array($mainObj, $final, true)) {
+                    if (!in_array($mainObj, $final, true)) {
                         array_push($final, $mainObj);
                     }
                     continue;
                 }
-                
+
                 $access     = new Accessor($mainObj);
                 $columnName = $infos['join']['options']['column'];
                 $reference  = $infos['join']['options']['reference'];
@@ -200,56 +202,59 @@ class Hydrator {
 
                 $tableObj   = $this->driver->getConnection()->table($mainObjTable);
                 $current->setParent($mainObj, $tableObj->getRegistry()->getEventDispatcher($mainObj));
-                
+
                 $access->set($columnName, $current);
-                
+
                 unset($access, $values, $isJoin, $columns, $current);
             }
 
             $access = new Accessor($mainObj);
             $relations  = $access->getRelations();
-            foreach($relations as $columnName => $relation) {
+            foreach ($relations as $columnName => $relation) {
                 $relation->setParentRefs($access->get($relation->getLocal()));
                 $tableObj   = $this->driver->getConnection()->table($mainObjTable);
                 $relation->setParent($mainObj, $tableObj->getRegistry()->getEventDispatcher($mainObj));
                 if($relation->isLazy())
                         $relation->setConnection($this->driver->getConnection());
             }
-            
+
             unset($mainObj, $mainObjRefs);
         }
 
         $this->markAsFresh();
-        
+
         return $final;
     }
 
     /**
      *
-     * @param mixed $object
-     * @param string $columnName
-     * @param array $join
-     * @param string $entityClass
+     * @param  mixed                   $object
+     * @param  string                  $columnName
+     * @param  array                   $join
+     * @param  string                  $entityClass
      * @return \Fwk\Db\Entity\Relation
      */
-    public function getRelationObject($object, $columnName, array $join, $entityClass = '\stdClass') {
+    public function getRelationObject($object, $columnName, array $join, $entityClass = '\stdClass')
+    {
         $access     = new Accessor($object);
         $test       = $access->get($columnName);
 
         if($test instanceof \Fwk\Db\Entity\Relation)
+
             return $test;
 
         $ref    = new One2Many($join['local'], $join['foreign'], $join['table'], $entityClass);
-        if(!empty($join['options']['reference'])) {
+        if (!empty($join['options']['reference'])) {
             $current->setReference($join['options']['reference']);
         }
-        
+
         return $ref;
     }
 
-    public function getValuesFromSet(array $columns, array $resultSet) {
+    public function getValuesFromSet(array $columns, array $resultSet)
+    {
         $final = array();
-        foreach($columns as $alias => $realName) {
+        foreach ($columns as $alias => $realName) {
             $final[$realName]   = $resultSet[$alias];
         }
 
@@ -258,11 +263,12 @@ class Hydrator {
 
     /**
      * Loads an entityClass
-     * 
-     * @param string $entityClass
+     *
+     * @param  string $entityClass
      * @return mixed
      */
-    protected function loadEntityClass($tableName, array $identifiers, $entityClass = null) {
+    protected function loadEntityClass($tableName, array $identifiers, $entityClass = null)
+    {
         $tableObj   = $this->driver->getConnection()->table($tableName);
         $registry   = $tableObj->getRegistry();
 
@@ -271,20 +277,22 @@ class Hydrator {
 
         $obj        = $registry->get($identifiers);
 
-        if(null === $obj) {
+        if (null === $obj) {
             $obj      = new $entityClass;
             $registry->store($obj, $identifiers, \Fwk\Db\Entity\Registry::STATE_FRESH);
             $this->markAsFresh[]    = array('registry' => $registry, 'entity' => $obj);
         }
-        
+
         return $obj;
     }
 
-    protected function markAsFresh() {
+    protected function markAsFresh()
+    {
         if(!\is_array($this->markAsFresh) || !count($this->markAsFresh))
+
                 return;
 
-        foreach($this->markAsFresh as $infos) {
+        foreach ($this->markAsFresh as $infos) {
             $infos['registry']->defineInitialValues($infos['entity']);
         }
 
@@ -294,26 +302,28 @@ class Hydrator {
     /**
      * Returns an array of identifiers for the given table
      *
-     * @param string $tableName
-     * @param array $results
+     * @param  string $tableName
+     * @param  array  $results
      * @return array
      */
-    protected function getIdentifiers($tableName, array $results) {
+    protected function getIdentifiers($tableName, array $results)
+    {
         $tableObj   = $this->driver->getConnection()->table($tableName);
         $tableIds   = $tableObj->getIdentifiersKeys();
 
         if (!count($tableIds))
+
             return array();
 
         $final = array();
         foreach ($tableIds as $identifier) {
-            foreach((array)$this->columns as $colName  => $infos) {
-                if($infos['table'] == $tableName && in_array($infos['column'], $tableIds)) {
+            foreach ((array) $this->columns as $colName  => $infos) {
+                if ($infos['table'] == $tableName && in_array($infos['column'], $tableIds)) {
                     $final[$infos['column']]   = $results[$colName];
                 }
             }
         }
-        
+
         return $final;
     }
 }

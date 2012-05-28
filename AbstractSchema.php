@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -32,47 +32,50 @@
  */
 namespace Fwk\Db;
 
-
-class AbstractSchema 
+class AbstractSchema
 {
     /**
-     * 
+     *
      * @var Connection
      */
     protected $connection;
-    
-    
+
     /**
      * Declared entities for tables
-     * 
+     *
      * @var array
      */
     protected $entities;
-    
-    public function getConnection() {
+
+    public function getConnection()
+    {
         return $this->connection;
     }
 
-    public function setConnection(Connection $connection) {
+    public function setConnection(Connection $connection)
+    {
         $this->connection = $connection;
     }
-    
+
      /**
      *
      * @param string $tableName
      * @param string $entityClass
      */
-    public function declareEntity($tableName, $entityClass) {
+    public function declareEntity($tableName, $entityClass)
+    {
         $this->entities[$tableName] = $entityClass;
     }
 
     /**
      *
-     * @param string $tableName
+     * @param  string $tableName
      * @return string
      */
-    public function getDeclaredEntity($tableName) {
+    public function getDeclaredEntity($tableName)
+    {
         if(is_array($this->entities) && \array_key_exists($tableName, $this->entities))
+
                 return $this->entities[$tableName];
 
         return '\stdClass';

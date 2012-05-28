@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -34,13 +34,13 @@ namespace Fwk\Db\Columns;
 
 use Fwk\Db\Column;
 
-/* 
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
 
-abstract class AbstractColumn {
-
+abstract class AbstractColumn
+{
     protected $name;
 
     protected $typeName;
@@ -54,66 +54,75 @@ abstract class AbstractColumn {
     protected $key = null;
 
     protected $autoIncrement = false;
-    
+
     /**
      *
-     * @param string $name
-     * @param string $typeName
-     * @param integer $size
-     * @param boolean $null
-     * @param string $default
-     * @param integer $key
-     * @param boolean $autoIncrement
+     * @param  string  $name
+     * @param  string  $typeName
+     * @param  integer $size
+     * @param  boolean $null
+     * @param  string  $default
+     * @param  integer $key
+     * @param  boolean $autoIncrement
      * @return void
      */
-    public function __construct($name, $typeName, $size = null, $null = null, $default = null, $key = Column::INDEX_NONE, $autoIncrement = false) {
+    public function __construct($name, $typeName, $size = null, $null = null, $default = null, $key = Column::INDEX_NONE, $autoIncrement = false)
+    {
         $this->name = $name;
         $this->typeName = $typeName;
-        $this->size = (int)$size;
-        $this->null = (bool)$null;
-        $this->default = (string)$default;
+        $this->size = (int) $size;
+        $this->null = (bool) $null;
+        $this->default = (string) $default;
 
         if(!in_array($key, array(Column::INDEX_INDEX, Column::INDEX_NONE, Column::INDEX_PRIMARY, Column::INDEX_UNIQUE)))
                 throw new Exceptions\ColumnException(sprintf("Unknown index type: '%s' on column '%s'", $key, $name));
 
         $this->key = $key;
-        $this->autoIncrement = (bool)$autoIncrement;
+        $this->autoIncrement = (bool) $autoIncrement;
     }
 
-
-    public function isAutoIncrement() {
+    public function isAutoIncrement()
+    {
         return $this->autoIncrement;
     }
 
-    public function isIndex($indexType = Column::INDEX_INDEX) {
+    public function isIndex($indexType = Column::INDEX_INDEX)
+    {
         return ($this->key === $indexType);
     }
 
-    public function isPrimary() {
+    public function isPrimary()
+    {
         return $this->isIndex(Column::INDEX_PRIMARY);
     }
 
-    public function isNull() {
+    public function isNull()
+    {
         return $this->null;
     }
 
-    public function hasDefault() {
+    public function hasDefault()
+    {
         return ($this->default === null ? false : true);
     }
 
-    public function getName() {
+    public function getName()
+    {
         return $this->name;
     }
-    
-    public function __toString() {
+
+    public function __toString()
+    {
         return $this->getName();
     }
-    
-    public function getDefault() {
+
+    public function getDefault()
+    {
         return $this->default;
     }
 
-    public function getTypeName() {
+    public function getTypeName()
+    {
         return $this->typeName;
     }
 

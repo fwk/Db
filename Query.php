@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -34,7 +34,7 @@ namespace Fwk\Db;
 
 /**
  * Represents an Object-Oriented SQL-like query interface.
- * 
+ *
  */
 class Query extends \ArrayObject
 {
@@ -86,10 +86,9 @@ class Query extends \ArrayObject
         return $this;
     }
 
-
     public function from($table, $alias = null)
     {
-        if(\strpos($table, ' ') !== false) {
+        if (\strpos($table, ' ') !== false) {
             list($table, $alias) = explode(' ', $table);
         }
 
@@ -104,13 +103,13 @@ class Query extends \ArrayObject
 
         return $this;
     }
-    
+
     public function getFetchMode()
     {
-        
+
         return $this->fetchMode;
     }
-    
+
     /**
      *
      * @param mixed $table
@@ -120,7 +119,7 @@ class Query extends \ArrayObject
     public function delete($table)
     {
         $this->type         = self::TYPE_DELETE;
-        $this['delete']     = (string)$table;
+        $this['delete']     = (string) $table;
 
         return $this;
     }
@@ -134,7 +133,7 @@ class Query extends \ArrayObject
     public function insert($table)
     {
         $this->type         = self::TYPE_INSERT;
-        $this['insert']     = (string)$table;
+        $this['insert']     = (string) $table;
 
         return $this;
     }
@@ -148,19 +147,20 @@ class Query extends \ArrayObject
     public function update($table)
     {
         $this->type         = self::TYPE_UPDATE;
-        $this['update']     = (string)$table;
+        $this['update']     = (string) $table;
 
         return $this;
     }
 
     /**
      *
-     * @param string $condition
+     * @param  string $condition
      * @return Query
      */
     public function where($condition)
     {
         $this['where']     = $condition;
+
         return $this;
     }
 
@@ -178,7 +178,7 @@ class Query extends \ArrayObject
         $arr    = $this['wheres'];
         array_push($arr, array('condition' => $condition, 'type' => 'AND'));
         $this['wheres'] = $arr;
-        
+
         return $this;
     }
 
@@ -196,7 +196,7 @@ class Query extends \ArrayObject
         $arr    = $this['wheres'];
         array_push($arr, array('condition' => $condition, 'type' => 'OR'));
         $this['wheres'] = $arr;
-        
+
         return $this;
     }
 
@@ -237,12 +237,13 @@ class Query extends \ArrayObject
      *
      * @return Query
      */
-    public static function factory() {
-
+    public static function factory()
+    {
         return new Query();
     }
 
-    public function set($key, $value) {
+    public function set($key, $value)
+    {
         $vals           = $this['values'];
         $vals[$key]     = $value;
         $this['values'] = $vals;
@@ -250,15 +251,17 @@ class Query extends \ArrayObject
         return $this;
     }
 
-    public function values(array $values) {
+    public function values(array $values)
+    {
         $vals           = $this['values'];
         $this['values'] = array_merge((is_array($vals) ? $vals : array()), $values);
-        
+
         return $this;
     }
 
-    public function join($table, $localColumn, $foreignColumn = null, $type = Query::JOIN_LEFT, $options = array()) {
-        if(\strpos($table, ' ') !== false) {
+    public function join($table, $localColumn, $foreignColumn = null, $type = Query::JOIN_LEFT, $options = array())
+    {
+        if (\strpos($table, ' ') !== false) {
             list($columnName, ) = \explode(' ', $table);
         } else
             $columnName = $table;
@@ -285,21 +288,23 @@ class Query extends \ArrayObject
 
         array_push($joins, $join);
         $this['joins'] = $joins;
+
         return $this;
     }
 
-    public function getType() {
-        
+    public function getType()
+    {
         return $this->type;
     }
 
     /**
      *
      *
-     * @param string $entityClass
+     * @param  string $entityClass
      * @return Query
      */
-    public function entity($entityClass) {
+    public function entity($entityClass)
+    {
         $this['entity']         = $entityClass;
 
         return $this;
@@ -307,12 +312,14 @@ class Query extends \ArrayObject
 
     /**
      * Prevent 'undefined index' errors
-     * 
-     * @param string $key
+     *
+     * @param  string $key
      * @return mixed
      */
-    public function offsetGet($key) {
+    public function offsetGet($key)
+    {
         if(!$this->offsetExists($key))
+
                 return null;
 
         return parent::offsetGet($key);

@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -50,21 +50,21 @@ class Accessor
 
     /**
      * Reflector for the object
-     * 
+     *
      * @var \ReflectionObject
      */
     protected $reflector;
 
     /**
      * Override properties visibility ?
-     * 
+     *
      * @var boolean
      */
     protected $force = false;
 
     /**
      * Constructor
-     * 
+     *
      * @param mixed $object
      */
     public function __construct($object)
@@ -77,43 +77,46 @@ class Accessor
      *
      * @return array<ColumnName,Relation>
      */
-    public function getRelations() {
+    public function getRelations()
+    {
         $values     = $this->toArray();
         $final      = array();
-        
-        foreach($values as $key => $value) {
-            if($value instanceof Relation) {
+
+        foreach ($values as $key => $value) {
+            if ($value instanceof Relation) {
                 $final[$key]   = $value;
             }
         }
 
         return $final;
     }
-    
-    public static function everythingAsArrayModifier($value) {
-        if($value instanceof Relation) {
+
+    public static function everythingAsArrayModifier($value)
+    {
+        if ($value instanceof Relation) {
             /**
-             * @todo Boucle infinie!!!  $value->hasChanged() 
+             * @todo Boucle infinie!!!  $value->hasChanged()
              */
-            $value  = sprintf('relation:%s-%u', (/* $value->hasChanged() */ true ? (string)\microtime() : "static"), (string)$value->isFetched());
+            $value  = sprintf('relation:%s-%u', (/* $value->hasChanged() */ true ? (string) \microtime() : "static"), (string) $value->isFetched());
         }
 
-        if(\is_array($value)) {
-            foreach($value as $key => $val) {
-                if(is_object($val)) {
+        if (\is_array($value)) {
+            foreach ($value as $key => $val) {
+                if (is_object($val)) {
                     $accessor   = self::factory($val);
                     $val        = $accessor->toArray();
                 }
                 $value[$key]    = $val;
             }
         }
+
         return $value;
     }
-    
+
     /**
      * Try to retrieve a value from the object
      *
-     * @param string $key
+     * @param  string $key
      * @return mixed
      */
     public function get($key)
@@ -121,53 +124,55 @@ class Accessor
         $obj        = $this->object;
         $getter     = "get". ucfirst($key);
 
-        if(\method_exists($obj, $getter) && \is_callable(array($obj, $getter))) {
+        if (\method_exists($obj, $getter) && \is_callable(array($obj, $getter))) {
             return \call_user_func(array($obj, $getter));
-        }
-        elseif(get_class($obj) == 'stdClass' && isset($obj->{$key})) {
+        } elseif (get_class($obj) == 'stdClass' && isset($obj->{$key})) {
             return  $obj->{$key};
-        }
-        elseif($obj instanceof \ArrayAccess && $obj->offsetExists($key)) {
+        } elseif ($obj instanceof \ArrayAccess && $obj->offsetExists($key)) {
             return  $obj->offsetGet($key);
-        }
-        else {
+        } else {
             $reflector  = $this->getReflector();
             try {
                 $prop   = $reflector->getProperty($key);
-                if(($prop->isPrivate() || $prop->isProtected()) && $this->force) {
+                if (($prop->isPrivate() || $prop->isProtected()) && $this->force) {
                     $prop->setAccessible(true);
                 }
 
                 return $prop->getValue($obj);
-            } catch(\ReflectionException $e) {
+            } catch (\ReflectionException $e) {
             }
         }
+
         return false;
     }
 
     /**
      * Try to set a value
-     * 
-     * @param string $key
-     * @param mixed $value
+     *
+     * @param  string  $key
+     * @param  mixed   $value
      * @return boolean
      */
-    public function set($key, $value) {
+    public function set($key, $value)
+    {
         $obj        = $this->object;
         $setter     = "set". ucfirst($key);
 
-        if(\method_exists($obj, $setter) && \is_callable(array($obj, $setter))) {
+        if (\method_exists($obj, $setter) && \is_callable(array($obj, $setter))) {
             \call_user_func(array($obj, $setter), $value);
+
             return true;
         }
 
-        if(get_class($obj) == 'stdClass') {
+        if (get_class($obj) == 'stdClass') {
             $obj->{$key}    = $value;
+
             return true;
         }
 
-        if($obj instanceof \ArrayAccess) {
+        if ($obj instanceof \ArrayAccess) {
             $obj->offsetSet($key, $value);
+
             return true;
         }
 
@@ -175,44 +180,43 @@ class Accessor
         try {
             $prop   = $reflector->getProperty($key);
 
-            if(($prop->isPrivate() || $prop->isProtected()) && $this->force) {
+            if (($prop->isPrivate() || $prop->isProtected()) && $this->force) {
                 $prop->setAccessible(true);
             }
-            
-            if($prop->isPublic() || $this->force === true) {
+
+            if ($prop->isPublic() || $this->force === true) {
                 $prop->setValue($obj, $value);
 
                 return true;
             }
-        } catch(\ReflectionException $e) {
+        } catch (\ReflectionException $e) {
         }
 
         return false;
     }
 
-
     /**
      * Set multiple values
-     * 
+     *
      * @param array $values
-     * 
-     * @return 
+     *
+     * @return
      */
     public function setValues(array $values)
     {
-        foreach($values as $key => $value) {
+        foreach ($values as $key => $value) {
             $this->set($key, $value);
         }
     }
 
     /**
      * Gets a reflector for the object
-     * 
+     *
      * @return \ReflectionObject
      */
     public function getReflector()
     {
-        if(!isset($this->reflector)) {
+        if (!isset($this->reflector)) {
             $this->reflector = new \ReflectionObject($this->object);
         }
 
@@ -224,10 +228,10 @@ class Accessor
         $reflector  = $this->getReflector();
         $final      = array();
 
-        foreach($reflector->getProperties() as $property) {
+        foreach ($reflector->getProperties() as $property) {
             $value = $this->get($property->getName());
 
-            if(\is_callable($modifier)) {
+            if (\is_callable($modifier)) {
                 $value  = \call_user_func_array($modifier, array($value));
             }
 
@@ -242,21 +246,22 @@ class Accessor
      *
      *
      */
-    public function hashCode($algo  = 'md5') {
+    public function hashCode($algo  = 'md5')
+    {
         $array  = $this->toArray();
         \ksort($array);
         $str    = \get_class($this->object);
 
-        foreach($array as $key => $value) {
+        foreach ($array as $key => $value) {
             if($value instanceof Relation)
                 continue;
-            
-            if(is_object($value)) {
+
+            if (is_object($value)) {
                 $tmp    = self::factory($value);
                 $value  = $tmp->toArray();
             }
 
-            if(is_array($value)) {
+            if (is_array($value)) {
                 $value = \json_encode($value);
             }
 
@@ -269,22 +274,22 @@ class Accessor
     /**
      *
      * @param mixed $object
-     * 
+     *
      * @throws \InvalidArgumentException
-     * 
+     *
      * @return Accessor
      */
     public static function factory($object)
     {
-        if(!is_object($object)) {
+        if (!is_object($object)) {
             throw new \InvalidArgumentException("Argument is not an object");
         }
-        
+
         return new static($object);
     }
-    
+
     public function overrideVisibility($bool)
     {
-        $this->force = (bool)$bool;
+        $this->force = (bool) $bool;
     }
 }

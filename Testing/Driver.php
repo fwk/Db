@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @subpackage Testing
@@ -41,60 +41,62 @@ use Fwk\Db\Driver as DriverInterface,
 class Driver extends AbstractDriver implements DriverInterface
 {
     protected $connected;
-    
+
     public function connect()
     {
         $this->connected = true;
-        
+
         return $this->connected;
     }
-    
+
     public function disconnect()
     {
-        if(true === $this->connected) {
+        if (true === $this->connected) {
             $this->connected = false;
+
             return true;
         }
-        
+
         return true;
     }
-    
-    public function query(Query $query, array $params = array(), array $options = array()) {
+
+    public function query(Query $query, array $params = array(), array $options = array())
+    {
         ;
     }
-    
-    public function rawQuery($query) {
+
+    public function rawQuery($query)
+    {
         ;
     }
-    
-    
+
     /**
      * Begins a transaction
-     * 
+     *
      * @return void
      */
     public function beginTransaction()
     {
     }
-    
+
     /**
      * Commits a transaction
-     * 
+     *
      * @return void
      */
     public function commit()
     {
     }
-    
+
     /**
      * Cancel a transaction
-     * 
+     *
      * @return void
      */
     public function rollBack()
     {
     }
-    
+
     public function getLastInsertId()
     {
         return 0;

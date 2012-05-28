@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -32,11 +32,10 @@
  */
 namespace Fwk\Db;
 
-
 interface Schema {
 
     const DEFAULT_ENTITY = '\stdClass';
-    
+
     public function setConnection(Connection $connection);
 
     public function getConnection();
@@ -44,6 +43,6 @@ interface Schema {
     public function getTables();
 
     public function getTable($tableName);
-    
+
     public function getDeclaredEntity($tableName);
 }

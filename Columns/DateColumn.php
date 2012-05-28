@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -34,22 +34,25 @@ namespace Fwk\Db\Columns;
 
 use Fwk\Db\Column;
 
-
-class DateColumn extends AbstractColumn implements Column {
-
-    public function getTypedValue($value) {
+class DateColumn extends AbstractColumn implements Column
+{
+    public function getTypedValue($value)
+    {
         return new \DateTime($value, $object);
     }
 
-
-    public function getDateFormat() {
+    public function getDateFormat()
+    {
         if($this->typeName == 'datetime')
+
                 return 'Y-m-d H:i:s';
 
         elseif($this->typeName == 'date')
+
                 return 'Y-m-d';
 
         elseif($this->typeName == 'time')
+
                 return 'H:i:s';
 
         return 'Y-m-d';

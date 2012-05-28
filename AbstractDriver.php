@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -50,17 +50,17 @@ abstract class AbstractDriver
      */
     public function getConnection()
     {
-        if(!isset($this->connection)) {
+        if (!isset($this->connection)) {
             throw new Exception(sprintf('No connection defined for this driver'));
         }
-        
+
         return $this->connection;
     }
 
     /**
      * Defines a connection to handle
      *
-     * @param Connection $connection
+     * @param  Connection $connection
      * @return Driver
      */
     public function setConnection(Connection $connection)

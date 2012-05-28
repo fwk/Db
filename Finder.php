@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -32,42 +32,41 @@
  */
 namespace Fwk\Db;
 
-
 class Finder implements \Countable
 {
     /**
      *
-     * @var array 
+     * @var array
      */
     protected $resultSet;
-    
+
     /**
      * Table to navigate
-     * 
-     * @var Table 
+     *
+     * @var Table
      */
     protected $table;
-    
+
     /**
      * Current Connection
-     * 
+     *
      * @var Connection
      */
     protected $connection;
-    
+
     /**
      * Current query
-     * 
+     *
      * @var Query
      */
     protected $query;
-    
+
     /**
      * Constructor
-     * 
-     * @param Table $table
-     * @param Connection $connection 
-     * 
+     *
+     * @param Table      $table
+     * @param Connection $connection
+     *
      * @return void
      */
     public function __construct(Table $table, Connection $connection = null)
@@ -75,15 +74,16 @@ class Finder implements \Countable
         $this->table = $table;
         $this->connection = $connection;
     }
-    
+
     /**
      * Defines a connection
-     * 
+     *
      * @param Connection $connection
-     * 
+     *
      * @return Finder
      */
-    public function setConnection(Connection $connection) {
+    public function setConnection(Connection $connection)
+    {
         $this->connection   = $connection;
 
         return $this;
@@ -91,37 +91,37 @@ class Finder implements \Countable
 
     /**
      * Returns current connection
-     * 
+     *
      * @throws Exception
-     * 
+     *
      * @return Connection
      */
     public function getConnection()
     {
-        if(!isset($this->connection)) {
+        if (!isset($this->connection)) {
             throw new Exception(sprintf('No connection is defined'));
         }
-        
+
         return $this->connection;
     }
-    
-    public function find($identifiers) 
+
+    public function find($identifiers)
     {
-        
+
     }
-    
+
     public function one($identifier)
     {
-        
+
     }
-    
+
     public function all()
     {
-        
+
     }
-    
+
     public function count()
     {
-        
+
     }
 }

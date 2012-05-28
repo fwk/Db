@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -35,78 +35,79 @@ namespace Fwk\Db;
 use Fwk\Db\Connection;
 use Fwk\Events\Event;
 
-abstract class AbstractPDODriver extends AbstractDriver {
-
+abstract class AbstractPDODriver extends AbstractDriver
+{
     /**
      * The PDO handle
-     * 
+     *
      * @var \PDO
      */
     protected $handle;
 
-    
     /**
      * Connects to a PDO compatible database
      *
      * @return boolean
      */
-    public function connect() {
-        if(!isset($this->handle)) {
+    public function connect()
+    {
+        if (!isset($this->handle)) {
             $handle     = $this->getHandle();
-            
-            if($handle instanceof \PDO) {
+
+            if ($handle instanceof \PDO) {
                 $this->notify(new Event(ConnectionEvents::CONNECT));
+
                 return true;
             }
-            
+
             return false;
         }
 
         return true;
     }
-    
+
      /**
      * Ends connection to database
      *
      * @return boolean
      */
-    public function disconnect() {
-        if(!$this->handle instanceof \PDO)
-        {
+    public function disconnect()
+    {
+        if (!$this->handle instanceof \PDO) {
             return true;
         }
-        
+
         $this->notify(new Event(ConnectionEvents::DISCONNECT));
         unset($this->handle);
 
         return true;
     }
 
-
     /**
      * Executes a plain SQL query and return results without transformation
-     * 
-     * @param string $query
+     *
+     * @param  string $query
      * @return mixed
      */
-    public function rawQuery($query) {
+    public function rawQuery($query)
+    {
         try {
             return $this->getHandle()->query($query);
-        } catch(\PDOException $exc) {
+        } catch (\PDOException $exc) {
             $this->getConnection()->setErrorException($exc);
         }
-        
+
         return null;
     }
 
-
     /**
-     * Returns the PDO handle 
+     * Returns the PDO handle
      *
      * @return \PDO
      */
-    public function getHandle() {
-        if(!isset($this->handle)) {
+    public function getHandle()
+    {
+        if (!isset($this->handle)) {
             $connection     = $this->getConnection();
 
             $dsn            = $connection->get('dsn');
@@ -120,16 +121,16 @@ abstract class AbstractPDODriver extends AbstractDriver {
             try {
                 $pdo        = new \PDO($dsn, $user, $password);
                 $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                
-                if(!empty($charset)) {
+
+                if (!empty($charset)) {
                     $pdo->exec(sprintf("SET NAMES %s", $pdo->quote($charset)));
                 }
-                
+
                 $this->handle = $pdo;
                 $this->getConnection()
                         ->notify(new Event(ConnectionEvents::CONNECT));
-                
-            } catch(\PDOException $exc) {
+
+            } catch (\PDOException $exc) {
                 $this->getConnection()->setErrorException($exc);
             }
         }
@@ -143,43 +144,46 @@ abstract class AbstractPDODriver extends AbstractDriver {
      * @alias quote
      * @param string $string
      */
-    public function escape($string) {
-
+    public function escape($string)
+    {
         return $this->getHandle()->quote($string);
     }
 
-    public function getLastInsertId() {
-
+    public function getLastInsertId()
+    {
         return $this->getHandle()->lastInsertId();
     }
-    
-    public function beginTransaction() {
+
+    public function beginTransaction()
+    {
         try {
             return $this->getHandle()->beginTransaction();
-        } catch(\PDOException $exc) {
+        } catch (\PDOException $exc) {
             $this->getConnection()->setErrorException($exc);
         }
-        
+
         return false;
     }
 
-    public function commit() {
+    public function commit()
+    {
         try {
             return $this->getHandle()->commit();
-        } catch(\PDOException $exc) {
+        } catch (\PDOException $exc) {
             $this->getConnection()->setErrorException($exc);
         }
-        
+
         return false;
     }
 
-    public function rollBack() {
+    public function rollBack()
+    {
         try {
             return $this->getHandle()->rollBack();
-        } catch(\PDOException $exc) {
+        } catch (\PDOException $exc) {
             $this->getConnection()->setErrorException($exc);
         }
-        
+
         return false;
     }
 }

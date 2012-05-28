@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -34,17 +34,17 @@ namespace Fwk\Db;
 
 /**
  * Represents a database driver
- * 
+ *
  */
 interface Driver
 {
     /**
-     * Connects to the database 
+     * Connects to the database
      *
      * @return boolean true on success
      */
     public function connect();
-    
+
     /**
      * Ends connection to database
      *
@@ -54,8 +54,8 @@ interface Driver
 
     /**
      * Defines the connection for this driver
-     * 
-     * @param \Fwk\Db\Connection $connection The connection object
+     *
+     * @param  \Fwk\Db\Connection $connection The connection object
      * @return void
      */
     public function setConnection(\Fwk\Db\Connection $connection);
@@ -70,42 +70,42 @@ interface Driver
     /**
      * Executes a query in raw format and return results without transformation
      *
-     * @param mixed $query  Raw query
+     * @param  mixed $query Raw query
      * @return mixed
      */
     public function rawQuery($query);
 
     /**
      * Returns last insert ID if supported by the DB server
-     * 
+     *
      * @return integer
      */
     public function getLastInsertId();
-    
+
     /**
      * Executes an ORM query
-     * 
+     *
      * @return mixed
      */
     public function query(\Fwk\Db\Query $query, array $params = array(), array $options = array());
 
     /**
      * Begins a transaction
-     * 
+     *
      * @return void
      */
     public function beginTransaction();
-    
+
     /**
      * Commits a transaction
-     * 
+     *
      * @return void
      */
     public function commit();
-    
+
     /**
      * Cancel a transaction
-     * 
+     *
      * @return void
      */
     public function rollBack();

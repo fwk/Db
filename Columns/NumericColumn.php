@@ -20,9 +20,9 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * PHP Version 5.3
- * 
+ *
  * @package    Fwk
  * @subpackage Db
  * @author     Julien Ballestracci <julien@nitronet.org>
@@ -34,15 +34,18 @@ namespace Fwk\Db\Columns;
 
 use Fwk\Db\Column;
 
-class NumericColumn extends AbstractColumn implements Column {
-
-    public function getTypedValue($value) {
+class NumericColumn extends AbstractColumn implements Column
+{
+    public function getTypedValue($value)
+    {
         if($this->typeName == 'double')
-                return (double)$value;
+
+                return (double) $value;
 
         elseif(strpos($this->typeName, 'float') !== false)
-                return (float)$value;
 
-        return (int)$value;
+                return (float) $value;
+
+        return (int) $value;
     }
 }
