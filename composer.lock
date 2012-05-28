@@ -4,7 +4,7 @@
         {
             "package": "fwk/Events",
             "version": "dev-master",
-            "source-reference": "ec4880335a20bb45b4ae25d8a9e6317681d00c67"
+            "source-reference": "acfae6635aabfe4ac9ab772e322a611029f4c9f5"
         }
     ],
     "packages-dev": null,

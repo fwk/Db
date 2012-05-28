@@ -33,14 +33,15 @@
  */
 namespace Fwk\Db\Mysql;
 
-use Fwk\Db\Driver;
-use Fwk\Db\Query;
+use Fwk\Db\Driver,
+    Fwk\Db\Query;
+
 /**
- * This class transform a Fwk\Db\Query object into a (my)SQL query string
+ * This class transform a Fwk\Db\Query object into a SQL query string
  *
  */
-class QueryMaker {
-
+class QueryMaker
+{
     /**
      * The driver
      *
@@ -65,10 +66,11 @@ class QueryMaker {
     }
 
 
-    public function execute(Query $query, array $params = array(), array $options = array()) {
+    public function execute(Query $query, array $params = array(), 
+        array $options = array())
+    {
 
         $sql    = $this->getQueryString($query);
-        // echo $sql ."<br />";
         
         if($query->getType() == Query::TYPE_INSERT) {
             $query = $this->driver->rawQuery($sql);

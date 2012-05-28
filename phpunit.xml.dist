@@ -8,6 +8,7 @@
 <testsuites>
   <testsuite name="AllTests">
     <directory>./Tests</directory>
+    <directory>./vendor/fwk/Events/Tests</directory>
   </testsuite>
 </testsuites>
   

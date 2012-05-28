@@ -32,17 +32,12 @@
  */
 namespace Fwk\Db;
 
-
 /**
  * Represents an Object-Oriented SQL-like query interface.
  * 
- * Unlike popular ORM's, this class tries to be SQL compilant as much
- * as possible. There is not special syntax to learn. The API is 
- * quite straightfoward..
- * 
  */
-class Query extends \ArrayObject {
-
+class Query extends \ArrayObject
+{
     const TYPE_SELECT   = 'select';
     const TYPE_DELETE   = 'delete';
     const TYPE_INSERT   = 'insert';
@@ -71,11 +66,11 @@ class Query extends \ArrayObject {
      *
      * @return void
      */
-    public function __construct(array $options = array()) {
+    public function __construct(array $options = array())
+    {
         parent::__construct($options);
         $this->setFlags(self::ARRAY_AS_PROPS);
     }
-
 
     /**
      *
@@ -83,7 +78,8 @@ class Query extends \ArrayObject {
      *
      * @return Query
      */
-    public function select($columns = null) {
+    public function select($columns = null)
+    {
         $this->type = self::TYPE_SELECT;
         $this['select']    = $columns;
 
@@ -91,11 +87,10 @@ class Query extends \ArrayObject {
     }
 
 
-    public function from($table, $alias = null) {
+    public function from($table, $alias = null)
+    {
         if(\strpos($table, ' ') !== false) {
-            $pos    = \strpos($table, ' ');
-            $alias  = \substr($table, $pos+1);
-            $table  = \substr($table, 0, $pos);
+            list($table, $alias) = explode(' ', $table);
         }
 
         $this['from']   = trim($table) . ($alias !== null ? ' '. trim($alias) : null);
@@ -103,13 +98,15 @@ class Query extends \ArrayObject {
         return $this;
     }
 
-    public function setFetchMode($mode) {
+    public function setFetchMode($mode)
+    {
         $this->fetchMode     = $mode;
 
         return $this;
     }
     
-    public function getFetchMode() {
+    public function getFetchMode()
+    {
         
         return $this->fetchMode;
     }
@@ -120,7 +117,8 @@ class Query extends \ArrayObject {
      *
      * @return Query
      */
-    public function delete($table) {
+    public function delete($table)
+    {
         $this->type         = self::TYPE_DELETE;
         $this['delete']     = (string)$table;
 
@@ -133,7 +131,8 @@ class Query extends \ArrayObject {
      *
      * @return Query
      */
-    public function insert($table) {
+    public function insert($table)
+    {
         $this->type         = self::TYPE_INSERT;
         $this['insert']     = (string)$table;
 
@@ -146,7 +145,8 @@ class Query extends \ArrayObject {
      *
      * @return Query
      */
-    public function update($table) {
+    public function update($table)
+    {
         $this->type         = self::TYPE_UPDATE;
         $this['update']     = (string)$table;
 
@@ -158,7 +158,8 @@ class Query extends \ArrayObject {
      * @param string $condition
      * @return Query
      */
-    public function where($condition) {
+    public function where($condition)
+    {
         $this['where']     = $condition;
         return $this;
     }
@@ -169,7 +170,8 @@ class Query extends \ArrayObject {
      *
      * @return Query
      */
-    public function andWhere($condition) {
+    public function andWhere($condition)
+    {
         if(!is_array($this['wheres']))
                 $this['wheres']     = array();
 
@@ -186,12 +188,15 @@ class Query extends \ArrayObject {
      *
      * @return Query
      */
-    public function orWhere($condition) {
+    public function orWhere($condition)
+    {
         if(!is_array($this['wheres']))
                 $this['wheres']     = array();
 
-        $arr = $this['wheres'];
-        array_push($this['wheres'], array('condition' => $condition, 'type' => 'OR'));
+        $arr    = $this['wheres'];
+        array_push($arr, array('condition' => $condition, 'type' => 'OR'));
+        $this['wheres'] = $arr;
+        
         return $this;
     }
 
@@ -201,8 +206,8 @@ class Query extends \ArrayObject {
      *
      * @return Query
      */
-    public function limit($limit) {
-
+    public function limit($limit)
+    {
         $this['limit']      = $limit;
 
         return $this;
@@ -214,14 +219,15 @@ class Query extends \ArrayObject {
      *
      * @return Query
      */
-    public function groupBy($group) {
-
+    public function groupBy($group)
+    {
         $this['groupBy']   = $group;
 
         return $this;
     }
 
-    public function orderBy($column, $order = true) {
+    public function orderBy($column, $order = true)
+    {
         $this['orderBy']    = array('column' => $column, 'order' => $order);
 
         return $this;
@@ -311,5 +317,4 @@ class Query extends \ArrayObject {
 
         return parent::offsetGet($key);
     }
-
 }
