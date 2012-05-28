@@ -1,6 +1,10 @@
 # Fwk Database Tools
 
+[![Build Status](https://secure.travis-ci.org/fwk/Db.png?branch=master)](http://travis-ci.org/fwk/Db)
+
 Powerfull yet Simple ORM for PHP 5.3+
+
+(this package is currently under development and is not suitable for production use)
 
 ## Installation
 
