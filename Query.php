@@ -45,8 +45,10 @@ class Query extends \ArrayObject
 
     const JOIN_INNER    = 'inner';
     const JOIN_LEFT     = 'left';
-    const JOIN_OUTTER   = 'outter';
 
+    const WHERE_AND     = 'and';
+    const WHERE_OR      = 'or';
+    
     const FETCH_SPECIAL = 0;
     const FETCH_OPT     = 1;
 
@@ -206,9 +208,9 @@ class Query extends \ArrayObject
      *
      * @return Query
      */
-    public function limit($limit)
+    public function limit($max, $offset = null)
     {
-        $this['limit']      = $limit;
+        $this['limit'] = array('first' => $offset, 'max' => $max);
 
         return $this;
     }
@@ -226,7 +228,7 @@ class Query extends \ArrayObject
         return $this;
     }
 
-    public function orderBy($column, $order = true)
+    public function orderBy($column, $order = null)
     {
         $this['orderBy']    = array('column' => $column, 'order' => $order);
 

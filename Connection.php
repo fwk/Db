@@ -77,13 +77,6 @@ class Connection extends Dispatcher
     protected $state            = self::STATE_INITIALIZED;
 
     /**
-     * Should this connection throw exceptions or fail silently ?
-     *
-     * @var boolean
-     */
-    protected $throwExceptions  = true;
-
-    /**
      * Tables objects (cache)
      *
      * @var array<Table>
@@ -95,7 +88,6 @@ class Connection extends Dispatcher
      *
      * options:
      *      - autoConnect:  (boolean) should connect on construct (defaults to false)
-     *      - throwExceptions: (boolean) should we throw exceptions or silently fail ?
      *
      * @param array  $options
      *
@@ -104,8 +96,6 @@ class Connection extends Dispatcher
     public function __construct(array $options = array())
     {
         $this->options      = $options;
-
-        $this->throwExceptions($this->get('throwExceptions', true));
 
         if (true === $this->get('autoConnect', false)) {
             $this->connect();
@@ -262,6 +252,7 @@ class Connection extends Dispatcher
     public function getSchema()
     {
         if(!isset($this->schema)) {
+            $this->connect();
             $this->schema = $this->getDriver()
                     ->getSchemaManager()
                     ->createSchema();
@@ -315,15 +306,33 @@ class Connection extends Dispatcher
 
             return $event->results;
         }
-
-        $results = $this->getDriver()->query($query, $params, $options);
+        
+        $bridge = $this->newQueryBrige();
+        $stmt = $bridge->execute($query, $params, $options);
+        $results = $stmt->execute($params);
+        
+        if($query->getType() == Query::TYPE_SELECT) {
+            var_dump($stmt->fetchAll());
+        }
+        
+        $results = array(); /** @todo */
         $event->results = $results;
         $afterEvent = new Event(ConnectionEvents::AFTER_QUERY, $event->getData());
         $this->notify($afterEvent);
 
-        return $afterEvents->results;
+        return $afterEvent->results;
     }
 
+    
+    /**
+     * 
+     * @return QueryBridge 
+     */
+    public function newQueryBrige()
+    {
+        return new QueryBridge($this);
+    }
+    
     /**
      * Defines current state
      *
@@ -359,25 +368,11 @@ class Connection extends Dispatcher
     }
 
     /**
-     * Should this connection throw exceptions or fail silently ?
-     *
-     * @param  boolean    $boolean
-     * @return Connection
-     */
-    public function throwExceptions($boolean)
-    {
-        $this->throwExceptions  = $boolean;
-
-        return $this;
-    }
-
-    /**
      * Sets an error Exception and throws it
      *
-     * @see throwExceptions
      * @param \Exception $e
      *
-     * @return Connection
+     * @return void
      */
     public function setErrorException(\Exception $e)
     {
@@ -387,11 +382,7 @@ class Connection extends Dispatcher
             'exception' => $e
         )));
 
-        if ($this->throwExceptions) {
-            throw $e;
-        }
-
-        return $this;
+        throw $e;
     }
 
     /**

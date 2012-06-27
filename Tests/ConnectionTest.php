@@ -80,6 +80,11 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('\Fwk\Db\Table', $tbl);
     }
     
+    public function testNewQueryBridge()
+    {
+        $this->assertInstanceOf('\Fwk\Db\QueryBridge', $this->object->newQueryBrige());
+    }
+    
     protected function prepareTestTable()
     {
         $schema = $this->object->getSchema();

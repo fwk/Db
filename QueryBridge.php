@@ -25,29 +25,33 @@
  *
  * @package    Fwk
  * @subpackage Db
- * @subpackage Mysql
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link       http://www.phpfwk.com
  */
-namespace Fwk\Db\Mysql;
+namespace Fwk\Db;
 
-use Fwk\Db\Driver,
-    Fwk\Db\Query;
+use Fwk\Db\Connection,
+    Fwk\Db\Query,
+    Doctrine\DBAL\Query\QueryBuilder;
 
 /**
  * This class transform a Fwk\Db\Query object into a SQL query string
  *
  */
-class QueryMaker
+class QueryBridge
 {
+    const STATE_INIT    = 0;
+    const STATE_READY   = 1;
+    const STATE_ERROR   = 2;
+    
     /**
-     * The driver
+     * The Connection
      *
-     * @var \Fwk\Db\Drivers\Driver
+     * @var Connection
      */
-    protected $driver;
+    protected $connection;
 
     /**
      *
@@ -60,71 +64,69 @@ class QueryMaker
      * @var array
      */
     protected $columnsAliases;
+    
+    /**
+     *
+     * @var QueryBuilder 
+     */
+    protected $handle;
+    
+    protected $state = self::STATE_INIT;
+    
+    protected $queryString;
 
-    public function __construct(Driver $driver)
+    public function __construct(Connection $connection)
     {
-        $this->driver       = $driver;
-    }
+        $this->connection = $connection;
+    } 
 
+    /**
+     *
+     * @param Query $query
+     * @param array $params
+     * @param array $options
+     * @return \Doctrine\DBAL\Query\QueryBuilder 
+     */
     public function execute(Query $query, array $params = array(),
         array $options = array())
     {
-
-        $sql    = $this->getQueryString($query);
-
-        if ($query->getType() == Query::TYPE_INSERT) {
-            $query = $this->driver->rawQuery($sql);
-
-            return $query;
+        
+        $sql = $this->prepare($query);
+        
+        $this->queryString = $sql = $this->prepare($query);
+        
+        if($query->getType() == Query::TYPE_INSERT) {
+            return $this->connection->getDriver()->executeUpdate($sql, $params);
         }
-
-        $stmt = $this->driver->getHandle()->prepare($sql, $params);
-        $x = $stmt->execute($params);
-
-        if ($query->getType() == Query::TYPE_SELECT) {
-            $mode = \PDO::FETCH_ASSOC;
-
-            if($query->getFetchMode() == Query::FETCH_OPT)
-                $mode = $query['fetchMode'];
-
-            $res = $stmt->fetchAll($mode);
-
-            return $res;
-        }
-
-        return $x;
-    }
-
-    /**
-     * Returns the SQL representation of the query
-     *
-     * @param  Query  $query
-     * @return string
-     */
-    public function getQueryString(Query $query)
-    {
-        return $this->prepare($query);
+        
+        $this->handle->setParameters($params);
+        return $this->handle->execute();
     }
 
     /**
      *
      * @param Query $query
      *
-     * @return string
+     * @return void
      */
     public function prepare(Query $query)
     {
-        $type = $query->getType();
+        if($this->state !== self::STATE_INIT) {
+            return;
+        }
+        
+        $this->handle   = $this->connection->getDriver()->createQueryBuilder();
+        $type           = $query->getType();
         switch ($type) {
             case Query::TYPE_DELETE:
-                $parts = array(
+                $parts  = array(
                     'delete' => true
                 );
                 $call = array($this, 'deleteQuery');
                 break;
 
             case Query::TYPE_INSERT:
-                $parts = array(
+                $parts  = array(
                     'insert' => true,
                     'values' => true
                 );
@@ -132,7 +134,7 @@ class QueryMaker
                 break;
 
             case Query::TYPE_SELECT:
-                $parts = array(
+                $parts  = array(
                     'select' => true,
                     'from' => true
                 );
@@ -147,40 +149,23 @@ class QueryMaker
                 break;
 
             default:
-                throw new \RuntimeException(sprintf('QueryMaker: unknown query type "%s"', (string) $type));
+                throw new Exception(sprintf('Unknown query type "%s"', (string)$type));
         }
 
         foreach ($parts as $part => $required) {
-            if ($required == true && !$query->offsetExists($part))
-                throw new \RuntimeException (sprintf('QueryMaker: missing required part "%s"', $part));
+            if ($required == true && !$query->offsetExists($part)) {
+                throw new Exception(sprintf('Missing required query part "%s"', $part));
+            }
         }
 
         $table = $query['from'];
-        $schema = $this->driver->getConnection()->getSchema();
-
-        if (!empty($table)) {
-            if(strpos($table, ' '))
-                    list($table, ) = explode(' ', $table);
-
-            $decl   = $schema->getDeclaredEntity($table);
-            $query->entity($decl);
-        }
 
         if (!empty($query['entity']) && $query['entity'] != "\stdClass") {
-            $load   = \Fwk\Loader::getInstance()->load($query['entity']);
-            if(!$load)
-                throw new \RuntimeException (sprintf('Unable to load entity class "%s"', $query['entity']));
-
             $obj        = new $query['entity'];
-            $access     = new \Fwk\Db\Entity\Accessor($obj);
+            $access     = new Accessor($obj);
             $relations  = $access->getRelations();
 
             foreach ($relations as $colName => $relation) {
-                $tblName = $relation->getTableName();
-                $ent     = $relation->getEntityClass();
-                if ($ent == null || $ent == "\stdClass") {
-                    $relation->setEntityClass($schema->getDeclaredEntity($tblName));
-                }
                 $relation->prepare($query, $colName);
             }
         }
@@ -190,26 +175,21 @@ class QueryMaker
 
     /**
      *
-     * @return string
+     * @return void
      */
     public function selectQuery(Query $query)
     {
-        $str = "SELECT";
-
         $queryJoins = $query['joins'];
 
-        $from = $this->getSelectFrom($query['from'], $queryJoins);
-        $columns = $this->getSelectColumns($query['select'], $query['from'], $query, $queryJoins);
-        $joins = (isset($query['joins']) ? $this->getSelectJoins($queryJoins) : null);
-        $where = (isset($query['where']) ? $this->getWhere($query) : null);
-        $groupBy = (isset($query['groupBy']) ? $this->getGroupBy($query['groupBy']) : null);
-        $orderBy = (isset($query['orderBy']) ? $this->getOrderBy($query['orderBy']) : null);
-        $limit = (isset($query['limit']) ? $this->getLimit($query['limit']) : null);
-        $query = implode(' ', array($str, $columns, $from, $joins, $where, $orderBy, $groupBy, $limit));
-
-        // echo $query . '<br />';
-
-        return $query;
+        $this->getSelectFrom($query['from'], $queryJoins);
+        $this->getSelectColumns($query['select'], $query['from'], $query, $queryJoins);
+        if(isset($query['joins'])) { $this->getSelectJoins($queryJoins); }
+        if(isset($query['where'])) { $this->getWhere($query); }
+        if(isset($query['groupBy'])) { $this->getGroupBy($query['groupBy']); }
+        if(isset($query['orderBy'])) { $this->getOrderBy($query['orderBy']); }
+        if(isset($query['limit'])) { $this->getLimit($query['limit']); }
+        
+        return $this->handle->getSQL();
     }
 
     /**
@@ -218,21 +198,18 @@ class QueryMaker
      */
     public function deleteQuery(Query $query)
     {
-        $str = "DELETE";
-
-        $from = $this->getFrom($query['delete'], $query->getType());
-        $where = (isset($query['where']) ? $this->getWhere($query) : null);
-        $limit = (isset($query['limit']) ? $this->getLimit($query['limit']) : null);
-
-        if ($where === null && $limit === null) {
-            $table = $query['delete'];
-            if($table instanceof \Fwk\Db\Table)
-                $table = $table->getName();
-
-            return sprintf('TRUNCATE TABLE `%s`', $table);
+        $from = $query['delete'];
+        if(strpos($from,' ')) {
+            list($from, $alias) = explode(' ', $from);
+        } else {
+            $alias = null;
         }
-
-        return implode(' ', array($str, $from, $where, $limit));
+        
+        $this->handle->delete($from, $alias);
+        if(isset($query['where'])) { $this->getWhere($query); }
+        if(isset($query['limit'])) { $this->getLimit($query['limit']); }
+        
+        return $this->handle->getSQL();
     }
 
     /**
@@ -241,16 +218,18 @@ class QueryMaker
      */
     public function updateQuery(Query $query)
     {
-        $str = "UPDATE";
-
-        $from = $this->getFrom($query['update'], $query->getType());
-        $set = $this->getUpdateSet($query['values']);
-        $where = (isset($query['where']) ? $this->getWhere($query) : null);
-        $limit = (isset($query['limit']) ? $this->getLimit($query['limit']) : null);
-
-        $query = implode(' ', array($str, $from, $set, $where, $limit));
-
-        return $query;
+        $update = $query['update'];
+        if(strpos($update,' ')) {
+            list($update, $alias) = explode(' ', $update);
+        } else {
+            $alias = null;
+        }
+        $this->handle->update($update, $alias);
+        $this->getUpdateSet($query['values']);
+        if(isset($query['where'])) { $this->getWhere($query); }
+        if(isset($query['limit'])) { $this->getLimit($query['limit']); }
+        
+        return $this->handle->getSQL();
     }
 
     /**
@@ -260,13 +239,14 @@ class QueryMaker
     public function insertQuery(Query $query)
     {
         $str = "INSERT INTO";
+        
+        $table = $query['insert'];
+        if($table instanceof Table)
+            $table = $table->getName();
 
-        $from = $this->getFrom($query['insert']);
         $vals = $this->getInsertValues($query['values']);
 
-        $query = implode(' ', array($str, $from, $vals));
-
-        //echo $query;
+        $query = implode(' ', array($str, $table, $vals));
 
         return $query;
     }
@@ -282,7 +262,7 @@ class QueryMaker
 
         $col = $this->getColumnAlias($column);
 
-        return sprintf("ORDER BY %s %s",  $col, ($order == true ? 'ASC' : 'DESC'));
+        $this->handle->orderBy($col, $order);
     }
 
     protected function getSelectJoins(array $joins)
@@ -295,49 +275,32 @@ class QueryMaker
         foreach ($joins as $join) {
 
             $type = $join['type'];
-            if($type == Query::JOIN_LEFT)
-                $str .= 'LEFT JOIN ';
+            $table = $join['table'];
+            if(strpos($table, ' ') !== false) {
+                list($table, ) = explode(' ', $table);
+            } 
 
-            elseif($type == Query::JOIN_INNER)
-                $str .= 'INNER JOIN ';
-
-            elseif($type == Query::JOIN_OUTTER)
-                $str .= 'OUTTER JOIN ';
-
-            else
-                throw new  \Exception(sprintf('Unknown join type "%s"', $type));
-
+            $fromAlias = $this->getTableAlias(array_shift(array_keys($this->tablesAliases)));
+            $alias = $this->getTableAlias($table);
             $local = $join['local'];
             $foreign = $join['foreign'];
 
-            if (strpos($join['table'], ' ') !== false) {
-                $tIdx = \explode(' ', $join['table']);
-                $join['table'] = $tIdx[0];
+            if(\strpos($foreign, '.') === false) {
+                $foreign = $alias .'.'. $foreign;
             }
 
-            if (\strpos($foreign, '.') === false) {
-                $foreign = $this->getTableAlias($join['table']) .'.'. $foreign;
+            if(\strpos($local, '.') === false) {
+                $local = $fromAlias .'.'. $local;
             }
-
-            if (\strpos($local, '.') === false) {
-                $local = $this->getTableAlias($defaultTable) .'.'. $local;
+            
+            $cond = sprintf('%s = %s', $local, $foreign);
+            if($type == Query::JOIN_LEFT) {
+                $this->handle->leftJoin($fromAlias, $table, $alias, $cond);
             }
-
-            if (strpos($join['table'], ' ') !== false) {
-                $tIdx = \explode(' ', $join['table']);
-                $join['table'] = $tIdx[0];
+            else {
+                $this->handle->join($fromAlias, $table, $alias, $cond);
             }
-
-            $str .= sprintf('%s %s ON %s = %s ',
-                                $join['table'],
-                                $this->getTableAlias($join['table']),
-                                $local,
-                                $foreign
-                    );
         }
-
-        return trim($str);
-
     }
 
     protected function getInsertValues(array $values)
@@ -364,7 +327,7 @@ class QueryMaker
 
             return 'NULL';
 
-        return $this->driver->escape((string) $value);
+        return $this->connection->getDriver()->quote((string) $value);
     }
 
     /**
@@ -375,19 +338,9 @@ class QueryMaker
      */
     protected function getUpdateSet(array $values)
     {
-        if(!count($values))
-
-            return '';
-
-        $str = "SET";
-        $driver = $this->driver;
-        $final = array();
         foreach ($values as $key => $value) {
-            $value = $this->getCleanInsertValue($value);
-            array_push($final, "`$key` =$value");
+            $this->handle->set($key, $value);
         }
-
-        return $str . ' ' . implode(', ', $final);
     }
 
     /**
@@ -424,23 +377,10 @@ class QueryMaker
                 \array_push($final, $column['column'] .' AS '. $alias);
         }
 
-        return \implode(', ', $final);
+        $this->handle->select(\implode(', ', $final));
     }
 
 
-    /**
-     *
-     * @param mixed $table
-     *
-     * @return string
-     */
-    protected function getFrom($table, $type = Query::TYPE_SELECT)
-    {
-        if($table instanceof Table)
-            $table = $table->getName();
-
-        return ($type == Query::TYPE_DELETE ? 'FROM ' : '') . $table;
-    }
 
     /**
      *
@@ -467,61 +407,74 @@ class QueryMaker
     /**
      *
      * @param mixed $tables
+     * @param array $joins
      *
-     * @return string
+     * @return void
      */
     protected function getSelectFrom($tables, $joins = null)
     {
-        if (is_string($tables) && \strpos($tables, ',') !== false)
+        if (is_string($tables) && \strpos($tables, ',') !== false) {
             $tables = \explode(',', $tables);
+        }
 
-        if (!is_array($tables))
+        if (!is_array($tables)) {
             $tables = array($tables);
-
+        }
+        
         $joinned = array();
-        if (is_array($joins) && count($joins)) {
-
+        if (is_array($joins)) {
+            $js = $joins;
             foreach ($joins as $k => $join) {
-
                 array_push($tables, $join['table']);
-
+                
                 if (strpos($join['table'], ' ') !== false) {
-                    $tIdx = explode(' ', $join['table']);
-                    $join['table'] = $tIdx[0];
-
-                    $js = $joins;
-                    $js[$k]['table'] = $tIdx[0];
-                    $query['joins'] = $js;
+                    list($tble,$alias) = explode(' ', $join['table']);
+                    $join['table'] = $tble;
                 }
-
+                else {
+                    $tble = $join['table'];
+                    $alias = 'j'. (is_array($this->tablesAliases) ? count($this->tablesAliases) : '0');
+                }
+                
+                $js[$k]['table'] = $tble;
+                $js[$k]['alias'] = $alias;
+                
                 array_push($joinned, $join['table']);
+            }
+            $query['joins'] = $js;
+        }
+
+        $tbls = array();
+        foreach ($tables as $table) {
+            if($table instanceof Table) {
+                $table = $table->getName();
+            }
+            
+            $table = trim($table);
+            if (\strpos($table, ' ') !== false) {
+                list($table, $alias) = \explode(' ', $table);
+            }
+            else {
+                if(\is_array($this->tablesAliases)) {
+                    $alias = array_search($table, $this->tablesAliases);
+                    if(!$alias) {
+                        $alias = 't'. count($this->tablesAliases);
+                    }
+                } else {
+                    $alias = 't0';
+                }
+            }
+            
+            $this->tablesAliases[trim($alias)] = trim($table);
+            
+            if(!in_array($table, $joinned)) {
+                \array_push($tbls, array('table' => $table, 'alias' => $alias));
             }
         }
 
-        $passed = array();
-        $tbls = array();
-
-        foreach ($tables as $table) {
-            if($table instanceof Table)
-                $table = $table->getName();
-
-            $table = trim($table);
-            if (\strpos($table, ' ') !== false)
-                list($table, $alias) = \explode(' ', $table);
-
-            else
-                $alias = 't' . (\is_array($this->tablesAliases) ? count($this->tablesAliases) : '0');
-
-            if(\in_array($table, $passed))
-                    continue;
-
-            $this->tablesAliases[trim($alias)] = trim($table);
-
-            if(!in_array($table, $joinned))
-                \array_push($tbls, \implode(' ', array($table, $alias)));
+        foreach($tbls as $infos) {
+            $this->handle->from($infos['table'], $infos['alias']);
         }
-
-       return 'FROM '. implode(', ', $tbls);
     }
 
 
@@ -531,12 +484,12 @@ class QueryMaker
      */
     protected function getTableAlias($tableName)
     {
-        if(!is_array($this->tablesAliases))
-
-                return $tableName;
-
+        if(!is_array($this->tablesAliases)) {
+           return $tableName;
+        }
+        
         $k = \array_search($tableName, $this->tablesAliases);
-
+        
         return (false === $k ? $tableName : $k);
     }
 
@@ -549,6 +502,8 @@ class QueryMaker
      */
     protected function getSelectColumnsFromTables($tables, $joins = null)
     {
+        srand();
+        
         if (is_string($tables) && \strpos($tables, ',') !== false)
             $tables = \explode(',', $tables);
 
@@ -566,8 +521,7 @@ class QueryMaker
              if (is_string($table) && \strpos($table, ' ') !== false)
                 list($table, ) = \explode(' ', $table);
 
-
-            $cols = $this->driver->getConnection()->table($table)->getColumns();
+            $cols = $this->connection->table($table)->getColumns();
             foreach ($cols as $column) {
                 $colName = $column->getName();
                 $asName = 'c'. \rand(1000, 9999);
@@ -694,18 +648,19 @@ class QueryMaker
         $where = $query['where'];
         $wheres = $query['wheres'];
 
-        $str =  "WHERE $where";
-
+        $this->handle->where($where);
+        
         if(!is_array($wheres) OR !count($wheres))
-
-            return $str;
+            return;
 
         $whs = array();
         foreach ($wheres as $w) {
-           \array_push($whs, $w['type'] .' '. $w['condition']);
+            if($w['type'] == Query::WHERE_OR) {
+                $this->handle->orWhere($w['condition']);
+            } else {
+                $this->handle->andWhere($w['condition']);
+            }
         }
-
-        return $str . ' ' .\implode(' ', $whs);
     }
 
     /**
@@ -714,9 +669,13 @@ class QueryMaker
      *
      * @return string
      */
-    protected function getLimit($limit)
+    protected function getLimit(array $limit)
     {
-        return "LIMIT $limit";
+        if($limit['first'] !== null) {
+            $this->handle->setFirstResult($limit['first']);
+        } 
+        
+        $this->handle->setMaxResults($limit['max']);
     }
 
     /**
@@ -727,6 +686,6 @@ class QueryMaker
      */
     protected function getGroupBy($groupBy)
     {
-        return "GROUP BY $groupBy";
+        $this->handle->groupBy($groupBy);
     }
 }
