@@ -12,7 +12,8 @@
     ],
     "require": {
         "php": ">=5.3.0",
-        "fwk/Events": "dev-master"
+        "fwk/Events": "dev-master",
+        "doctrine/dbal": "dev-master"
     },
     "autoload": {
         "psr-0": {

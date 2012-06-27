@@ -8,7 +8,7 @@ namespace Fwk\Db;
 class ConnectionTest extends \PHPUnit_Framework_TestCase {
 
     /**
-     * @var EventDispatcher
+     * @var Connection
      */
     protected $object;
 
@@ -18,26 +18,13 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
      */
     protected function setUp()
     {
-        $schema = require __DIR__ .'/resources/testDatabaseSchema.php';
-        $driver = new Testing\Driver();
-
-        $this->object = new Connection($driver, $schema, array(
-
+        $this->object = new Connection(array(
+            'memory'    => true,
+            'driver'    => 'pdo_sqlite'
         ));
     }
 
-    public function testTableFail()
-    {
-        $this->setExpectedException('\Fwk\Db\Exceptions\TableNotFound');
-        $this->object->table('nonExistantTable');
-    }
-
-    public function testTableOk()
-    {
-        $table = $this->object->table(TEST_TABLE_1);
-        $this->assertTrue(($table instanceof Table));
-    }
-
+    
     public function testConnect()
     {
         $this->assertFalse($this->object->isConnected());
@@ -47,15 +34,19 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
 
     public function testOptions()
     {
-        $this->assertEquals(array(), $this->object->getOptions());
+        $this->assertEquals(array('memory' => true, 'driver' => 'pdo_sqlite'), $this->object->getOptions());
         $this->object->setOptions(array(
             'testOpt1' => "value1",
             'testOpt2' => "value2"
         ));
+        
         $this->assertEquals(array(
+            'memory'    => true,
+            'driver'    => 'pdo_sqlite',
             'testOpt1' => "value1",
             'testOpt2' => "value2"
         ), $this->object->getOptions());
+        
         $this->assertEquals("value2", $this->object->get('testOpt2'));
         $this->object->setOptions(array(
             'testOpt2' => "merged"
@@ -64,5 +55,39 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->object->set('testOpt1', "override");
         $this->assertEquals("override", $this->object->get('testOpt1'));
         $this->assertEquals("default", $this->object->get('inexistant', "default"));
+    }
+    
+    public function testDisconnect()
+    {
+        $this->assertTrue($this->object->disconnect());
+        $this->assertFalse($this->object->isConnected());
+        $this->assertTrue($this->object->connect());
+        $this->assertTrue($this->object->isConnected());
+        $this->assertTrue($this->object->disconnect());
+        $this->assertFalse($this->object->isConnected());
+    }
+    
+    public function testTableNotExists()
+    {
+        $this->setExpectedException('\Fwk\Db\Exceptions\TableNotFound');
+        $this->object->table('nonExistant');
+    }
+    
+    public function testTable()
+    {
+        $this->prepareTestTable();
+        $tbl = $this->object->table('test_table');
+        $this->assertInstanceOf('\Fwk\Db\Table', $tbl);
+    }
+    
+    protected function prepareTestTable()
+    {
+        $schema = $this->object->getSchema();
+        
+        $myTable = $schema->createTable("test_table");
+        $myTable->addColumn("id", "integer", array("unsigned" => true));
+        $myTable->addColumn("username", "string", array("length" => 32));
+        $myTable->setPrimaryKey(array("id"));
+        $myTable->addUniqueIndex(array("username"));
     }
 }

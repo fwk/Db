@@ -1,10 +1,35 @@
 {
-    "hash": "44e9ec02cbf345d9348b390662181bd7",
+    "hash": "e0386f44b31ae2c32da95c20d89904a5",
     "packages": [
+        {
+            "package": "doctrine/common",
+            "version": "dev-master",
+            "alias-pretty-version": "2.3.x-dev",
+            "alias-version": "2.3.9999999.9999999-dev"
+        },
+        {
+            "package": "doctrine/common",
+            "version": "dev-master",
+            "source-reference": "8df9cdf3b921a3b59bbba51d5ba9063509ef6a1a",
+            "commit-date": "1340561340"
+        },
+        {
+            "package": "doctrine/dbal",
+            "version": "dev-master",
+            "alias-pretty-version": "2.3.x-dev",
+            "alias-version": "2.3.9999999.9999999-dev"
+        },
+        {
+            "package": "doctrine/dbal",
+            "version": "dev-master",
+            "source-reference": "570b0983f12f577d2a7335f256faa882e2555d25",
+            "commit-date": "1340747203"
+        },
         {
             "package": "fwk/Events",
             "version": "dev-master",
-            "source-reference": "acfae6635aabfe4ac9ab772e322a611029f4c9f5"
+            "source-reference": "acfae6635aabfe4ac9ab772e322a611029f4c9f5",
+            "commit-date": "1338242176"
         }
     ],
     "packages-dev": null,
@@ -13,6 +38,7 @@
     ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "fwk/events": 20
+        "fwk/events": 20,
+        "doctrine/dbal": 20
     }
 }

@@ -25,49 +25,15 @@
  *
  * @package    Fwk
  * @subpackage Db
+ * @subpackage Exceptions
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link       http://www.phpfwk.com
  */
-namespace Fwk\Db;
+namespace Fwk\Db\Exceptions;
 
-use Fwk\Db\Connection;
+use Fwk\Db\Exception;
 
-abstract class AbstractDriver
-{
-    /**
-     * The connection
-     *
-     * @var Connection
-     */
-    protected $connection;
+class ConnectionError extends Exception { }
 
-    /**
-     * Returns the connection
-     *
-     * @return Connection
-     */
-    public function getConnection()
-    {
-        if (!isset($this->connection)) {
-            throw new Exception(sprintf('No connection defined for this driver'));
-        }
-
-        return $this->connection;
-    }
-
-    /**
-     * Defines a connection to handle
-     *
-     * @param  Connection $connection
-     * @return Driver
-     */
-    public function setConnection(Connection $connection)
-    {
-        $this->connection   = $connection;
-
-        return $this;
-    }
-
-}

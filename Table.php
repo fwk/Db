@@ -42,13 +42,6 @@ class Table
     protected $name;
 
     /**
-     * Columns
-     *
-     * @var array<Column>
-     */
-    protected $columns = array();
-
-    /**
      * Connection
      *
      * @var Connection
@@ -87,53 +80,17 @@ class Table
     }
 
     /**
-     * Adds a column to this table;
-     *
-     * @param Column $column
-     *
-     * @throws Exceptions\DuplicateTableColumn
-     *
-     * @return Table
-     */
-    public function addColumn(Column $column)
-    {
-        if ($this->hasColumn($column->getName())) {
-            throw new Exceptions\DuplicateTableColumn(
-                sprintf('Column "%s" already exists on table "%s"',
-                    $column->getName(),
-                    $this->getName()
-                )
-            );
-        }
-
-        $this->columns[$column->getName()]      = $column;
-
-        return $this;
-    }
-
-    /**
-     * Adds multiple columns at once
-     *
-     * @param  array $columns
-     * @return Table
-     */
-    public function addColumns(array $columns)
-    {
-        foreach ($columns as $column) {
-            $this->addColumn($column);
-        }
-
-        return $this;
-    }
-
-    /**
      * Returns all columns from this table
      *
      * @return array
      */
     public function getColumns()
     {
-        return $this->columns;
+        return $this
+                ->getConnection()
+                ->getSchema()
+                ->getTable($this->name)
+                ->getColumns();
     }
 
     /**
@@ -195,14 +152,26 @@ class Table
     public function getIdentifiersKeys()
     {
         if (!isset($this->identifiersKey)) {
-            $columns = $this->columns;
+            $idx = $this
+                    ->getConnection()
+                    ->getSchema()
+                    ->getTable($this->name)
+                    ->getIndexes();
+            
+            if(!count($idx)) {
+                throw new Exceptions\TableLacksIdentifiers(
+                    sprintf('"%s" has no indexes', $this->name)
+                );
+            }
+            
             $final = array();
-            foreach ($columns as $column) {
-                if ($column->isPrimary()) {
-                    array_push($final, $column->getName());
+            foreach($idx as $index) {
+                if($index->isPrimary()) {
+                    $final += $index->getColumns();
                 }
             }
-
+            
+            $final = array_unique($final);
             if (!count($final)) {
                 throw new Exceptions\TableLacksIdentifiers(
                     sprintf('"%s" has no identifiers key(s)', $this->name)
@@ -233,11 +202,12 @@ class Table
      * Returns an object representation of a given column
      *
      * @param  string $columnName
-     * @return Column
+     * @return \Doctrine\DBAL\Schema\Column
      */
     public function getColumn($columnName)
     {
-        if (!isset($this->columns[$columnName])) {
+        
+        if (!$this->hasColumn($columnName)) {
             throw new Exceptions\TableColumnNotFound(
                 sprintf('Unknown Column "%s" on table %s',
                     $columnName,
@@ -246,13 +216,19 @@ class Table
             );
         }
 
-        return $this->columns[$columnName];
+        return $this->getConnection()
+                    ->getSchema()
+                    ->getTable($this->name)
+                    ->getColumn($columnName);
     }
 
     public function hasColumn($columnName)
     {
-
-        return isset($this->columns[$columnName]);
+        $tbl = $this->getConnection()
+                    ->getSchema()
+                    ->getTable($this->name);
+        
+        return $tbl->hasColumn($columnName);
     }
 
     public function setDefaultEntity($entityClass)
@@ -265,9 +241,7 @@ class Table
     public function getDefaultEntity()
     {
         if (!isset($this->defaultEntity)) {
-            $this->defaultEntity = $this->getConnection()
-                                       ->getSchema()
-                                       ->getDeclaredEntity($this->name);
+            $this->defaultEntity = '\stdClass';
         }
 
         return $this->defaultEntity;

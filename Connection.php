@@ -33,7 +33,9 @@
 namespace Fwk\Db;
 
 use Fwk\Events\Dispatcher,
-    Fwk\Events\Event;
+    Fwk\Events\Event, 
+    Doctrine\DBAL\Connection as DbalConnection,
+    Doctrine\DBAL\DriverManager;
 
 /**
  * Represents a Connection to a database
@@ -52,17 +54,18 @@ class Connection extends Dispatcher
      * @var array
      */
     protected $options = array();
+    
     /**
      * Driver object
      *
-     * @var Driver
+     * @var DbalConnection
      */
     protected $driver;
-
+    
     /**
-     * Database Schema
-     *
-     * @var Schema
+     * Schema object
+     * 
+     * @var \Doctrine\DBAL\Schema\Schema
      */
     protected $schema;
 
@@ -88,31 +91,19 @@ class Connection extends Dispatcher
     protected $tables;
 
     /**
-     * Are we connected yet ?
-     *
-     * @var boolean
-     */
-    protected $connected;
-
-    /**
      * Constructor with generic configuration parameters (array)
      *
      * options:
      *      - autoConnect:  (boolean) should connect on construct (defaults to false)
      *      - throwExceptions: (boolean) should we throw exceptions or silently fail ?
      *
-     * @param Driver $driver
-     * @param Schema $schema
      * @param array  $options
      *
      * @return void
      */
-    public function __construct(Driver $driver, Schema $schema,
-        array $options = array())
+    public function __construct(array $options = array())
     {
         $this->options      = $options;
-        $this->schema       = $schema;
-        $this->driver       = $driver;
 
         $this->throwExceptions($this->get('throwExceptions', true));
 
@@ -124,16 +115,36 @@ class Connection extends Dispatcher
     /**
      * Establish connection with database
      *
+     * @throws Fwk\Db\Exceptions\ConnectionError
+     * 
      * @return boolean
      */
     public function connect()
     {
-        $connected = $this->getDriver()->connect();
-        if ($connected && !$this->isConnected()) {
-            $this->state = self::STATE_CONNECTED;
+        if(!$this->isConnected()) {
+            try {
+                $dbal = $this->getDriver();
+                $res  = $dbal->connect();
+            } catch(\Doctrine\DBAL\DBALException $e) {
+            } catch(\PDOException $e) {
+                $this->setErrorException(new Exceptions\ConnectionError($e->getMessage()));
+                return false;
+            }
+            
+            if(!$res) {
+                $this->setErrorException(new Exceptions\ConnectionError());
+                return false;
+            }
+            
+            $this->setState(self::STATE_CONNECTED);
+            $event = new Event(ConnectionEvents::CONNECT, array(
+                'connection'     => $this,
+            ));
+
+            $this->notify($event);
         }
 
-        return $connected;
+        return true;
     }
 
     /**
@@ -147,12 +158,22 @@ class Connection extends Dispatcher
             return true;
         }
 
-        $closed = $this->getDriver()->disconnect();
-        if ($closed) {
-            $this->state = self::STATE_DISCONNECTED;
+        try {
+            $dbal = $this->getDriver();
+            $dbal->close();
+        } catch(\Doctrine\DBAL\DBALException $e) {
+        } catch(\PDOException $e) {
+            $this->setErrorException(new Exceptions\ConnectionError($e->getMessage()));
         }
 
-        return $closed;
+        $this->setState(self::STATE_DISCONNECTED);
+        $event = new Event(ConnectionEvents::DISCONNECT, array(
+            'connection'     => $this,
+        ));
+
+        $this->notify($event);
+
+        return true;
     }
 
     /**
@@ -211,26 +232,45 @@ class Connection extends Dispatcher
     }
 
     /**
-     * Returns the driver for this connection
+     * Returns the DBAL instance for this connection
      *
-     * @return Driver
+     * @return DbalConnection
      */
     public function getDriver()
     {
-
+        if(!isset($this->driver)) {
+            $this->driver = DriverManager::getConnection($this->options);
+        }
+        
         return $this->driver;
     }
 
     /**
-     * Returns the defined database schema
+     * Defines a driver
+     * 
+     * @param DbalConnection $driver 
+     */
+    public function setDriver(DbalConnection $driver)
+    {
+        $this->driver = $driver;
+    }
+    
+    /**
      *
-     * @return Schema
+     * @return \Doctrine\DBAL\Schema\Schema
      */
     public function getSchema()
     {
+        if(!isset($this->schema)) {
+            $this->schema = $this->getDriver()
+                    ->getSchemaManager()
+                    ->createSchema();
+        }
+        
         return $this->schema;
     }
 
+        
     /**
      * Tells if the connection is established
      *
@@ -366,9 +406,7 @@ class Connection extends Dispatcher
     public function table($tableName)
     {
         if (!isset($this->tables[$tableName])) {
-            $table      = $this->getSchema()->getTable($tableName);
-
-            if (!$table instanceof Table) {
+            if(!$this->getSchema()->hasTable($tableName)) {
                 $this->setErrorException(
                     new Exceptions\TableNotFound(
                         sprintf('Inexistant table "%s"', $tableName)
@@ -377,8 +415,10 @@ class Connection extends Dispatcher
 
                 return false;
             }
-
+            
+            $table = new Table($tableName);
             $table->setConnection($this);
+            
             $this->tables[$tableName]   = $table;
         }
 
@@ -388,7 +428,7 @@ class Connection extends Dispatcher
     public function lastInsertId()
     {
 
-        return $this->getDriver()->getLastInsertId();
+        return $this->getDriver()->lastInsertId();
     }
 
     /**
@@ -398,7 +438,6 @@ class Connection extends Dispatcher
      */
     public function beginTransaction()
     {
-
         $this->getDriver()->beginTransaction();
 
         return $this;
@@ -428,5 +467,4 @@ class Connection extends Dispatcher
 
         return $this;
     }
-
 }

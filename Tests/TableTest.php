@@ -21,20 +21,27 @@ class TableTest extends \PHPUnit_Framework_TestCase {
 
     public function __construct()
     {
-        $schema = require __DIR__ .'/resources/testDatabaseSchema.php';
-        $driver = new Testing\Driver();
-
-        $this->connection = new Connection($driver, $schema, array(
-
+        $this->connection = new Connection(array(
+            'memory'    => true,
+            'driver'    => 'pdo_sqlite'
         ));
+        
+        $schema = $this->connection->getSchema();
+        
+        $myTable = $schema->createTable("test_table");
+        $myTable->addColumn("id", "integer", array("unsigned" => true));
+        $myTable->addColumn("username", "string", array("length" => 32));
+        $myTable->setPrimaryKey(array("id"));
+        $myTable->addUniqueIndex(array("username"));
     }
+    
     /**
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
      */
     protected function setUp()
     {
-        $this->object = new Table('testTable');
+        $this->object = new Table('test_table');
     }
 
     /**
@@ -48,34 +55,20 @@ class TableTest extends \PHPUnit_Framework_TestCase {
 
     /**
      */
-    public function testAddColumn()
+    public function testGetColumnsFail()
     {
-        $this->assertEquals($this->object, $this->object->addColumn(new Columns\TextColumn('test', 'varchar')));
-        $this->setExpectedException('\Fwk\Db\Exceptions\DuplicateTableColumn');
-        $this->object->addColumn(new Columns\TextColumn('test', 'varchar'));
+        $this->setExpectedException('Fwk\Db\Exception');
+        $this->assertEquals(2, count($this->object->getColumns()));
     }
 
-    public function testAddColumns()
-    {
-        $this->object->addColumns(array(
-            new Columns\NumericColumn('id', 'integer', 11, false, null, Column::INDEX_PRIMARY, true),
-            new Columns\TextColumn('test', 'varchar', 255, false, null),
-            new Columns\TextColumn('test_null', 'varchar', 50, true, null)
-        ));
-
-        $this->assertTrue($this->object->hasColumn('id'));
-        $this->assertTrue($this->object->hasColumn('test'));
-        $this->assertTrue($this->object->hasColumn('test_null'));
-    }
     /**
      */
     public function testGetColumns()
     {
-        $this->assertEquals(array(), $this->object->getColumns());
-        $this->object->addColumn(new Columns\TextColumn('test', 'varchar'));
-        $this->assertEquals(1, count($this->object->getColumns()));
+        $this->object->setConnection($this->connection);
+        $this->assertEquals(2, count($this->object->getColumns()));
     }
-
+    
     /**
      */
     public function testSetConnection()
@@ -108,25 +101,12 @@ class TableTest extends \PHPUnit_Framework_TestCase {
      */
     public function testGetName()
     {
-        $this->assertEquals('testTable', $this->object->getName());
-    }
-
-    /**
-     */
-    public function testGetIdentifiersKeysFail()
-    {
-        $this->setExpectedException('\Fwk\Db\Exceptions\TableLacksIdentifiers');
-        $this->object->getIdentifiersKeys();
+        $this->assertEquals('test_table', $this->object->getName());
     }
 
     public function testGetIdentifiersKeys()
     {
-        $this->object->addColumns(array(
-            new Columns\NumericColumn('id', 'integer', 11, false, null, Column::INDEX_PRIMARY, true),
-            new Columns\TextColumn('test', 'varchar', 255, false, null),
-            new Columns\TextColumn('test_null', 'varchar', 50, true, null)
-        ));
-
+        $this->object->setConnection($this->connection);
         $this->assertEquals(array('id'), $this->object->getIdentifiersKeys());
     }
 
@@ -141,25 +121,24 @@ class TableTest extends \PHPUnit_Framework_TestCase {
      */
     public function testGetColumnFail()
     {
+        $this->object->setConnection($this->connection);
         $this->setExpectedException('\Fwk\Db\Exceptions\TableColumnNotFound');
         $this->object->getColumn('test');
     }
 
     public function testGetColumn()
     {
-        $col = new Columns\TextColumn('test', 'varchar');
-        $this->object->addColumn($col);
-        $this->assertEquals($col, $this->object->getColumn('test'));
+        $this->object->setConnection($this->connection);
+        $this->assertInstanceOf('\Doctrine\DBAL\Schema\Column', $this->object->getColumn('username'));
     }
 
     /**
      */
     public function testHasColumn()
     {
+        $this->object->setConnection($this->connection);
         $this->assertFalse($this->object->hasColumn('test'));
-        $col = new Columns\TextColumn('test', 'varchar');
-        $this->object->addColumn($col);
-        $this->assertTrue($this->object->hasColumn('test'));
+        $this->assertTrue($this->object->hasColumn('username'));
     }
 
     /**
