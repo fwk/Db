@@ -32,11 +32,12 @@
  */
 namespace Fwk\Db;
 
-class Finder implements \Countable
+class Finder 
 {
     /**
-     *
-     * @var array
+     * Results 
+     * 
+     * @var ResultSet
      */
     protected $resultSet;
 
@@ -62,6 +63,13 @@ class Finder implements \Countable
     protected $query;
 
     /**
+     * Query parameters
+     * 
+     * @var array
+     */
+    protected $params;
+    
+    /**
      * Constructor
      *
      * @param Table      $table
@@ -71,8 +79,14 @@ class Finder implements \Countable
      */
     public function __construct(Table $table, Connection $connection = null)
     {
-        $this->table = $table;
-        $this->connection = $connection;
+        $query = Query::factory()
+                    ->select()
+                    ->from(sprintf('%s %s', $table->getName(), 'f'));
+        
+        $this->table        = $table;
+        $this->connection   = $connection;
+        $this->query        = $query;
+        $this->params       = array();
     }
 
     /**
@@ -99,29 +113,93 @@ class Finder implements \Countable
     public function getConnection()
     {
         if (!isset($this->connection)) {
-            throw new Exception(sprintf('No connection is defined'));
+            throw new Exception('No connection is defined');
         }
 
         return $this->connection;
     }
 
-    public function find($identifiers)
+    /**
+     *
+     * @param array $identifiers
+     * @return ResultSet 
+     */
+    public function find(array $identifiers)
     {
-
+        if(isset($this->resultSet)) {
+            throw new Exception('Finder already executed');
+        }
+        
+        $this->query->where('1 = 1');
+        foreach($identifiers as $key => $value) {
+            $this->query->andWhere(sprintf('f.%s = ?', $key));
+            $this->params[] = $value;
+        }
+        
+        return $this->getResultSet();
     }
 
-    public function one($identifier)
+    /**
+     *
+     * @param mixed $identifiers
+     * @return mixed 
+     */
+    public function one($identifiers)
     {
-
+        if(isset($this->resultSet)) {
+            throw new Exception('Finder already executed');
+        }
+        
+        $ids = $this->table->getIdentifiersKeys();
+        if(!is_array($identifiers)) {
+            if(count($ids) === 1) {
+                $identifiers = array($ids[0] => $identifiers);
+            } else {
+                $identifiers = array($identifiers);
+            }
+        }
+        
+        if(count($ids) != count($identifiers)) {
+            throw new Exceptions\MissingIdentifier(sprintf('Table has %u identifiers (%s), only %u provided', count($ids), implode(', ', $ids), count($identifiers)));
+        }
+        
+        $this->query->where('1 = 1');
+        foreach($ids as $key) {
+            if(!isset($identifiers[$key])) {
+                 throw new Exceptions\MissingIdentifier(sprintf('Missing required identifier "%s"', $key));
+            }
+            
+            $this->query->andWhere(sprintf('f.%s = ?', $key));
+            $this->params[] = $identifiers[$key];
+        }
+        
+        $res = $this->getResultSet();
+        if($res->count() >= 1) {
+            return $res[0];
+        }
+        
+        return null;
     }
 
+    /**
+     *
+     * @return ResultSet
+     */
     public function all()
     {
-
+         return $this->getResultSet();
     }
 
-    public function count()
+    /**
+     *
+     * @return ResultSet 
+     */
+    public function getResultSet()
     {
-
+        if(!isset($this->resultSet)) {
+            $this->resultSet = $this->connection->execute($this->query, $this->params);
+        }
+        
+        return $this->resultSet;
     }
 }

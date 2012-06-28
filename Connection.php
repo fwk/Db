@@ -309,13 +309,15 @@ class Connection extends Dispatcher
         
         $bridge = $this->newQueryBrige();
         $stmt = $bridge->execute($query, $params, $options);
-        $results = $stmt->execute($params);
+        $res = $stmt->execute($params);
         
         if($query->getType() == Query::TYPE_SELECT) {
-            var_dump($stmt->fetchAll());
-        }
+            $tmp = $stmt->fetchAll();
+            $hyd = new Hydrator($query, $this, $bridge->getColumnsAliases());
+            
+            $results = new ResultSet($hyd->hydrate($tmp));
+        } 
         
-        $results = array(); /** @todo */
         $event->results = $results;
         $afterEvent = new Event(ConnectionEvents::AFTER_QUERY, $event->getData());
         $this->notify($afterEvent);

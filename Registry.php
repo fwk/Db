@@ -455,4 +455,8 @@ class Registry implements \Countable, \IteratorAggregate
     {
         return new \ArrayIterator($this->toArray());
     }
+    
+    public function getStore() {
+        return $this->store;
+    }
 }

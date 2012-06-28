@@ -116,7 +116,12 @@ class QueryTest extends \PHPUnit_Framework_TestCase {
     public function testLimit()
     {
         $this->object->limit(100);
-        $this->assertEquals(100, $this->object['limit']);
+        $this->assertTrue(is_array($this->object['limit']));
+        $this->assertArrayHasKey('max', $this->object['limit']);
+        $this->assertArrayHasKey('first', $this->object['limit']);
+        $this->assertEquals(100, $this->object['limit']['max']);
+        $this->object->limit(100, 50);
+        $this->assertEquals(50, $this->object['limit']['first']);
     }
 
     /**

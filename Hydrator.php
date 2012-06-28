@@ -25,18 +25,19 @@
  *
  * @package    Fwk
  * @subpackage Db
- * @subpackage Mysql
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link       http://www.phpfwk.com
  */
-namespace Fwk\Db\Mysql;
+namespace Fwk\Db;
 
-use Fwk\Db\Query;
-use Fwk\Db\Driver;
-use Fwk\Db\Entity\Relations\One2Many;
-use Fwk\Db\Entity\Accessor;
+use Fwk\Db\Query,
+    Fwk\Db\Connection, 
+    Fwk\Db\Accessor, 
+    Fwk\Db\Registry,
+    Fwk\Db\Relations\One2Many;
+
 
 /**
  * This class transforms a resultset from a query into a set of corresponding
@@ -53,11 +54,11 @@ class Hydrator
     protected $query;
 
     /**
-     * The driver
+     * The Connection
      *
-     * @var Driver
+     * @var Connection
      */
-    protected $driver;
+    protected $connection;
 
     /**
      * Columns description
@@ -81,16 +82,16 @@ class Hydrator
     protected $markAsFresh;
 
     /**
-     * Constructor
      *
-     * @param Driver $driver
-     * @param array  $columns
+     * @param Query $query
+     * @param Connection $connection
+     * @param array $columns 
      */
-    public function __construct(Query $query, Driver $driver, array $columns)
+    public function __construct(Query $query, Connection $connection, array $columns)
     {
         $this->query        = $query;
         $this->columns      = $columns;
-        $this->driver       = $driver;
+        $this->connection   = $connection;
 
         $joins      = (array) $query['joins'];
         $tables     = array();
@@ -200,7 +201,7 @@ class Hydrator
                 $current->setFetched(true);
                 $current->setParentRefs($mainObjRefs);
 
-                $tableObj   = $this->driver->getConnection()->table($mainObjTable);
+                $tableObj   = $this->connection->table($mainObjTable);
                 $current->setParent($mainObj, $tableObj->getRegistry()->getEventDispatcher($mainObj));
 
                 $access->set($columnName, $current);
@@ -212,10 +213,10 @@ class Hydrator
             $relations  = $access->getRelations();
             foreach ($relations as $columnName => $relation) {
                 $relation->setParentRefs($access->get($relation->getLocal()));
-                $tableObj   = $this->driver->getConnection()->table($mainObjTable);
+                $tableObj   = $this->connection->table($mainObjTable);
                 $relation->setParent($mainObj, $tableObj->getRegistry()->getEventDispatcher($mainObj));
                 if($relation->isLazy())
-                        $relation->setConnection($this->driver->getConnection());
+                        $relation->setConnection($this->connection);
             }
 
             unset($mainObj, $mainObjRefs);
@@ -269,7 +270,7 @@ class Hydrator
      */
     protected function loadEntityClass($tableName, array $identifiers, $entityClass = null)
     {
-        $tableObj   = $this->driver->getConnection()->table($tableName);
+        $tableObj   = $this->connection->table($tableName);
         $registry   = $tableObj->getRegistry();
 
         if($entityClass === null)
@@ -279,7 +280,7 @@ class Hydrator
 
         if (null === $obj) {
             $obj      = new $entityClass;
-            $registry->store($obj, $identifiers, \Fwk\Db\Entity\Registry::STATE_FRESH);
+            $registry->store($obj, $identifiers, Registry::STATE_FRESH);
             $this->markAsFresh[]    = array('registry' => $registry, 'entity' => $obj);
         }
 
@@ -308,7 +309,7 @@ class Hydrator
      */
     protected function getIdentifiers($tableName, array $results)
     {
-        $tableObj   = $this->driver->getConnection()->table($tableName);
+        $tableObj   = $this->connection->table($tableName);
         $tableIds   = $tableObj->getIdentifiersKeys();
 
         if (!count($tableIds))
