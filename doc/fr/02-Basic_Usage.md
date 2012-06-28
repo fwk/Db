@@ -1,6 +1,6 @@
 # Utilisation basique
 
-Voici en quelques exemples une démonstration de ce qu'il est possible de faire avec [fwk/Db](http://github.com/fwk/Db). Par défaut, [fwk/Db](http://github.com/fwk/Db) utilise ```\stdClass``` comme entité. Nous verrons plus tard comment définir des entités.
+Voici en quelques exemples une démonstration de ce qu'il est possible de faire avec [fwk/Db](http://github.com/fwk/Db). Par défaut, [fwk/Db](http://github.com/fwk/Db) utilise ```\stdClass``` comme entité. 
 
 ## Initialisation de la connexion
 
@@ -90,7 +90,10 @@ C'est tout :)
 
 ## Création
 
-[fwk/Db](http://github.com/fwk/Db) laisse au serveur de base de données le soin de valider les requêtes. Il est donc du ressort du développeur de s'assurer que les entités qu'il sauvegarde comportent bien toutes les informations nécessaires. 
+[fwk/Db](http://github.com/fwk/Db) laisse au serveur de base de données le soin de valider les requêtes et l'intégrité des données. Il est donc du ressort du développeur de s'assurer que:
+
+* Les entités qu'il sauvegarde comportent bien toutes les informations nécessaires.
+* Son schéma de base de données est cohérent.
 
 ```
 <?php
@@ -104,7 +107,7 @@ $usersTable->save($newUser); /* => INSERT INTO users ... */
 
 ## Suppression
 
-Comme d'habitude, la suppression d'une entité dans une table est très simple:
+La suppression d'une entité dans une table est très simple:
 
 ```
 <?php
@@ -114,9 +117,9 @@ $myUser = $finder->one(2);
 $usersTable->delete($myUser) /* DELETE FROM users WHERE id = 2 */
 ```
 
-# OOP SQL Query
+# Queries SQL Orientés Objet
 
-[fwk/Db](http://github.com/fwk/Db) fourni un objet ```Query``` permettant de créer simplement, de manière orientée objet, des Queries SQL. 
+[fwk/Db](http://github.com/fwk/Db) fourni un objet ```Query``` permettant de créer de manière orientée objet des queries SQL. 
 
 Voici quelques exemples:
 
@@ -156,6 +159,6 @@ $query = Query::factory()
 $result = $db->execute($query, array(/* paramètres */));
 ```
 
-Le parcours de l'API de l'objet Query permettra au développeur de comprendre son fonctionnement en détails. [fwk/Db](http://github.com/fwk/Db) n'a pas réinventé la roue. Par conséquent, *pensez SQL* !
+Le parcours de l'API de l'objet ```Query``` permettra au développeur de comprendre son fonctionnement en détails. Pour faire simple: *pensez SQL* !
 
 
