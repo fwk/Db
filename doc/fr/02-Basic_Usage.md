@@ -7,6 +7,8 @@ Voici en quelques exemples une démonstration de ce qu'il est possible de faire 
 Le point d'entrée de [fwk/Db](http://github.com/fwk/Db) est l'objet ```Connection```. Ses options de configuration sont identiques à celles requises par [Doctrine/DBAL](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/configuration.html). 
 
 ``` php
+<?php
+
 $db = new \Fwk\Db\Connection(array(
    'driver' => 'pdo_mysql',
    'host' => 'localhost',
@@ -23,6 +25,7 @@ Voilà ! Vous pouvez dès à présent utiliser [fwk/Db](http://github.com/fwk/Db
 [fwk/Db](http://github.com/fwk/Db) est fourni avec un objet ```Finder``` permettant de chercher des données dans une table. Cet objet se récupère depuis l'objet ```Table```.
 
 ``` php
+<?php
 
 $usersTable = $db->table('users');
 ```
@@ -30,6 +33,8 @@ $usersTable = $db->table('users');
 ### Utilisation du Finder
 
 ``` php
+<?php
+
 $finder = $usersTable->finder();
 $allUsers = $finder->all(); /* retourne tous les utilisateurs */
 ```
@@ -39,18 +44,24 @@ $allUsers = $finder->all(); /* retourne tous les utilisateurs */
 Dans le cas d'une clé primaire unique (généralement "ID"):
 
 ``` php
+<?php
+
 $myUser = $finder->one(2); /* retourne user ID: 2 */
 ```
 
 Dans le cas d'une clé primaire sur plusieurs colonnes:
 
 ``` php
+<?php
+
 $myUser = $finder->one(array('id' => 2, 'nickname' => 'neiluj')); /* retourne user ID: 2 */
 ```
 
 Enfin, pour une recherche classique sur différents champs pas forcément indexés, la méthode ```find()``` permet de faire des _AND WHERE_ simplement:
 
 ``` php
+<?php
+
 $users = $finder->find(array('email' => 'julien@nitronet.org')); /* retourne un ou plusieurs résultats */
 ```
 
@@ -59,6 +70,8 @@ $users = $finder->find(array('email' => 'julien@nitronet.org')); /* retourne un 
 Comme vu un peu plus haut, le code suivant nous renvoi une entitée ```\stdClass``` correspondant à l'utilisateur ID = 2:
 
 ``` php
+<?php
+
 $myUser = $finder->one(2);
 
 print_r($myUser); /* stdClass { id: 2, email: "julien@nitronet.org", nickname: "neiluj" } */
@@ -67,6 +80,8 @@ print_r($myUser); /* stdClass { id: 2, email: "julien@nitronet.org", nickname: "
 Nous mettons maintenant à jour son email et sauvegardons les changements dans la table:
 
 ``` php
+<?php
+
 $myUser->email = "j@nitronet.org";
 
 $usersTable->save($myUser); /* => UPDATE users ... WHERE id = 2 */
@@ -82,6 +97,8 @@ C'est tout :)
 * Son schéma de base de données est cohérent.
 
 ``` php
+<?php
+
 $newUser = new \stdClass;
 $newUser->nickname = "n3wb1e";
 $newUser->email = "imnew@example.com";
@@ -94,6 +111,8 @@ $usersTable->save($newUser); /* => INSERT INTO users ... */
 La suppression d'une entité dans une table est très simple:
 
 ``` php
+<?php
+
 $myUser = $finder->one(2);
 
 $usersTable->delete($myUser) /* DELETE FROM users WHERE id = 2 */
@@ -106,6 +125,8 @@ $usersTable->delete($myUser) /* DELETE FROM users WHERE id = 2 */
 Voici quelques exemples:
 
 ``` php
+<?php
+
 use Fwk\Db\Query;
 
 // SELECT * FROM users LIMIT 2
