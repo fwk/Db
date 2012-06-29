@@ -2,7 +2,7 @@
 
 Par défaut, [fwk/Db](http://github.com/fwk/Db) retourne des classes ```\stdClass```. Cependant, il est possible d'assigner des entités spécifiques pour chaque table. Par exemple:
 
-```
+``` php
 <?php
 
 $db->table('users')->setDefaultEntity('MyApp\models\User');
@@ -10,7 +10,7 @@ $db->table('users')->setDefaultEntity('MyApp\models\User');
 
 Cela peut également être précisé lors de l'utilisation de l'objet ```Query```:
 
-```
+``` php
 <?php
 
 $query->select()->from('users')->where('id = ?')->entity('MyApp\models\User');
@@ -24,7 +24,7 @@ La visibilité choisie par le développeur influencera le passage des données e
 
 Example:
 
-```
+``` php
 <?php
 namespace MyApp\models;
 
