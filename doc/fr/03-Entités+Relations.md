@@ -22,7 +22,7 @@ Cela permet entre-autres de pouvoir diviser ses modèles en fonction de l'usage 
 
 La visibilité choisie par le développeur influencera le passage des données entre un Query et les propriété de l'entité. Par conséquent, si les propriétées sont ```private``` ou ```protected```, des getters/setters devront être présents. 
 
-Example:
+Exemple:
 
 ``` php
 <?php
@@ -52,7 +52,39 @@ class User
 
 ## One-to-One
 
+Prenons l'exemple d'une application supposée gérer une collection de livres. Chaque livre est classé dans une catégorie principale. 
+
+``` php
+<?php
+
+use Fwk\Db\Relations\One2One;
+
+class Book extends \stdClass
+{
+    public $category;
+    
+    public function __construct()
+    {
+        $this->category = new One2One('category_id', 'id', 'categories');
+    }
+}
+```
+
+Maintenant, l'entitée représentant la catégorie du livre est disponible via ```$book->category->fetch()```. En fait, il est possible d'accéder directement aux propriétés et méthodes de l'entité comme dans l'exemple ci-dessous, mais ```$book->category``` doit impérativement rester une instance de ```Fwk\Db\Relation```.
+
+``` php
+<?php
+
+$booksTable = $db->table('books');
+$booksTable->setDefaultEntity('Book');
+$book = $db->table('books')->finder()->one(2);
+
+echo $book->category->name; // Sci-Fi
+```
+
 ## One-to-Many
+
+
 
 ## Many-to-Many
 
