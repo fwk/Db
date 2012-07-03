@@ -691,4 +691,13 @@ class QueryBridge
     {
         $this->handle->groupBy($groupBy);
     }
+    
+    /**
+     *
+     * @return string 
+     */
+    public function getQueryString()
+    {
+        return $this->queryString;
+    }
 }

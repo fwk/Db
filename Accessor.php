@@ -126,7 +126,7 @@ class Accessor
 
         if (\method_exists($obj, $getter) && \is_callable(array($obj, $getter))) {
             return \call_user_func(array($obj, $getter));
-        } elseif (get_class($obj) == 'stdClass' && isset($obj->{$key})) {
+        } elseif ($obj instanceof \stdClass && isset($obj->{$key})) {
             return  $obj->{$key};
         } elseif ($obj instanceof \ArrayAccess && $obj->offsetExists($key)) {
             return  $obj->offsetGet($key);
@@ -164,7 +164,7 @@ class Accessor
             return true;
         }
 
-        if (get_class($obj) == 'stdClass') {
+        if ($obj instanceof \stdClass) {
             $obj->{$key}    = $value;
 
             return true;

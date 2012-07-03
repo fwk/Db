@@ -308,6 +308,7 @@ class Connection extends Dispatcher
         }
         
         $bridge = $this->newQueryBrige();
+        $event->bridge = $bridge;
         $stmt = $bridge->execute($query, $params, $options);
         
         if($query->getType() == Query::TYPE_SELECT) {

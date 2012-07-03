@@ -174,11 +174,11 @@ class Hydrator
                 $access     = new Accessor($obj);
                 $values     = $this->getValuesFromSet($columns, $result);
                 $access->setValues($values);
-
+                $mainObjRefs    = $ids;
+                
                 if (!$isJoin) {
                     $mainObj        = $obj;
                     $mainObjTable   = $tableName;
-                    $mainObjRefs    = $ids;
                     $idsHash        = $tableName . implode(':', $ids);
                     unset($access, $values, $isJoin, $columns);
                     if (!in_array($mainObj, $final, true)) {
@@ -240,7 +240,7 @@ class Hydrator
         $access     = new Accessor($object);
         $test       = $access->get($columnName);
 
-        if($test instanceof \Fwk\Db\Entity\Relation)
+        if($test instanceof \Fwk\Db\Relation)
 
             return $test;
 
