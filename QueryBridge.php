@@ -90,11 +90,8 @@ class QueryBridge
     public function execute(Query $query, array $params = array(),
         array $options = array())
     {
-        
-        $sql = $this->prepare($query);
-        
         $this->queryString = $sql = $this->prepare($query);
-        
+
         if($query->getType() == Query::TYPE_INSERT) {
             return $this->connection->getDriver()->executeUpdate($sql, $params);
         }
@@ -319,13 +316,19 @@ class QueryBridge
 
     protected function getCleanInsertValue($value)
     {
+        $value = trim($value);
+        if($value === '?' || strpos($value, ':') === 0) {
+            return $value;
+        }
+        
+        /*
         if($value instanceof Expression)
-
             return (string) $value;
-
-        if($value === null)
-
+        */
+        
+        if($value === null) {
             return 'NULL';
+        }
 
         return $this->connection->getDriver()->quote((string) $value);
     }

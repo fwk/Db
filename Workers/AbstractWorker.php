@@ -25,14 +25,59 @@
  *
  * @package    Fwk
  * @subpackage Db
- * @subpackage Exceptions
+ * @subpackage Workers
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link       http://www.phpfwk.com
  */
-namespace Fwk\Db\Exceptions;
+namespace Fwk\Db\Workers;
 
-use Fwk\Db\Exception;
+use Fwk\Db\Registry;
 
-class DuplicateTableColumn extends Exception { }
+class AbstractWorker
+{
+    /**
+     * Object to delete
+     *
+     * @var mixed
+     */
+    protected $entity;
+
+    /**
+     *
+     * @var Registry
+     */
+    protected $registry;
+
+    /**
+     *
+     * @param mixed $entity
+     */
+    public function __construct($entity)
+    {
+        $this->entity   = $entity;
+    }
+
+    public function getRegistry()
+    {
+
+        return $this->registry;
+    }
+
+    public function setRegistry(Registry $registry)
+    {
+        $this->registry = $registry;
+    }
+
+    public function getEntity()
+    {
+        
+        return $this->entity;
+    }
+    
+    public function __toString()
+    {
+        return get_class($this);
+    }
+}

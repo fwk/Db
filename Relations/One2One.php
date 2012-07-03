@@ -39,12 +39,13 @@ use Fwk\Db\Accessor;
 use Fwk\Db\EntityEvents;
 use Fwk\Db\Registry;
 
-class One2One extends AbstractRelation implements Relation {
-
+class One2One extends AbstractRelation implements Relation
+{
     /**
      * Prepares a Query to fetch this relation (only FETCH_EAGER)
      *
      * @param Query $query
+     * 
      * @return void
      */
     public function prepare(Query $query, $columnName) {
@@ -64,7 +65,8 @@ class One2One extends AbstractRelation implements Relation {
     }
 
 
-    public function fetch() {
+    public function fetch()
+    {
         if(!$this->fetched && $this->isActive()) {
             $query = new Query();
             $query->entity($this->entity);
@@ -77,7 +79,7 @@ class One2One extends AbstractRelation implements Relation {
             $res        = $connect->execute($query, array($this->parentRefs));
             $idKeys     = $connect->table($this->tableName)->getIdentifiersKeys();
 
-            if(count($res) == 1) {
+            if(count($res) >= 1) {
                $ids     = array();
                $access  = new Accessor($res[0]);
                foreach($idKeys as $key) {
@@ -92,31 +94,24 @@ class One2One extends AbstractRelation implements Relation {
         return $this;
     }
 
-    public function add($object, array $identifiers = array()) {
-        if($this->contains($object))
-                return;
-
-        $this->getRegistry()->store($object, $identifiers, Registry::STATE_NEW);
-    }
-
-    public function remove($object) {
-        if($this->contains($object)) {
-            $this->getRegistry()->markForAction($object, Registry::ACTION_DELETE);
-        }
-    }
-
-    public function get() {
+    /**
+     * Fetches and return the entity (or null)
+     * 
+     * @return mixed
+     */
+    public function get()
+    {
         $this->fetch();
         
         foreach($this->getRegistry()->getStore() as $obj) {
             return $obj;
         }
-
+        
         return null;
     }
-
+    
     public function __get($key) {
-        $obj    = $this->get();
+        $obj = $this->get();
         if(!\is_object($obj))
                 throw new \RuntimeException (sprintf('Unable to retrieve %s parameter from relation (empty)', $key));
         
@@ -242,15 +237,6 @@ class One2One extends AbstractRelation implements Relation {
                 parent::remove($entity);
             }
         }
-    }
-
-    /**
-     *
-     * @return array
-     */
-    public function toArray() {
-
-        return array($this->get());
     }
 }
 

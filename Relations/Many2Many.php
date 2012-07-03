@@ -33,22 +33,23 @@
  */
 namespace Fwk\Db\Relations;
 
-use Fwk\Db\Relation;
-use Fwk\Db\Query;
-use Fwk\Db\Accessor;
-use Fwk\Db\EntityEvents;
-use Fwk\Db\Registry;
+use Fwk\Db\Relation,
+    Fwk\Db\Query,
+    Fwk\Db\Accessor,
+    Fwk\Db\EntityEvents,
+    Fwk\Db\Registry;
 
-class Many2Many extends AbstractRelation implements Relation, \ArrayAccess, \Countable, \IteratorAggregate {
-
-    protected $reference;
-    protected $orderBy;
-
+class Many2Many extends AbstractManyRelation implements Relation
+{
     protected $foreignTable;
+    
     protected $foreignRefs;
+    
     protected $foreignLink;
 
-    public function __construct($local, $foreign, $table, $foreignTable, $foreignRefs, $foreignLink, $entity = null) {
+    public function __construct($local, $foreign, $table, $foreignTable, 
+        $foreignRefs, $foreignLink, $entity = null)
+    {
         parent::__construct($local, $foreign, $table, $entity);
 
         $this->foreignTable = $foreignTable;
@@ -62,9 +63,11 @@ class Many2Many extends AbstractRelation implements Relation, \ArrayAccess, \Cou
      * @param Query $query
      * @return void
      */
-    public function prepare(Query $query, $columName) {
-        if ($this->isLazy())
+    public function prepare(Query $query, $columName)
+    {
+        if ($this->isLazy()) {
             return;
+        }
         
         $join1 = array(
             'column' => 'skipped_join',
@@ -91,41 +94,13 @@ class Many2Many extends AbstractRelation implements Relation, \ArrayAccess, \Cou
         $query->join($this->tableName . ' ' . $jAlias, $jAlias . '.' . $this->foreignRefs, $skAlias . '.' . $this->foreignLink, Query::JOIN_LEFT, $join);
     }
 
-    public function setReference($column) {
-        $this->reference = $column;
-
-        return $this;
-    }
-
-    public function setOrderBy($column, $direction = true) {
-        $this->orderBy = array('column' => $column, 'direction' => $direction);
-
-        return $this;
-    }
-
-    public function add($object, array $identifiers = array()) {
-        if($this->contains($object))
-                return;
-
-        $data   = array(
-            'reference' => null
-        );
-
-        if(!empty ($this->reference)) {
-            $access             = new Accessor($object);
-            $reference          = $access->get($this->reference);
-            $data['reference']  = $reference;
-        }
-
-        $this->getRegistry()->store($object, $identifiers, Registry::STATE_NEW, $data);
-    }
-
     /**
      *
      * @param mixed $object
      * @param \Fwk\Events\Dispatcher $evd
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd) {
+    public function setParent($object, \Fwk\Events\Dispatcher $evd)
+    {
         $return     = parent::setParent($object, $evd);
         if($return === true) {
             $evd->on(EntityEvents::AFTER_SAVE, array($this, 'onParentSave'));
@@ -135,20 +110,14 @@ class Many2Many extends AbstractRelation implements Relation, \ArrayAccess, \Cou
         return $return;
     }
 
-
-    public function remove($object) {
-        if($this->contains($object)) {
-            $this->getRegistry()->markForAction($object, Registry::ACTION_DELETE);
-        } 
-    }
-
     /**
      * Listener executed when parent entity is saved
      *
      * @param \Fwk\Events\Event $event
      * @return void
      */
-    public function  onParentSave(\Fwk\Events\Event $event) {
+    public function  onParentSave(\Fwk\Events\Event $event)
+    {
         $connection     = $event->connection;
         $parent         = $event->object;
         $parentRegistry = $event->registry;
@@ -234,7 +203,8 @@ class Many2Many extends AbstractRelation implements Relation, \ArrayAccess, \Cou
         }
     }
     
-    public function fetch() {
+    public function fetch()
+    {
         if (!$this->fetched && $this->isActive()) {
             $params     = array();
             $query      = new Query();
@@ -276,69 +246,30 @@ class Many2Many extends AbstractRelation implements Relation, \ArrayAccess, \Cou
         return $this;
     }
 
-    public function getForeignTable() {
+    public function getForeignTable()
+    {
 
         return $this->foreignTable;
     }
 
-    public function getForeignLink() {
+    public function getForeignLink()
+    {
 
         return $this->foreignLink;
     }
 
-    public function getForeignReference() {
+    public function getForeignReference()
+    {
 
         return $this->foreignRefs;
-    }
-
-    public function getReference() {
-
-        return $this->reference;
-    }
-
-    public function getOrderBy() {
-
-        return $this->orderBy;
-    }
-
-    public function offsetExists($offset) {
-        $this->fetch();
-        $array  = $this->toArray();
-        return \array_key_exists($offset, $array);
-    }
-
-    public function offsetGet($offset) {
-        $this->fetch();
-        $array  = $this->toArray();
-        return (\array_key_exists($offset, $array) ? $array[$offset] : null);
-    }
-
-    public function offsetSet($offset, $value) {
-        $this->fetch();
-        return $this->add($value);
-    }
-
-    public function offsetUnset($offset) {
-        $this->fetch();
-
-        $obj    = $this->offsetGet($offset);
-        if(null === $obj)
-            return;
-
-        return $this->getRegistry()->remove($obj);
-    }
-
-    public function getIterator() {
-        $this->fetch();
-        
-        return new \ArrayIterator($this->toArray());
     }
 
     /**
      *
      * @return \SplPriorityQueue
      */
-    public function getWorkersQueue() {
+    public function getWorkersQueue()
+    {
         $queue  = new \SplPriorityQueue();
 
         foreach($this->getRegistry()->getStore() as $object) {
@@ -374,12 +305,4 @@ class Many2Many extends AbstractRelation implements Relation, \ArrayAccess, \Cou
 
         return $queue;
     }
-
-    public function count() {
-        $this->fetch();
-
-        return count($this->getRegistry()->getStore());
-    }
 }
-
-

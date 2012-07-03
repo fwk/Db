@@ -32,8 +32,8 @@
  */
 namespace Fwk\Db;
 
-interface Relation {
-
+interface Relation
+{
     const FETCH_EAGER   = 'eager';
     const FETCH_LAZY    = 'lazy';
 
@@ -46,8 +46,14 @@ interface Relation {
      * @return boolean
      */
     public function isEager();
-
-    public function getEntityClass();
+    
+    public function fetch();
+    
+    public function prepare(\Fwk\Db\Query $query, $columnName);
+    
+    public function setParent($object, \Fwk\Events\Dispatcher $evd);
+    
+    public function getEntity();
 
     public function getForeign();
 
@@ -56,4 +62,8 @@ interface Relation {
     public function setFetched($bool);
 
     public function setFetchMode($mode);
+    
+    public function toArray();
+    
+    public function getIterator();
 }

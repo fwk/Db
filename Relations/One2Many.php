@@ -33,51 +33,25 @@
  */
 namespace Fwk\Db\Relations;
 
-use Fwk\Db\Relation;
-use Fwk\Db\Query;
-use Fwk\Db\Accessor;
-use Fwk\Db\EntityEvents;
-use Fwk\Db\Registry;
+use Fwk\Db\Relation,
+    Fwk\Db\Query,
+    Fwk\Db\Accessor,
+    Fwk\Db\EntityEvents,
+    Fwk\Db\Registry;
 
-class One2Many extends AbstractRelation implements Relation, \ArrayAccess, \Countable, \IteratorAggregate {
-
-    /**
-     * @var string
-     */
-    protected $reference;
-    
-    /**
-     * @var array
-     */
-    protected $orderBy;
-
-    /**
-     *
-     * @var array
-     */
-    protected $removed;
-    
-    /**
-     * Constructor
-     * 
-     * @param string $local
-     * @param string $foreign
-     * @param string $table
-     * @param string $entity
-     */
-    public function  __construct($local, $foreign, $table, $entity = null) {
-        parent::__construct($local, $foreign, $table, $entity);
-    }
-    
+class One2Many extends AbstractManyRelation implements Relation
+{
     /**
      * Prepares a Query to fetch this relation
      *
      * @param Query $query
+     * 
      * @return void
      */
     public function prepare(Query $query, $columnName) {
-        if ($this->isLazy())
+        if ($this->isLazy()) {
             return;
+        }
 
         $this->columnName   = $columnName;
         $join = array(
@@ -89,24 +63,6 @@ class One2Many extends AbstractRelation implements Relation, \ArrayAccess, \Coun
         );
 
         $query->join($this->tableName, $this->local, $this->foreign, Query::JOIN_LEFT, $join);
-    }
-
-    /**
-     * Sets a column to use as a reference
-     * 
-     * @param string $column
-     * @return One2Many
-     */
-    public function setReference($column) {
-        $this->reference = $column;
-
-        return $this;
-    }
-
-    public function setOrderBy($column, $direction = true) {
-        $this->orderBy = array('column' => $column, 'direction' => $direction);
-
-        return $this;
     }
 
     public function fetch() {
@@ -141,29 +97,6 @@ class One2Many extends AbstractRelation implements Relation, \ArrayAccess, \Coun
         return $this;
     }
 
-    /**
-     * Adds an object to the collection
-     *
-     * @param mixed $object
-     */
-    public function add($object, array $identifiers = array()) {
-        if($this->contains($object))
-                return;
-        
-        $data   = array(
-            'reference' => null
-        );
-
-        if(!empty ($this->reference)) {
-            $access             = new Accessor($object);
-            $reference          = $access->get($this->reference);
-            $data['reference']  = $reference;
-        }
-
-        $this->getRegistry()->store($object, $identifiers, Registry::STATE_NEW, $data);
-    }
-
-    
     /**
      *
      * @param mixed $object
@@ -222,52 +155,6 @@ class One2Many extends AbstractRelation implements Relation, \ArrayAccess, \Coun
             }
         }
     }
-    
-    /**
-     * Removes an object from the collection
-     * 
-     * @param mixed $object
-     */
-    public function remove($object) {
-        if($this->contains($object)) {
-            $this->getRegistry()->markForAction($object, Registry::ACTION_DELETE);
-        }
-    }
-
-    public function getReference() {
-        return $this->reference;
-    }
-
-    public function getOrderBy() {
-        return $this->orderBy;
-    }
-
-    public function offsetExists($offset) {
-        $this->fetch();
-        $array  = $this->toArray();
-        return \array_key_exists($offset, $array);
-    }
-
-    public function offsetGet($offset) {
-        $this->fetch();
-        $array  = $this->toArray();
-        return (\array_key_exists($offset, $array) ? $array[$offset] : null);
-    }
-
-    public function offsetSet($offset, $value) {
-        $this->fetch();
-        return $this->add($value);
-    }
-
-    public function offsetUnset($offset) {
-        $this->fetch();
-        
-        $obj    = $this->offsetGet($offset);
-        if(null === $obj)
-            return;
-
-        return $this->remove($obj);
-    }
 
     /**
      *
@@ -309,18 +196,6 @@ class One2Many extends AbstractRelation implements Relation, \ArrayAccess, \Coun
         }
 
         return $queue;
-    }
-
-    public function count() {
-        $this->fetch();
-
-        return count($this->getRegistry()->getStore());
-    }
-    
-    public function getIterator() {
-        $this->fetch();
-        
-        return new \ArrayIterator($this->toArray());
     }
 }
 

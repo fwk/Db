@@ -33,25 +33,53 @@
  */
 namespace Fwk\Db\Relations;
 
-use Fwk\Db\EntityEvents;
-use Fwk\Db\Relation;
-use Fwk\Db\Registry;
+use Fwk\Db\EntityEvents,
+    Fwk\Db\Relation,
+    Fwk\Db\Registry,
+    Fwk\Db\Exception, 
+    Fwk\Db\Connection, 
+    Fwk\Events\Dispatcher,
+    \IteratorAggregate;
 
-abstract class AbstractRelation {
-
-    /** @var string */
+/**
+ * Abstract utility class for Relations
+ */
+abstract class AbstractRelation implements IteratorAggregate
+{
+    /** 
+     * Local column name
+     * 
+     * @var string 
+     */
     protected $local;
 
-    /** @var string */
+    /** 
+     * Foreign column name
+     * 
+     * @var string 
+     */
     protected $foreign;
 
-    /** @var integer */
+    /** 
+     * Fetch mode 
+     * {@see Relation::FETCH_LAZY} and {@see Relation::FETCH_EAGER}
+     * 
+     * @var integer
+     */
     protected $fetchMode = Relation::FETCH_LAZY;
 
-    /** @var string */
+    /** 
+     * Entity classname for this relation
+     * 
+     * @var string 
+     */
     protected $entity;
 
-    /** @var string */
+    /** 
+     * Column name in parent entity for this relation
+     * 
+     * @var string 
+     */
     protected $columnName;
 
     /**
@@ -62,16 +90,38 @@ abstract class AbstractRelation {
     protected $connection;
     
     /**
+     * Is the relation fetched ?
+     * 
      * @var boolean
      */
     protected $fetched = false;
 
+    /**
+     * Parent references 
+     * 
+     * @var mixed
+     */
     protected $parentRefs;
 
+    /**
+     * Parent entity (if any)
+     * 
+     * @var mixed 
+     */
     protected $parent;
     
+    /**
+     * Relation's own registry
+     * 
+     * @var Registry
+     */
     protected $registry;
     
+    /**
+     * Referenced table name
+     * 
+     * @var string 
+     */
     protected $tableName;
 
     /**
@@ -81,7 +131,8 @@ abstract class AbstractRelation {
      * @param string $table
      * @param string $entity
      */
-    public function __construct($local, $foreign, $table, $entity = null) {
+    public function __construct($local, $foreign, $table, $entity = null)
+    {
         $this->tableName = $table;
         $this->registry = new Registry($table);
         $this->local    = $local;
@@ -93,9 +144,11 @@ abstract class AbstractRelation {
      * FETCH_EAGER -or- FETCH_LAZY
      * 
      * @param integer $mode
-     * @return Generic
+     * 
+     * @return Relation
      */
-    public function setFetchMode($mode) {
+    public function setFetchMode($mode)
+    {
         $this->fetchMode = $mode;
 
         return $this;
@@ -104,47 +157,63 @@ abstract class AbstractRelation {
     /**
      *
      * @param boolean $bool
+     * 
      * @return Relation
      */
-    public function setFetched($bool) {
+    public function setFetched($bool)
+    {
         $this->fetched = (bool)$bool;
         if($this->fetched) {
             foreach($this->getRegistry()->getStore() as $object) {
                 $this->getRegistry()->defineInitialValues($object);
             }
         }
+        
         return $this;
     }
 
      /**
-     * Returns the connection defined for this relation (Lazy only)
+     * Returns the connection defined for this relation
      *
-     * @return \Fwk\Db\Connection
+     * @return Connection
      */
-    public function getConnection() {
-        if(!isset($this->connection))
-                throw new \RuntimeException (sprintf('No connection defined for this relation (%s: %s<->%s)', $this->tableName, $this->local, $this->foreign));
-
+    public function getConnection()
+    {
+        if(!isset($this->connection)) {
+            throw new Exception(
+                sprintf(
+                    'No connection defined for this relation (%s: %s<->%s)', 
+                    $this->tableName, 
+                    $this->local, 
+                    $this->foreign
+                )
+            );
+        }
+        
         return $this->connection;
     }
 
     /**
      * Sets a connection for this relation (used for lazy loading)
      *
-     * @param \Fwk\Db\Connection $connection
-     * @return Many2Many
+     * @param Connection $connection
+     * 
+     * @return Relation
      */
-    public function setConnection(\Fwk\Db\Connection $connection) {
+    public function setConnection(Connection $connection)
+    {
         $this->connection   = $connection;
 
         return $this;
     }
 
     /**
-     *
+     * Tells if an entity managed by this relation has changed 
+     * 
      * @return boolean
      */
-    public function hasChanged() {
+    public function hasChanged()
+    {
         foreach($this->getRegistry()->getStore() as $obj) {
             $cgh    = $this->getRegistry()->getChangedValues($obj);
             $data   = $this->getRegistry()->getData($obj);
@@ -156,34 +225,38 @@ abstract class AbstractRelation {
     }
    
     /**
-     *
+     * Tells if this relation is active (parents references have been defined)
+     * 
      * @return boolean
      */
-    public function isActive() {
+    public function isActive()
+    {
         
         return isset($this->parentRefs);
     }
 
-    public function has($object) {
+    /**
+     * Tells if the specified object is in the relation
+     * 
+     * @param mixed $object
+     * 
+     * @return boolean 
+     */
+    public function has($object)
+    {
 
         return $this->getRegistry()->contains($object);
     }
 
     /**
-     *
-     * @return array
-     */
-    public function get() {
-        $this->fetch();
-        return $this->toArray();
-    }
-    
-    /**
-     *
+     * Defines parent references
+     * 
      * @param mixed $refs
-     * @return AbstractRelation
+     * 
+     * @return Relation
      */
-    public function setParentRefs($refs) {
+    public function setParentRefs($refs)
+    {
         $this->parentRefs   = $refs;
 
         return $this;
@@ -192,10 +265,12 @@ abstract class AbstractRelation {
     /**
      *
      * @param mixed $object
-     * @param \Fwk\Events\Dispatcher $evd
+     * @param Dispatcher $evd
+     * 
      * @return boolean true if parent has been changed/defined
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd) {
+    public function setParent($object, Dispatcher $evd)
+    {
         if($this->parent === $object) {
             return false;
         }
@@ -205,57 +280,107 @@ abstract class AbstractRelation {
     }
 
     /**
-     *
+     * Tells if this relation has been fetched
+     * 
      * @return boolean
      */
-    public function isFetched() {
+    public function isFetched()
+    {
 
         return $this->fetched;
     }
 
     /**
-     *
+     * Tells if this relation is in LAZY fetch mode
+     * 
      * @return boolean
      */
-    public function isLazy() {
+    public function isLazy()
+    {
+        
         return ($this->fetchMode === Relation::FETCH_LAZY);
     }
 
     /**
-     *
+     * Tells if this relation is in EAGER fetch mode
+     * 
      * @return boolean
      */
-    public function isEager() {
+    public function isEager()
+    {
+        
         return ($this->fetchMode === Relation::FETCH_EAGER);
     }
 
     /**
-     *
+     * Return the defined entity for this relation
+     * 
      * @return string
      */
-    public function getEntityClass() {
+    public function getEntity()
+    {
+        
         return $this->entity;
     }
 
-    public function getForeign() {
+    /**
+     * Return the foreign column for this relation
+     * 
+     * @return string 
+     */
+    public function getForeign()
+    {
+        
         return $this->foreign;
     }
 
-    public function getLocal() {
+    /**
+     * Return the local column for this relation
+     * 
+     * @return string
+     */
+    public function getLocal()
+    {
+        
         return $this->local;
     }
 
-    public function setColumnName($columnName) {
+    /**
+     * Defines the column name for this relation on the parent entity
+     * 
+     * @param string $columnName
+     * 
+     * @return Relation 
+     */
+    public function setColumnName($columnName)
+    {
         $this->columnName   = $columnName;
+        
+        return $this;
     }
 
-    public function clear() {
+    /**
+     * Removes all objects
+     * 
+     * @return Relation
+     */
+    public function clear()
+    {
         foreach($this->getRegistry()->getStore() as $object) {
             $this->getRegistry()->remove($object);
         }
+        $this->fetched = false;
+        
+        return $this;
     }
 
-     public function toArray() {
+    /**
+     * Returns an array of all entities in this relation
+     * 
+     * @return array 
+     */
+     public function toArray()
+    {
         $final= array();
         foreach($this->getRegistry()->getStore() as $object) {
                 $data   = $this->getRegistry()->getData($object);
@@ -275,32 +400,111 @@ abstract class AbstractRelation {
     }
     
     /**
-     *
+     * Returns this relation's registry
+     * 
      * @return Registry
      */
-    public function getRegistry() {
+    public function getRegistry()
+    {
         
         return $this->registry;
     }
 
-    public function setRegistry($registry) {
-        
+    /**
+     * Defines a registry for this relation
+     * 
+     * @param Registry $registry
+     * 
+     * @return Relation 
+     */
+    public function setRegistry(Registry $registry)
+    {
         $this->registry = $registry;
+        
+        return $this;
     }
     
-    public function contains($obj) {
-        return $this->getRegistry()->contains($obj);
-    }
-    
-    public function getTableName() {
+    /**
+     * Return this relation's table name
+     * 
+     * @return string 
+     */
+    public function getTableName()
+    {
         return $this->tableName;
     }
 
-    public function setTableName($tableName) {
+    /**
+     * Defines this relation's table name
+     * 
+     * @param string $tableName 
+     * 
+     * @return Relation
+     */
+    public function setTableName($tableName)
+    {
         $this->tableName = $tableName;
+        
+        return $this;
     }
     
-    public function setEntityClass($entityClass) {
+    /**
+     *
+     * @param string $entityClass 
+     * 
+     * @return Relation
+     */
+    public function setEntity($entityClass)
+    {
         $this->entity   = $entityClass;
+        
+        return $this;
+    }
+    
+    /**
+     * Add an entity to this relation
+     * 
+     * @param mixed $object
+     * @param array $identifiers
+     * 
+     * @return Relation 
+     */
+    public function add($object, array $identifiers = array())
+    {
+        if($this->has($object)) {
+            return;
+        }
+
+        $this->getRegistry()->store($object, $identifiers, Registry::STATE_NEW);
+        
+        return $this;
+    }
+
+    /**
+     * Removes an entity from this relation
+     * 
+     * @param mixed $object
+     * 
+     * @return Relation 
+     */
+    public function remove($object)
+    {
+        if($this->has($object)) {
+            $this->getRegistry()->markForAction($object, Registry::ACTION_DELETE);
+        }
+        
+        return $this;
+    }
+    
+    /**
+     * Return this relation data within an Iterator (foreach ...)
+     * {@see \Traversable}
+     * 
+     * @return \ArrayIterator 
+     */
+    public function getIterator() {
+        $this->fetch();
+        
+        return new \ArrayIterator($this->toArray());
     }
 }

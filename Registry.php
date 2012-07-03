@@ -33,7 +33,9 @@
 namespace Fwk\Db;
 
 use Fwk\Events\Dispatcher,
-    Fwk\Events\Event;
+    Fwk\Events\Event, 
+    Fwk\Db\Workers\DeleteEntityWorker, 
+    Fwk\Db\Workers\SaveEntityWorker;
 
 /**
  * Entity registry object
@@ -226,7 +228,7 @@ class Registry implements \Countable, \IteratorAggregate
         $obj    = $event->object;
 
         foreach ($table->getColumns() as $column) {
-            if(!$column->isAutoIncrement())
+            if(!$column->getAutoincrement())
                     continue;
 
             $column         = $column->getName();
@@ -371,7 +373,7 @@ class Registry implements \Countable, \IteratorAggregate
     {
         $state  = $this->getState($object);
         if ($state == self::STATE_UNREGISTERED) {
-            $this->store($object, array(), self::STATE_UNKNOWN);
+            $this->store($object, array(), self::STATE_NEW);
         }
         $data   = $this->getData($object);
         $data['action']     = $action;
@@ -410,11 +412,11 @@ class Registry implements \Countable, \IteratorAggregate
             $priority   = $ts;
             switch ($action) {
                 case self::ACTION_DELETE:
-                    $worker     = new Workers\DeleteEntityWorker($object);
+                    $worker     = new DeleteEntityWorker($object);
                     break;
 
                 case self::ACTION_SAVE:
-                    $worker     = new Workers\SaveEntityWorker($object);
+                    $worker     = new SaveEntityWorker($object);
                     break;
 
                 default:
