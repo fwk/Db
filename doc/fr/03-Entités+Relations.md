@@ -77,7 +77,7 @@ Maintenant, l'entitée représentant la catégorie du livre est disponible via `
 
 $booksTable = $db->table('books');
 $booksTable->setDefaultEntity('Book');
-$book = $db->table('books')->finder()->one(2);
+$book = $booksTable->finder()->one(2);
 
 echo $book->category->name; // Sci-Fi
 ```
