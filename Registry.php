@@ -230,16 +230,20 @@ class Registry implements \Countable, \IteratorAggregate
         foreach ($table->getColumns() as $column) {
             if(!$column->getAutoincrement())
                     continue;
-
-            $column         = $column->getName();
+            
+            $columnName         = $column->getName();
             $access         = Accessor::factory($obj);
 
-            $test           = $access->get($column);
+            $test           = $access->get($columnName);
             if(!empty($test))
                 continue;
 
             $lastInsertId   = $connx->lastInsertId();
-            $access->set($column, $lastInsertId);
+            $access->set($columnName, $lastInsertId);
+            
+            $data = $this->getData($obj);
+            $data['identifiers'][$columnName] = $lastInsertId;
+            $this->setData($obj, $data);
             $this->defineInitialValues($obj);
         }
     }

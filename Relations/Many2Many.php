@@ -179,7 +179,7 @@ class Many2Many extends AbstractManyRelation implements Relation
                     throw new \RuntimeException (sprintf('Parent (%s) have no identifiers defined', get_class($this->parent)));
 
                 if(!\array_key_exists($this->local, $ids))
-                        throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', $this->local, $registry->getTableName()));
+                        throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', implode(', ', array_keys($ids)), $registry->getTableName()));
 
                 $value  = $access->get($this->local);
                 Accessor::factory($entity)->set($this->foreign, $value);
@@ -195,10 +195,10 @@ class Many2Many extends AbstractManyRelation implements Relation
 
                     $val = Accessor::factory($entity)->get($this->foreignRefs);
 
-                    $query->set($this->foreign, $access->get($this->foreignRefs));
-                    $query->set($this->foreignLink, \Fwk\Types\Accessor::factory($entity)->get($this->local));
+                    $query->set($this->foreign, '?');
+                    $query->set($this->foreignLink, '?');
 
-                    $connection->execute($query, array());
+                    $connection->execute($query, array($access->get($this->foreignRefs), Accessor::factory($entity)->get($this->local)));
                     $this->getRegistry()->defineInitialValues($entity);
                 }
             }

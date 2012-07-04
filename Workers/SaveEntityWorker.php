@@ -68,16 +68,15 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 foreach($columns as $key => $columnObj) {
                     $default = $columnObj->getDefault();
                     $value  = (array_key_exists($key, $values) ? $values[$key] : -1);
-                    if(-1 === $value && !empty($default))
+                    if(-1 === $value && (!empty($default) || $columnObj->getAutoincrement() == true))
                             continue;
 
-                    if(null === $value && $columnObj->getNotnull() && !$columnObj->getAutoincrement())
+                    elseif(-1 === $value && $columnObj->getNotnull() === true)
                             throw new \LogicException (sprintf('Column %s (%s) does not allow null value', $key, $table->getName()));
 
-                    if(null !== $value) {
-                        $query->set($key, '?');
-                        $queryParams[] = $value;
-                    }
+                    $query->set($key, '?');
+                    $queryParams[] = $value;
+                    
                     $setted++;
                 }
 

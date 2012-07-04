@@ -24,6 +24,18 @@ class FwkDbTestUtil
         $tbl->setPrimaryKey(array("id"));
         $tbl->addUniqueIndex(array("username"));
         
+        $tbl = $schema->createTable('fwkdb_test_emails');
+        $tbl->addColumn("id", "integer", array("unsigned" => true, "autoincrement" => true));
+        $tbl->addColumn("email", "string", array("length" => 255));
+        $tbl->addColumn("verified", "integer", array("length" => 1, "unsigned" => true));
+        $tbl->setPrimaryKey(array("id"));
+        $tbl->addUniqueIndex(array("email"));
+        
+        $tbl = $schema->createTable('fwkdb_test_users_emails');
+        $tbl->addColumn("user_id", "integer", array("unsigned" => true));
+        $tbl->addColumn("email_id", "integer", array("unsigned" => true));
+        $tbl->setPrimaryKey(array("user_id", "email_id"));
+        
         $queries = $schema->toSql($connection->getDriver()->getDatabasePlatform());
         foreach($queries as $query) {
             $connection->getDriver()->exec($query);
