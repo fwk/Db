@@ -161,7 +161,8 @@ class QueryBridge
                     list($table, ) = explode(' ', $table);
             
             $decl   = $this->connection->table($table)->getDefaultEntity($table);
-            $query->entity($decl);
+            if(empty($query['entity']) || $query['entity'] == "\stdClass")
+                $query->entity($decl);
         }
         
         if (!empty($query['entity']) && $query['entity'] != "\stdClass") {

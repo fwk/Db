@@ -33,11 +33,13 @@
  */
 namespace Fwk\Db\Relations;
 
-use Fwk\Db\Relation;
-use Fwk\Db\Query;
-use Fwk\Db\Accessor;
-use Fwk\Db\EntityEvents;
-use Fwk\Db\Registry;
+use Fwk\Db\Relation,
+    Fwk\Db\Query,
+    Fwk\Db\Accessor,
+    Fwk\Db\EntityEvents,
+    Fwk\Db\Registry, 
+    Fwk\Db\Workers\SaveEntityWorker, 
+    Fwk\Db\Workers\DeleteEntityWorker;
 
 class One2One extends AbstractRelation implements Relation
 {
@@ -113,7 +115,7 @@ class One2One extends AbstractRelation implements Relation
     public function __get($key) {
         $obj = $this->get();
         if(!\is_object($obj))
-                throw new \RuntimeException (sprintf('Unable to retrieve %s parameter from relation (empty)', $key));
+                throw new \RuntimeException (sprintf('Unable to retrieve "%s" parameter from relation (empty)', $key));
         
         return Accessor::factory($obj)->get($key);
     }
@@ -187,11 +189,11 @@ class One2One extends AbstractRelation implements Relation
             $priority   = $ts;
             switch($action) {
                 case Registry::ACTION_DELETE:
-                    $worker = new \Fwk\Db\Entity\Workers\DeleteEntityWorker($object);
+                    $worker = new DeleteEntityWorker($object);
                     break;
 
                 case Registry::ACTION_SAVE:
-                    $worker = new \Fwk\Db\Entity\Workers\SaveEntityWorker($object);
+                    $worker = new SaveEntityWorker($object);
                     break;
 
                 default:
@@ -224,7 +226,7 @@ class One2One extends AbstractRelation implements Relation
             $worker->setRegistry($registry);
             $entity     = $worker->getEntity();
 
-            if($worker instanceof \Fwk\Db\Entity\Workers\SaveEntityWorker) {
+            if($worker instanceof SaveEntityWorker) {
                $worker->execute($connection);
                
                $current = Accessor::factory($entity)->get($this->foreign);
@@ -232,7 +234,7 @@ class One2One extends AbstractRelation implements Relation
                $this->getRegistry()->defineInitialValues($entity);
             }
 
-            if($worker instanceof \Fwk\Db\Entity\Workers\DeleteEntityWorker) {
+            if($worker instanceof DeleteEntityWorker) {
                 Accessor::factory($parent)->set($this->local, null);
                 parent::remove($entity);
             }

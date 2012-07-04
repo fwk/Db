@@ -176,6 +176,11 @@ class Hydrator
                 $access->setValues($values);
                 $mainObjRefs    = $ids;
                 
+                foreach ($access->getRelations() as $columnName => $relation) {
+                    $relation->setConnection($this->connection);
+                    $relation->setParentRefs($access->get($relation->getLocal()));
+                }
+                
                 if (!$isJoin) {
                     $mainObj        = $obj;
                     $mainObjTable   = $tableName;
@@ -209,16 +214,14 @@ class Hydrator
                 unset($access, $values, $isJoin, $columns, $current);
             }
 
+            
             $access = new Accessor($mainObj);
             $relations  = $access->getRelations();
             foreach ($relations as $columnName => $relation) {
-                $relation->setParentRefs($access->get($relation->getLocal()));
                 $tableObj   = $this->connection->table($mainObjTable);
                 $relation->setParent($mainObj, $tableObj->getRegistry()->getEventDispatcher($mainObj));
-                if($relation->isLazy())
-                        $relation->setConnection($this->connection);
             }
-
+ 
             unset($mainObj, $mainObjRefs);
         }
 
@@ -233,7 +236,7 @@ class Hydrator
      * @param  string                  $columnName
      * @param  array                   $join
      * @param  string                  $entityClass
-     * @return \Fwk\Db\Entity\Relation
+     * @return \Fwk\Db\Relation
      */
     public function getRelationObject($object, $columnName, array $join, $entityClass = '\stdClass')
     {

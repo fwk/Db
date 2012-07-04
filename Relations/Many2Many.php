@@ -37,7 +37,9 @@ use Fwk\Db\Relation,
     Fwk\Db\Query,
     Fwk\Db\Accessor,
     Fwk\Db\EntityEvents,
-    Fwk\Db\Registry;
+    Fwk\Db\Registry, 
+    Fwk\Db\Workers\SaveEntityWorker, 
+    Fwk\Db\Workers\DeleteEntityWorker;
 
 class Many2Many extends AbstractManyRelation implements Relation
 {
@@ -129,7 +131,7 @@ class Many2Many extends AbstractManyRelation implements Relation
             $entity     = $worker->getEntity();
             $exec       = true;
             
-            if($worker instanceof \Fwk\Db\Entity\Workers\DeleteEntityWorker) {
+            if($worker instanceof DeleteEntityWorker) {
                  if(!isset($this->parent))
                         throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
 
@@ -166,7 +168,7 @@ class Many2Many extends AbstractManyRelation implements Relation
                 $exec = false;
             }
 
-            if($worker instanceof \Fwk\Db\Entity\Workers\SaveEntityWorker) {
+            if($worker instanceof SaveEntityWorker) {
                 if(!isset($this->parent))
                         throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
 
@@ -187,7 +189,7 @@ class Many2Many extends AbstractManyRelation implements Relation
             if($exec) {
                 $worker->execute($connection);
                 
-                if($worker instanceof \Fwk\Db\Entity\Workers\SaveEntityWorker && $this->getRegistry()->getState($entity) == Registry::STATE_NEW) {
+                if($worker instanceof SaveEntityWorker && $this->getRegistry()->getState($entity) == Registry::STATE_NEW) {
                     $query  = Query::factory()
                         ->insert($this->foreignTable);
 
@@ -287,11 +289,11 @@ class Many2Many extends AbstractManyRelation implements Relation
             $priority   = $ts;
             switch($action) {
                 case Registry::ACTION_DELETE:
-                    $worker = new \Fwk\Db\Entity\Workers\DeleteEntityWorker($object);
+                    $worker = new DeleteEntityWorker($object);
                     break;
 
                 case Registry::ACTION_SAVE:
-                    $worker = new \Fwk\Db\Entity\Workers\SaveEntityWorker($object);
+                    $worker = new SaveEntityWorker($object);
                     break;
 
                 default:

@@ -37,7 +37,9 @@ use Fwk\Db\Relation,
     Fwk\Db\Query,
     Fwk\Db\Accessor,
     Fwk\Db\EntityEvents,
-    Fwk\Db\Registry;
+    Fwk\Db\Registry, 
+    Fwk\Db\Workers\SaveEntityWorker, 
+    Fwk\Db\Workers\DeleteEntityWorker;
 
 class One2Many extends AbstractManyRelation implements Relation
 {
@@ -129,7 +131,7 @@ class One2Many extends AbstractManyRelation implements Relation
             $worker->setRegistry($registry);
             $entity     = $worker->getEntity();
             
-            if($worker instanceof \Fwk\Db\Entity\Workers\SaveEntityWorker) {
+            if($worker instanceof SaveEntityWorker) {
                 if(!isset($this->parent))
                         throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
 
@@ -150,7 +152,7 @@ class One2Many extends AbstractManyRelation implements Relation
 
             $worker->execute($connection);
 
-            if($worker instanceof \Fwk\Db\Entity\Workers\DeleteEntityWorker) {
+            if($worker instanceof DeleteEntityWorker) {
                 parent::getRegistry()->remove($entity);
             }
         }
@@ -179,11 +181,11 @@ class One2Many extends AbstractManyRelation implements Relation
             $priority   = $ts;
             switch($action) {
                 case Registry::ACTION_DELETE:
-                    $worker = new \Fwk\Db\Entity\Workers\DeleteEntityWorker($object);
+                    $worker = new DeleteEntityWorker($object);
                     break;
 
                 case Registry::ACTION_SAVE:
-                    $worker = new \Fwk\Db\Entity\Workers\SaveEntityWorker($object);
+                    $worker = new SaveEntityWorker($object);
                     break;
 
                 default:
