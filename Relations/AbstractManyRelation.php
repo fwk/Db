@@ -39,7 +39,8 @@ use Fwk\Db\EntityEvents,
     Fwk\Db\Exception, 
     Fwk\Db\Connection, 
     Fwk\Events\Dispatcher,
-    \IteratorAggregate;
+    \IteratorAggregate, 
+    Fwk\Db\Accessor;
 
 /**
  * Abstract utility class for *Many Relations

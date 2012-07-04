@@ -32,6 +32,8 @@
  */
 namespace Fwk\Db;
 
+use Fwk\Db\Relation;
+
 /**
  * This class is a simple accessor for values of objects
  *

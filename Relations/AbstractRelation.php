@@ -381,6 +381,7 @@ abstract class AbstractRelation implements IteratorAggregate
      */
      public function toArray()
     {
+         $this->fetch();
         $final= array();
         foreach($this->getRegistry()->getStore() as $object) {
                 $data   = $this->getRegistry()->getData($object);

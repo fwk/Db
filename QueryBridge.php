@@ -156,7 +156,14 @@ class QueryBridge
         }
 
         $table = $query['from'];
-
+        if(!empty($table)) {
+            if(strpos($table, ' '))
+                    list($table, ) = explode(' ', $table);
+            
+            $decl   = $this->connection->table($table)->getDefaultEntity($table);
+            $query->entity($decl);
+        }
+        
         if (!empty($query['entity']) && $query['entity'] != "\stdClass") {
             $obj        = new $query['entity'];
             $access     = new Accessor($obj);

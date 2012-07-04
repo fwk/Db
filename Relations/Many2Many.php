@@ -233,7 +233,7 @@ class Many2Many extends AbstractManyRelation implements Relation
             $res = $connect->execute($query, $params);
             foreach ($res as $result) {
                    $ids     = array();
-                   $access  = new \Fwk\Types\Accessor($result);
+                   $access  = new Accessor($result);
                    foreach($idKeys as $key) {
                        $ids[$key]   = $access->get($key);
                    }
