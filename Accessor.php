@@ -22,13 +22,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- *
- * @package    Fwk
- * @subpackage Db
- * @author     Julien Ballestracci <julien@nitronet.org>
- * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
- * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://www.phpfwk.com
+ * 
+ * @category  Database
+ * @package   Fwk\Db
+ * @author    Julien Ballestracci <julien@nitronet.org>
+ * @copyright 2011-2012 Julien Ballestracci <julien@nitronet.org>
+ * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link      http://www.phpfwk.com
  */
 namespace Fwk\Db;
 
@@ -40,6 +40,11 @@ use Fwk\Db\Relation;
  * If getters/setters are found, we use them first.
  * If not, we try to directly get/set the value (\ArrayAccess or \stdClass)
  *
+ * @category Utilities
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.phpfwk.com
  */
 class Accessor
 {
@@ -67,17 +72,24 @@ class Accessor
     /**
      * Constructor
      *
-     * @param mixed $object
+     * @param mixed $object The object we want to access
+     * 
+     * @throws \InvalidArgumentException if $object is not an object
+     * @return void
      */
     public function __construct($object)
     {
+        if (!is_object($object)) {
+            throw new \InvalidArgumentException("Argument is not an object");
+        }
+        
         $this->object   = $object;
     }
 
     /**
-     * Returns all relations objects from an entity
+     * Returns all relations from an entity
      *
-     * @return array<ColumnName,Relation>
+     * @return array Found relations
      */
     public function getRelations()
     {
@@ -93,13 +105,25 @@ class Accessor
         return $final;
     }
 
+    /**
+     * Static toArray() modifier to handle objects and relations.
+     * {@see Accessor::toArray()}
+     * 
+     * @param mixed $value Actual value 
+     * 
+     * @return mixed Filtered value
+     */
     public static function everythingAsArrayModifier($value)
     {
         if ($value instanceof Relation) {
             /**
              * @todo Boucle infinie!!!  $value->hasChanged()
              */
-            $value  = sprintf('relation:%s-%s', (string) \microtime(), (string) $value->isFetched());
+            $value  = sprintf(
+                'relation:%s-%s', 
+                (string)\microtime(), 
+                (string)$value->isFetched()
+            );
         }
 
         if (is_object($value)) {
@@ -124,8 +148,9 @@ class Accessor
     /**
      * Try to retrieve a value from the object
      *
-     * @param  string $key
-     * @return mixed
+     * @param string $key Propertie's name
+     * 
+     * @return mixed Actual value if reached or false 
      */
     public function get($key)
     {
@@ -157,9 +182,10 @@ class Accessor
     /**
      * Try to set a value
      *
-     * @param  string  $key
-     * @param  mixed   $value
-     * @return boolean
+     * @param string $key   Propertie's name
+     * @param mixed  $value Desired value
+     * 
+     * @return boolean true if successful
      */
     public function set($key, $value)
     {
@@ -204,11 +230,11 @@ class Accessor
     }
 
     /**
-     * Set multiple values
+     * Set multiple values at once
      *
-     * @param array $values
+     * @param array $values Array of keys->values to be set
      *
-     * @return
+     * @return void
      */
     public function setValues(array $values)
     {
@@ -231,6 +257,14 @@ class Accessor
         return $this->reflector;
     }
 
+    /**
+     * Make an array of keys->values (eventually filtered by $modifier) from
+     * object's properties.
+     * 
+     * @param mixed $modifier Filtering callable
+     * 
+     * @return array The resulting array
+     */
     public function toArray($modifier = null)
     {
         $reflector  = $this->getReflector();
@@ -252,7 +286,9 @@ class Accessor
     /**
      * Produces a unique hash code based on values
      *
-     *
+     * @param string $algo Desired algorythm
+     * 
+     * @return string
      */
     public function hashCode($algo  = 'md5')
     {
@@ -272,22 +308,24 @@ class Accessor
     }
 
     /**
-     *
-     * @param mixed $object
-     *
-     * @throws \InvalidArgumentException
+     * Factory utility
+     * 
+     * @param mixed $object The object we want to access
      *
      * @return Accessor
      */
     public static function factory($object)
     {
-        if (!is_object($object)) {
-            throw new \InvalidArgumentException("Argument is not an object");
-        }
-
         return new static($object);
     }
 
+    /**
+     * Should we force properties visibility ?
+     * 
+     * @param boolean $bool yes or no
+     * 
+     * @return void
+     */
     public function overrideVisibility($bool)
     {
         $this->force = (bool) $bool;

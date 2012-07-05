@@ -22,9 +22,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- *
- * @package    Fwk
- * @subpackage Db
+ * 
+ * @category   Database
+ * @package    Fwk\Db
  * @subpackage Workers
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
@@ -37,11 +37,30 @@ use Fwk\Db\Registry,
     Fwk\Db\Worker,
     Fwk\Events\Event,
     Fwk\Db\EntityEvents,
-    Fwk\Db\Accessor;
+    Fwk\Db\Accessor,
+    Fwk\Db\Connection;
 
+/**
+ * Save Entity Worker
+ * 
+ * This worker is used when an entity or relation have to be deleted.
+ * 
+ * @category Workers
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.phpfwk.com
+ */
 class DeleteEntityWorker extends AbstractWorker implements Worker
 {
-    public function execute(\Fwk\Db\Connection $connection)
+    /**
+     * Executes the worker (SQL queries) and fire EntityEvents
+     * 
+     * @param Connection $connection Database connection
+     * 
+     * @return void
+     */
+    public function execute(Connection $connection)
     {
         $registry   = $this->getRegistry();
         $data       = $registry->getData($this->entity);
@@ -53,45 +72,89 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         $access     = new Accessor($this->entity);
 
         switch ($state) {
-            case Registry::STATE_UNKNOWN:
-                throw new \LogicException(sprintf('Entity is in unknown state (%s)', get_class($this->entity)));
+        case Registry::STATE_UNKNOWN:
+            throw new \LogicException(
+                sprintf(
+                    'Entity is in unknown state (%s)', 
+                    get_class($this->entity)
+                )
+            );
 
-            case Registry::STATE_NEW:
-                return;
+        case Registry::STATE_NEW:
+            return;
 
-            case Registry::STATE_FRESH:
-            case Registry::STATE_CHANGED:
-                $registry->fireEvent($this->entity, new Event(EntityEvents::BEFORE_DELETE, array('object'  => $this->entity, 'connection'   => $connection)));
+        case Registry::STATE_FRESH:
+        case Registry::STATE_CHANGED:
+            $registry->fireEvent(
+                $this->entity, 
+                new Event(
+                    EntityEvents::BEFORE_DELETE, 
+                    array(
+                        'object'        => $this->entity, 
+                        'connection'    => $connection
+                    )
+                )
+            );
 
-                $changed    = $registry->getChangedValues($this->entity);
-                $data       = $registry->getData($this->entity);
-                $state      = $data['state'];
+            $changed    = $registry->getChangedValues($this->entity);
+            $data       = $registry->getData($this->entity);
+            $state      = $data['state'];
 
-                $query->delete($table->getName())->where('1 = 1');
-                $ids    = $data['identifiers'];
-                $idKeys = $table->getIdentifiersKeys();
-                if(!count($ids))
-                    throw new \LogicException(sprintf('Entity %s lacks identifiers and cannot be deleted.', get_class($this->entity)));
-
-                foreach ($changed as $key => $value) {
-                    if(\array_key_exists($key, $ids))
-                            throw new \LogicException (sprintf('Unable to delete entity because identifiers (%s) have been modified', implode(', ', $ids)));
+            $query->delete($table->getName())->where('1 = 1');
+            $ids    = $data['identifiers'];
+            $idKeys = $table->getIdentifiersKeys();
+            if (!count($ids)) {
+                throw new \LogicException(
+                    sprintf(
+                        'Entity %s lacks identifiers and cannot be deleted.', 
+                        get_class($this->entity)
+                    )
+                );
+            }
+            
+            foreach ($changed as $key => $value) {
+                if (\array_key_exists($key, $ids)) {
+                    throw new \LogicException(
+                        sprintf(
+                            'Unable to delete entity because identifiers (%s) '.
+                            'have been modified', 
+                            implode(', ', $ids)
+                        )
+                    );
                 }
+            }
 
-                foreach ($idKeys as $key) {
-                    $query->andWhere(sprintf('`%s` = ?', $key));
-                    $value = $access->get($key);
-                    if(!$value)
-                        throw new \RuntimeException(sprintf('Cannot delete entity object (%s) because it lacks identifier (%s)', get_class($this->entity), $key));
-
-                    $queryParams[] = $value;
+            foreach ($idKeys as $key) {
+                $query->andWhere(sprintf('`%s` = ?', $key));
+                $value = $access->get($key);
+                if (!$value) {
+                    throw new \RuntimeException(
+                        sprintf(
+                            'Cannot delete entity object (%s) because it '. 
+                            'lacks identifier (%s)', 
+                            get_class($this->entity), 
+                            $key
+                        )
+                    );
                 }
+                $queryParams[] = $value;
+            }
 
-                break;
+            break;
         }
 
         $connection->execute($query, $queryParams);
-        $registry->fireEvent($this->entity, new Event(EntityEvents::AFTER_DELETE, array('object'  => $this->entity, 'connection'   => $connection)));
+        $registry->fireEvent(
+            $this->entity, 
+            new Event(
+                EntityEvents::AFTER_DELETE, 
+                array(
+                    'object'        => $this->entity, 
+                    'registry'      => $registry, 
+                    'connection'    => $connection
+                )
+            )
+        );
         $registry->remove($this->entity);
     }
 }
