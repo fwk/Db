@@ -22,18 +22,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- *
- * @package    Fwk
- * @subpackage Db
- * @author     Julien Ballestracci <julien@nitronet.org>
- * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
- * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://www.phpfwk.com
+ * 
+ * @category  Database
+ * @package   Fwk\Db
+ * @author    Julien Ballestracci <julien@nitronet.org>
+ * @copyright 2011-2012 Julien Ballestracci <julien@nitronet.org>
+ * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link      http://www.phpfwk.com
  */
 namespace Fwk\Db;
 
 /**
- * ResultSet Utility Class
+ * ResultSet Class
+ * 
+ * Wrapper class for query (SELECT) results
+ *
+ * @category Utilities
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.phpfwk.com
  */
 class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
 {
@@ -47,6 +55,8 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     /**
      * Constructor
      *
+     * @param array $results Query results
+     * 
      * @return void
      */
     public function __construct(array $results = array())
@@ -62,8 +72,10 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     *
-     * @param \Closure $filter
+     * Programmatically filter actual results and returns a new ResultSet to
+     * allow chainning.
+     * 
+     * @param \Closure $filter Filter callable
      *
      * @return ResultSet
      */
@@ -87,8 +99,10 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     *
-     * @param  mixed   $offset
+     * Verify the existence of an offset
+     * 
+     * @param mixed $offset Key name or index
+     * 
      * @return boolean
      */
     public function offsetExists($offset)
@@ -104,8 +118,10 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     *
-     * @param  mixed $offset
+     * Return the value for a given offset or null.
+     * 
+     * @param mixed $offset Key name or index
+     * 
      * @return mixed
      */
     public function offsetGet($offset)
@@ -121,8 +137,9 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     *
-     * @param mixed $object
+     * Tells if $object is stored
+     * 
+     * @param mixed $object Test object
      *
      * @return boolean
      */
@@ -132,9 +149,11 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     *
-     * @param  mixed $offset
-     * @param  mixed $value
+     * Adds an object at the specified offset
+     *  
+     * @param mixed $offset Key name or index
+     * @param mixed $value  Entity 
+     * 
      * @return void
      */
     public function offsetSet($offset, $value)
@@ -154,8 +173,10 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     *
-     * @param  mixed $offset
+     * Removes an object from the specified offset
+     * 
+     * @param mixed $offset Key name or index
+     * 
      * @return void
      */
     public function offsetUnset($offset)
@@ -169,7 +190,8 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     *
+     * Transform this result set to a plain PHP array
+     * 
      * @return array
      */
     public function toArray()
@@ -183,7 +205,8 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     *
+     * Count how many objects are stored 
+     * 
      * @return integer
      */
     public function count()
@@ -192,7 +215,9 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     }
 
     /**
-     *
+     * Returns a \Traversable iterator
+     * {@see \IteratorAggregate}
+     * 
      * @return \ArrayIterator
      */
     public function getIterator()
