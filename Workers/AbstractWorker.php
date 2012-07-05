@@ -22,9 +22,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- *
- * @package    Fwk
- * @subpackage Db
+ * 
+ * @category   Database
+ * @package    Fwk\Db
  * @subpackage Workers
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
@@ -35,7 +35,16 @@ namespace Fwk\Db\Workers;
 
 use Fwk\Db\Registry;
 
-class AbstractWorker
+/**
+ * Base utility class for Workers
+ * 
+ * @category Workers
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.phpfwk.com
+ */
+abstract class AbstractWorker
 {
     /**
      * Object to delete
@@ -45,31 +54,52 @@ class AbstractWorker
     protected $entity;
 
     /**
-     *
+     * Defined Registry to work with
+     * 
      * @var Registry
      */
     protected $registry;
 
     /**
-     *
-     * @param mixed $entity
+     * Constructor
+     * 
+     * @param mixed $entity The object involved with this worker
+     * 
+     * @return void
      */
     public function __construct($entity)
     {
         $this->entity   = $entity;
     }
 
+    /**
+     * Return the registry to be used by this worker
+     * 
+     * @return Registry
+     */
     public function getRegistry()
     {
 
         return $this->registry;
     }
 
+    /**
+     * Defines the Registry to work with.
+     * 
+     * @param Registry $registry The registry to be used by this worker
+     * 
+     * @return void
+     */
     public function setRegistry(Registry $registry)
     {
         $this->registry = $registry;
     }
 
+    /**
+     * Return the defined entity
+     * 
+     * @return mixed
+     */
     public function getEntity()
     {
 
