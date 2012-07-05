@@ -36,7 +36,7 @@ namespace Fwk\Db\Workers;
 use Fwk\Db\Registry,
     Fwk\Db\Worker,
     Fwk\Events\Event,
-    Fwk\Db\EntityEvents, 
+    Fwk\Db\EntityEvents,
     Fwk\Db\Accessor;
 
 class DeleteEntityWorker extends AbstractWorker implements Worker
@@ -51,8 +51,8 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         $query      = \Fwk\Db\Query::factory();
         $queryParams = array();
         $access     = new Accessor($this->entity);
-        
-        switch($state) {
+
+        switch ($state) {
             case Registry::STATE_UNKNOWN:
                 throw new \LogicException(sprintf('Entity is in unknown state (%s)', get_class($this->entity)));
 
@@ -73,17 +73,17 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
                 if(!count($ids))
                     throw new \LogicException(sprintf('Entity %s lacks identifiers and cannot be deleted.', get_class($this->entity)));
 
-                foreach($changed as $key => $value) {
+                foreach ($changed as $key => $value) {
                     if(\array_key_exists($key, $ids))
                             throw new \LogicException (sprintf('Unable to delete entity because identifiers (%s) have been modified', implode(', ', $ids)));
                 }
 
-                foreach($idKeys as $key) {
+                foreach ($idKeys as $key) {
                     $query->andWhere(sprintf('`%s` = ?', $key));
                     $value = $access->get($key);
                     if(!$value)
                         throw new \RuntimeException(sprintf('Cannot delete entity object (%s) because it lacks identifier (%s)', get_class($this->entity), $key));
-                    
+
                     $queryParams[] = $value;
                 }
 

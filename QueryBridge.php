@@ -45,7 +45,7 @@ class QueryBridge
     const STATE_INIT    = 0;
     const STATE_READY   = 1;
     const STATE_ERROR   = 2;
-    
+
     /**
      * The Connection
      *
@@ -64,38 +64,39 @@ class QueryBridge
      * @var array
      */
     protected $columnsAliases;
-    
+
     /**
      *
-     * @var QueryBuilder 
+     * @var QueryBuilder
      */
     protected $handle;
-    
+
     protected $state = self::STATE_INIT;
-    
+
     protected $queryString;
 
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
-    } 
+    }
 
     /**
      *
-     * @param Query $query
-     * @param array $params
-     * @param array $options
-     * @return \Doctrine\DBAL\Query\QueryBuilder 
+     * @param  Query                             $query
+     * @param  array                             $params
+     * @param  array                             $options
+     * @return \Doctrine\DBAL\Query\QueryBuilder
      */
     public function execute(Query $query, array $params = array())
     {
         $this->queryString = $sql = $this->prepare($query);
 
-        if($query->getType() == Query::TYPE_INSERT) {
+        if ($query->getType() == Query::TYPE_INSERT) {
             return $this->connection->getDriver()->executeUpdate($sql, $params);
         }
-        
+
         $this->handle->setParameters($params);
+
         return $this->handle->execute();
     }
 
@@ -107,10 +108,10 @@ class QueryBridge
      */
     public function prepare(Query $query)
     {
-        if($this->state !== self::STATE_INIT) {
+        if ($this->state !== self::STATE_INIT) {
             return;
         }
-        
+
         $this->handle   = $this->connection->getDriver()->createQueryBuilder();
         $type           = $query->getType();
         switch ($type) {
@@ -145,7 +146,7 @@ class QueryBridge
                 break;
 
             default:
-                throw new Exception(sprintf('Unknown query type "%s"', (string)$type));
+                throw new Exception(sprintf('Unknown query type "%s"', (string) $type));
         }
 
         foreach ($parts as $part => $required) {
@@ -155,15 +156,15 @@ class QueryBridge
         }
 
         $table = $query['from'];
-        if(!empty($table)) {
+        if (!empty($table)) {
             if(strpos($table, ' '))
                     list($table, ) = explode(' ', $table);
-            
+
             $decl   = $this->connection->table($table)->getDefaultEntity($table);
             if(empty($query['entity']) || $query['entity'] == "\stdClass")
                 $query->entity($decl);
         }
-        
+
         if (!empty($query['entity']) && $query['entity'] != "\stdClass") {
             $obj        = new $query['entity'];
             $access     = new Accessor($obj);
@@ -187,12 +188,12 @@ class QueryBridge
 
         $this->getSelectFrom($query['from'], $queryJoins);
         $this->getSelectColumns($query['select'], $query['from'], $query, $queryJoins);
-        if(isset($query['joins'])) { $this->getSelectJoins($queryJoins); }
-        if(isset($query['where'])) { $this->getWhere($query); }
-        if(isset($query['groupBy'])) { $this->getGroupBy($query['groupBy']); }
-        if(isset($query['orderBy'])) { $this->getOrderBy($query['orderBy']); }
-        if(isset($query['limit'])) { $this->getLimit($query['limit']); }
-        
+        if (isset($query['joins'])) { $this->getSelectJoins($queryJoins); }
+        if (isset($query['where'])) { $this->getWhere($query); }
+        if (isset($query['groupBy'])) { $this->getGroupBy($query['groupBy']); }
+        if (isset($query['orderBy'])) { $this->getOrderBy($query['orderBy']); }
+        if (isset($query['limit'])) { $this->getLimit($query['limit']); }
+
         return $this->handle->getSQL();
     }
 
@@ -203,16 +204,16 @@ class QueryBridge
     public function deleteQuery(Query $query)
     {
         $from = $query['delete'];
-        if(strpos($from,' ')) {
+        if (strpos($from,' ')) {
             list($from, $alias) = explode(' ', $from);
         } else {
             $alias = null;
         }
-        
+
         $this->handle->delete($from, $alias);
-        if(isset($query['where'])) { $this->getWhere($query); }
-        if(isset($query['limit'])) { $this->getLimit($query['limit']); }
-        
+        if (isset($query['where'])) { $this->getWhere($query); }
+        if (isset($query['limit'])) { $this->getLimit($query['limit']); }
+
         return $this->handle->getSQL();
     }
 
@@ -223,16 +224,16 @@ class QueryBridge
     public function updateQuery(Query $query)
     {
         $update = $query['update'];
-        if(strpos($update,' ')) {
+        if (strpos($update,' ')) {
             list($update, $alias) = explode(' ', $update);
         } else {
             $alias = null;
         }
         $this->handle->update($update, $alias);
         $this->getUpdateSet($query['values']);
-        if(isset($query['where'])) { $this->getWhere($query); }
-        if(isset($query['limit'])) { $this->getLimit($query['limit']); }
-        
+        if (isset($query['where'])) { $this->getWhere($query); }
+        if (isset($query['limit'])) { $this->getLimit($query['limit']); }
+
         return $this->handle->getSQL();
     }
 
@@ -243,7 +244,7 @@ class QueryBridge
     public function insertQuery(Query $query)
     {
         $str = "INSERT INTO";
-        
+
         $table = $query['insert'];
         if($table instanceof Table)
             $table = $table->getName();
@@ -275,28 +276,27 @@ class QueryBridge
 
             $type = $join['type'];
             $table = $join['table'];
-            if(strpos($table, ' ') !== false) {
+            if (strpos($table, ' ') !== false) {
                 list($table, ) = explode(' ', $table);
-            } 
+            }
 
             $fromAlias = $this->getTableAlias(array_shift(array_keys($this->tablesAliases)));
             $alias = $this->getTableAlias($table);
             $local = $join['local'];
             $foreign = $join['foreign'];
 
-            if(\strpos($foreign, '.') === false) {
+            if (\strpos($foreign, '.') === false) {
                 $foreign = $alias .'.'. $foreign;
             }
 
-            if(\strpos($local, '.') === false) {
+            if (\strpos($local, '.') === false) {
                 $local = $fromAlias .'.'. $local;
             }
-            
+
             $cond = sprintf('%s = %s', $local, $foreign);
-            if($type == Query::JOIN_LEFT) {
+            if ($type == Query::JOIN_LEFT) {
                 $this->handle->leftJoin($fromAlias, $table, $alias, $cond);
-            }
-            else {
+            } else {
                 $this->handle->join($fromAlias, $table, $alias, $cond);
             }
         }
@@ -319,16 +319,17 @@ class QueryBridge
     protected function getCleanInsertValue($value)
     {
         $value = trim($value);
-        if($value === '?' || strpos($value, ':') === 0) {
+        if ($value === '?' || strpos($value, ':') === 0) {
             return $value;
         }
-        
+
         /*
         if($value instanceof Expression)
+
             return (string) $value;
         */
-        
-        if($value === null) {
+
+        if ($value === null) {
             return 'NULL';
         }
 
@@ -425,58 +426,56 @@ class QueryBridge
         if (!is_array($tables)) {
             $tables = array($tables);
         }
-        
+
         $joinned = array();
         if (is_array($joins)) {
             $js = $joins;
             foreach ($joins as $k => $join) {
                 array_push($tables, $join['table']);
-                
+
                 if (strpos($join['table'], ' ') !== false) {
                     list($tble,$alias) = explode(' ', $join['table']);
                     $join['table'] = $tble;
-                }
-                else {
+                } else {
                     $tble = $join['table'];
                     $alias = 'j'. (is_array($this->tablesAliases) ? count($this->tablesAliases) : '0');
                 }
-                
+
                 $js[$k]['table'] = $tble;
                 $js[$k]['alias'] = $alias;
-                
+
                 array_push($joinned, $join['table']);
             }
         }
 
         $tbls = array();
         foreach ($tables as $table) {
-            if($table instanceof Table) {
+            if ($table instanceof Table) {
                 $table = $table->getName();
             }
-            
+
             $table = trim($table);
             if (\strpos($table, ' ') !== false) {
                 list($table, $alias) = \explode(' ', $table);
-            }
-            else {
-                if(\is_array($this->tablesAliases)) {
+            } else {
+                if (\is_array($this->tablesAliases)) {
                     $alias = array_search($table, $this->tablesAliases);
-                    if(!$alias) {
+                    if (!$alias) {
                         $alias = 't'. count($this->tablesAliases);
                     }
                 } else {
                     $alias = 't0';
                 }
             }
-            
+
             $this->tablesAliases[trim($alias)] = trim($table);
-            
-            if(!in_array($table, $joinned)) {
+
+            if (!in_array($table, $joinned)) {
                 \array_push($tbls, array('table' => $table, 'alias' => $alias));
             }
         }
 
-        foreach($tbls as $infos) {
+        foreach ($tbls as $infos) {
             $this->handle->from($infos['table'], $infos['alias']);
         }
     }
@@ -488,12 +487,12 @@ class QueryBridge
      */
     protected function getTableAlias($tableName)
     {
-        if(!is_array($this->tablesAliases)) {
+        if (!is_array($this->tablesAliases)) {
            return $tableName;
         }
-        
+
         $k = \array_search($tableName, $this->tablesAliases);
-        
+
         return (false === $k ? $tableName : $k);
     }
 
@@ -507,7 +506,7 @@ class QueryBridge
     protected function getSelectColumnsFromTables($tables, $joins = null)
     {
         srand();
-        
+
         if (is_string($tables) && \strpos($tables, ',') !== false)
             $tables = \explode(',', $tables);
 
@@ -653,12 +652,13 @@ class QueryBridge
         $wheres = $query['wheres'];
 
         $this->handle->where($where);
-        
+
         if(!is_array($wheres) OR !count($wheres))
+
             return;
 
         foreach ($wheres as $w) {
-            if($w['type'] == Query::WHERE_OR) {
+            if ($w['type'] == Query::WHERE_OR) {
                 $this->handle->orWhere($w['condition']);
             } else {
                 $this->handle->andWhere($w['condition']);
@@ -674,10 +674,10 @@ class QueryBridge
      */
     protected function getLimit(array $limit)
     {
-        if($limit['first'] !== null) {
+        if ($limit['first'] !== null) {
             $this->handle->setFirstResult($limit['first']);
-        } 
-        
+        }
+
         $this->handle->setMaxResults($limit['max']);
     }
 
@@ -691,10 +691,10 @@ class QueryBridge
     {
         $this->handle->groupBy($groupBy);
     }
-    
+
     /**
      *
-     * @return string 
+     * @return string
      */
     public function getQueryString()
     {

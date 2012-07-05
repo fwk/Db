@@ -36,4 +36,3 @@ namespace Fwk\Db\Exceptions;
 use Fwk\Db\Exception;
 
 class ConnectionError extends Exception { }
-

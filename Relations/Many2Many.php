@@ -37,19 +37,19 @@ use Fwk\Db\Relation,
     Fwk\Db\Query,
     Fwk\Db\Accessor,
     Fwk\Db\EntityEvents,
-    Fwk\Db\Registry, 
-    Fwk\Db\Workers\SaveEntityWorker, 
+    Fwk\Db\Registry,
+    Fwk\Db\Workers\SaveEntityWorker,
     Fwk\Db\Workers\DeleteEntityWorker;
 
 class Many2Many extends AbstractManyRelation implements Relation
 {
     protected $foreignTable;
-    
+
     protected $foreignRefs;
-    
+
     protected $foreignLink;
 
-    public function __construct($local, $foreign, $table, $foreignTable, 
+    public function __construct($local, $foreign, $table, $foreignTable,
         $foreignRefs, $foreignLink, $entity = null)
     {
         parent::__construct($local, $foreign, $table, $entity);
@@ -62,7 +62,7 @@ class Many2Many extends AbstractManyRelation implements Relation
     /**
      * Prepares a Query to fetch this relation (only FETCH_EAGER)
      *
-     * @param Query $query
+     * @param  Query $query
      * @return void
      */
     public function prepare(Query $query, $columName)
@@ -70,7 +70,7 @@ class Many2Many extends AbstractManyRelation implements Relation
         if ($this->isLazy()) {
             return;
         }
-        
+
         $join1 = array(
             'column' => 'skipped_join',
             'relation' => false,
@@ -91,20 +91,20 @@ class Many2Many extends AbstractManyRelation implements Relation
         srand();
         $skAlias = 'skj' . rand(100, 999);
         $jAlias = 'j' . rand(100, 999);
-        
+
         $query->join($this->foreignTable . ' ' . $skAlias, $this->local, $this->foreign, Query::JOIN_LEFT, $join1);
         $query->join($this->tableName . ' ' . $jAlias, $jAlias . '.' . $this->foreignRefs, $skAlias . '.' . $this->foreignLink, Query::JOIN_LEFT, $join);
     }
 
     /**
      *
-     * @param mixed $object
+     * @param mixed                  $object
      * @param \Fwk\Events\Dispatcher $evd
      */
     public function setParent($object, \Fwk\Events\Dispatcher $evd)
     {
         $return     = parent::setParent($object, $evd);
-        if($return === true) {
+        if ($return === true) {
             $evd->on(EntityEvents::AFTER_SAVE, array($this, 'onParentSave'));
             $evd->on(EntityEvents::AFTER_UPDATE, array($this, 'onParentSave'));
         }
@@ -115,7 +115,7 @@ class Many2Many extends AbstractManyRelation implements Relation
     /**
      * Listener executed when parent entity is saved
      *
-     * @param \Fwk\Events\Event $event
+     * @param  \Fwk\Events\Event $event
      * @return void
      */
     public function  onParentSave(\Fwk\Events\Event $event)
@@ -125,12 +125,12 @@ class Many2Many extends AbstractManyRelation implements Relation
         $table          = $connection->table($this->getTableName());
 
         $registry       = $table->getRegistry();
-        foreach($this->getWorkersQueue() as $worker) {
+        foreach ($this->getWorkersQueue() as $worker) {
             $worker->setRegistry($registry);
             $entity     = $worker->getEntity();
             $exec       = true;
-            
-            if($worker instanceof DeleteEntityWorker) {
+
+            if ($worker instanceof DeleteEntityWorker) {
                  if(!isset($this->parent))
                         throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
 
@@ -159,15 +159,15 @@ class Many2Many extends AbstractManyRelation implements Relation
 
                 if(empty($acc))
                     throw new \RuntimeException (sprintf('Identifier not set on %s (column: %s)', get_class($entity), $this->local));
-                
+
                 $connection->execute($query, $params);
                 $this->getRegistry()->remove($entity);
                 continue;
-                
+
                 $exec = false;
             }
 
-            if($worker instanceof SaveEntityWorker) {
+            if ($worker instanceof SaveEntityWorker) {
                 if(!isset($this->parent))
                         throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
 
@@ -185,10 +185,10 @@ class Many2Many extends AbstractManyRelation implements Relation
                 $registry->markForAction($entity, Registry::ACTION_SAVE);
             }
 
-            if($exec) {
+            if ($exec) {
                 $worker->execute($connection);
-                
-                if($worker instanceof SaveEntityWorker && $this->getRegistry()->getState($entity) == Registry::STATE_NEW) {
+
+                if ($worker instanceof SaveEntityWorker && $this->getRegistry()->getState($entity) == Registry::STATE_NEW) {
                     $query  = Query::factory()
                         ->insert($this->foreignTable);
 
@@ -201,13 +201,13 @@ class Many2Many extends AbstractManyRelation implements Relation
             }
         }
     }
-    
+
     public function fetch()
     {
         if (!$this->fetched && $this->isActive()) {
             $params     = array();
             $query      = new Query();
-            
+
             $query->entity($this->entity);
             $query->select()
                     ->from($this->tableName, 'lazy')
@@ -225,7 +225,7 @@ class Many2Many extends AbstractManyRelation implements Relation
             $query->join($this->foreignTable .' j', 'lazy.'. $this->foreignRefs, $this->foreignLink, Query::JOIN_LEFT, $join1);
             $query->where('j.'. $this->foreign .'=?');
             $params[]   = $this->parentRefs;
-            
+
             $connect    = $this->getConnection();
             $idKeys     = $connect->table($this->tableName)->getIdentifiersKeys();
 
@@ -233,12 +233,12 @@ class Many2Many extends AbstractManyRelation implements Relation
             foreach ($res as $result) {
                    $ids     = array();
                    $access  = new Accessor($result);
-                   foreach($idKeys as $key) {
+                   foreach ($idKeys as $key) {
                        $ids[$key]   = $access->get($key);
                    }
                    $this->add($result, $ids);
             }
-            
+
             $this->setFetched(true);
         }
 
@@ -271,10 +271,10 @@ class Many2Many extends AbstractManyRelation implements Relation
     {
         $queue  = new \SplPriorityQueue();
 
-        foreach($this->getRegistry()->getStore() as $object) {
+        foreach ($this->getRegistry()->getStore() as $object) {
             $data   = $this->getRegistry()->getData($object);
             $action = (($data['state'] == Registry::STATE_NEW || ($data['state'] == Registry::STATE_CHANGED && $data['action'] != Registry::ACTION_DELETE)) ? Registry::ACTION_SAVE : $data['action']);
-            if(empty($data['action'])) {
+            if (empty($data['action'])) {
                 $this->getRegistry()->getChangedValues($object);
                 $data   = $this->getRegistry()->getData($object);
             }
@@ -284,7 +284,7 @@ class Many2Many extends AbstractManyRelation implements Relation
                 continue;
 
             $priority   = $ts;
-            switch($action) {
+            switch ($action) {
                 case Registry::ACTION_DELETE:
                     $worker = new DeleteEntityWorker($object);
                     break;

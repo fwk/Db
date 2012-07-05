@@ -99,14 +99,14 @@ class Accessor
             /**
              * @todo Boucle infinie!!!  $value->hasChanged()
              */
-            $value  = sprintf('relation:%s-%s', (string)\microtime(), (string) $value->isFetched());
+            $value  = sprintf('relation:%s-%s', (string) \microtime(), (string) $value->isFetched());
         }
 
         if (is_object($value)) {
             $accessor   = self::factory($value);
             $value      = $accessor->toArray(array(__CLASS__, __METHOD__));
         }
-                
+
         if (\is_array($value)) {
             foreach ($value as $key => $val) {
                 if (is_object($val)) {
@@ -265,7 +265,7 @@ class Accessor
         foreach ($array as $value) {
             $str .= (is_array($value) ? json_encode($value) : $value);
         }
-        
+
         $this->overrideVisibility($old);
 
         return \hash($algo, $str);

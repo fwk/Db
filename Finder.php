@@ -32,11 +32,11 @@
  */
 namespace Fwk\Db;
 
-class Finder 
+class Finder
 {
     /**
-     * Results 
-     * 
+     * Results
+     *
      * @var ResultSet
      */
     protected $resultSet;
@@ -64,18 +64,18 @@ class Finder
 
     /**
      * Query parameters
-     * 
+     *
      * @var array
      */
     protected $params;
-    
+
     /**
      * Entity class name
-     * 
-     * @var string 
+     *
+     * @var string
      */
     protected $entity;
-    
+
     /**
      * Constructor
      *
@@ -89,13 +89,13 @@ class Finder
         $query = Query::factory()
                     ->select()
                     ->from(sprintf('%s %s', $table->getName(), 'f'));
-        
+
         $this->table        = $table;
-        
-        if(null !== $connection) {
+
+        if (null !== $connection) {
             $this->setConnection($connection);
         }
-        
+
         $this->query        = $query;
         $this->params       = array();
         $this->setEntity($table->getDefaultEntity());
@@ -133,67 +133,67 @@ class Finder
 
     /**
      *
-     * @param array $identifiers
-     * @return ResultSet 
+     * @param  array     $identifiers
+     * @return ResultSet
      */
     public function find(array $identifiers)
     {
-        if(isset($this->resultSet)) {
+        if (isset($this->resultSet)) {
             throw new Exception('Finder already executed');
         }
-        
+
         $this->query->where('1 = 1');
         $this->query->entity($this->getEntity());
-        
-        foreach($identifiers as $key => $value) {
+
+        foreach ($identifiers as $key => $value) {
             $this->query->andWhere(sprintf('f.%s = ?', $key));
             $this->params[] = $value;
         }
-        
+
         return $this->getResultSet();
     }
 
     /**
      *
-     * @param mixed $identifiers
-     * @return mixed 
+     * @param  mixed $identifiers
+     * @return mixed
      */
     public function one($identifiers)
     {
-        if(isset($this->resultSet)) {
+        if (isset($this->resultSet)) {
             throw new Exception('Finder already executed');
         }
-        
+
         $ids = $this->table->getIdentifiersKeys();
-        if(!is_array($identifiers)) {
-            if(count($ids) === 1) {
+        if (!is_array($identifiers)) {
+            if (count($ids) === 1) {
                 $identifiers = array($ids[0] => $identifiers);
             } else {
                 $identifiers = array($identifiers);
             }
         }
-        
-        if(count($ids) != count($identifiers)) {
+
+        if (count($ids) != count($identifiers)) {
             throw new Exceptions\MissingIdentifier(sprintf('Table has %u identifiers (%s), only %u provided', count($ids), implode(', ', $ids), count($identifiers)));
         }
-        
+
         $this->query->where('1 = 1');
         $this->query->entity($this->getEntity());
-        
-        foreach($ids as $key) {
-            if(!isset($identifiers[$key])) {
+
+        foreach ($ids as $key) {
+            if (!isset($identifiers[$key])) {
                  throw new Exceptions\MissingIdentifier(sprintf('Missing required identifier "%s"', $key));
             }
-            
+
             $this->query->andWhere(sprintf('f.%s = ?', $key));
             $this->params[] = $identifiers[$key];
         }
-        
+
         $res = $this->getResultSet();
-        if($res->count() >= 1) {
+        if ($res->count() >= 1) {
             return $res[0];
         }
-        
+
         return null;
     }
 
@@ -204,28 +204,30 @@ class Finder
     public function all()
     {
         $this->query->entity($this->getEntity());
-        
+
         return $this->getResultSet();
     }
 
     /**
      *
-     * @return ResultSet 
+     * @return ResultSet
      */
     public function getResultSet()
     {
-        if(!isset($this->resultSet)) {
+        if (!isset($this->resultSet)) {
             $this->resultSet = $this->connection->execute($this->query, $this->params);
         }
-        
+
         return $this->resultSet;
     }
-    
-    public function getEntity() {
+
+    public function getEntity()
+    {
         return $this->entity;
     }
 
-    public function setEntity($entity) {
+    public function setEntity($entity)
+    {
         $this->entity = $entity;
     }
 }

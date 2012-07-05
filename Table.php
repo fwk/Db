@@ -129,10 +129,10 @@ class Table
     {
 
         $finder = new Finder($this, $this->connection);
-        if(null !== $entity) {
+        if (null !== $entity) {
             $finder->setEntity($entity);
         }
-        
+
         return $finder;
     }
 
@@ -162,20 +162,20 @@ class Table
                     ->getSchema()
                     ->getTable($this->name)
                     ->getIndexes();
-            
-            if(!count($idx)) {
+
+            if (!count($idx)) {
                 throw new Exceptions\TableLacksIdentifiers(
                     sprintf('"%s" has no indexes', $this->name)
                 );
             }
-            
+
             $final = array();
-            foreach($idx as $index) {
-                if($index->isPrimary()) {
+            foreach ($idx as $index) {
+                if ($index->isPrimary()) {
                     $final += $index->getColumns();
                 }
             }
-            
+
             $final = array_unique($final);
             if (!count($final)) {
                 throw new Exceptions\TableLacksIdentifiers(
@@ -206,12 +206,12 @@ class Table
     /**
      * Returns an object representation of a given column
      *
-     * @param  string $columnName
+     * @param  string                       $columnName
      * @return \Doctrine\DBAL\Schema\Column
      */
     public function getColumn($columnName)
     {
-        
+
         if (!$this->hasColumn($columnName)) {
             throw new Exceptions\TableColumnNotFound(
                 sprintf('Unknown Column "%s" on table %s',
@@ -232,7 +232,7 @@ class Table
         $tbl = $this->getConnection()
                     ->getSchema()
                     ->getTable($this->name);
-        
+
         return $tbl->hasColumn($columnName);
     }
 

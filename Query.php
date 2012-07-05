@@ -48,7 +48,7 @@ class Query extends \ArrayObject
 
     const WHERE_AND     = 'and';
     const WHERE_OR      = 'or';
-    
+
     const FETCH_SPECIAL = 0;
     const FETCH_OPT     = 1;
 

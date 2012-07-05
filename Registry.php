@@ -33,8 +33,8 @@
 namespace Fwk\Db;
 
 use Fwk\Events\Dispatcher,
-    Fwk\Events\Event, 
-    Fwk\Db\Workers\DeleteEntityWorker, 
+    Fwk\Events\Event,
+    Fwk\Db\Workers\DeleteEntityWorker,
     Fwk\Db\Workers\SaveEntityWorker;
 
 /**
@@ -178,7 +178,7 @@ class Registry implements \Countable, \IteratorAggregate
                 return $this->store->setInfo($data);
             }
         }
-        
+
         throw new Exceptions\UnregisteredEntity(
             sprintf('Unregistered entity (%s)', \get_class($object))
         );
@@ -220,7 +220,7 @@ class Registry implements \Countable, \IteratorAggregate
         foreach ($table->getColumns() as $column) {
             if(!$column->getAutoincrement())
                     continue;
-            
+
             $columnName         = $column->getName();
             $access         = Accessor::factory($obj);
 
@@ -230,7 +230,7 @@ class Registry implements \Countable, \IteratorAggregate
 
             $lastInsertId   = $connx->lastInsertId();
             $access->set($columnName, $lastInsertId);
-            
+
             $data = $this->getData($obj);
             $data['identifiers'][$columnName] = $lastInsertId;
             $this->setData($obj, $data);
@@ -339,7 +339,7 @@ class Registry implements \Countable, \IteratorAggregate
         if (count($diff) && $data['state'] == self::STATE_FRESH) {
             $data['state']  =   self::STATE_CHANGED;
             $this->setData($object, $data);
-        } 
+        }
 
         return $diff;
     }
@@ -393,7 +393,7 @@ class Registry implements \Countable, \IteratorAggregate
             $access     = new Accessor($object);
             $relations  = $access->getRelations();
             foreach (array_keys($chg) as $key) {
-                if(!\array_key_exists($key, $relations)) {
+                if (!\array_key_exists($key, $relations)) {
                         continue;
                 }
 
@@ -449,8 +449,9 @@ class Registry implements \Countable, \IteratorAggregate
     {
         return new \ArrayIterator($this->toArray());
     }
-    
-    public function getStore() {
+
+    public function getStore()
+    {
         return $this->store;
     }
 }

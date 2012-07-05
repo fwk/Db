@@ -32,7 +32,6 @@
  */
 namespace Fwk\Db;
 
-
 /**
  * ResultSet Utility Class
  */
@@ -44,7 +43,7 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
      * @var \SplObjectStorage
      */
     protected $store;
-    
+
     /**
      * Constructor
      *
@@ -53,121 +52,122 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     public function __construct(array $results = array())
     {
         $this->store        = new \SplObjectStorage();
-        foreach($results as $key => $result) {
-            if(is_array($result)) {
-                $result = (object)$result;
+        foreach ($results as $key => $result) {
+            if (is_array($result)) {
+                $result = (object) $result;
             }
-            
+
             $this->store->attach($result, $key);
         }
     }
-    
+
     /**
      *
      * @param \Closure $filter
-     * 
-     * @return ResultSet 
+     *
+     * @return ResultSet
      */
     public function filter(\Closure $filter)
     {
         $final = array();
-        foreach($this->store as $obj) {
+        foreach ($this->store as $obj) {
             $result = call_user_func($filter, $obj);
             $key = $this->store->getInfo();
-            
-            if($result === true) {
-                if(is_int($key)) {
+
+            if ($result === true) {
+                if (is_int($key)) {
                     $final[] = $obj;
                 } else {
                     $final[$key] = $obj;
                 }
             }
         }
-        
+
         return new static($final);
     }
-    
+
     /**
      *
-     * @param mixed $offset
+     * @param  mixed   $offset
      * @return boolean
      */
     public function offsetExists($offset)
     {
-        foreach($this->store as $obj) {
+        foreach ($this->store as $obj) {
             $data = $this->store->getInfo();
-            if($data === $offset) {
+            if ($data === $offset) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
     /**
      *
-     * @param mixed $offset
+     * @param  mixed $offset
      * @return mixed
      */
     public function offsetGet($offset)
     {
-        foreach($this->store as $obj) {
+        foreach ($this->store as $obj) {
             $data = $this->store->getInfo();
-            if($data === $offset) {
+            if ($data === $offset) {
                 return $obj;
             }
         }
-        
+
         return null;
     }
 
     /**
      *
      * @param mixed $object
-     * 
+     *
      * @return boolean
      */
     public function has($object)
     {
         return $this->store->contains($object);
     }
-    
-    /**
-     *
-     * @param mixed $offset
-     * @param mixed $value
-     * @return void
-     */
-    public function offsetSet($offset, $value) {
-        if(empty($offset)) {
-            $offset = count($this->store);
-        }
-        
-        foreach($this->store as $obj) {
-            $key = $this->store->getInfo();
-            if($key === $offset) {
-                $this->store->detach($obj);
-            }
-        }
-        
-        $this->store->attach($value, $offset);
-    }
-    
 
     /**
      *
-     * @param mixed $offset
+     * @param  mixed $offset
+     * @param  mixed $value
      * @return void
      */
-    public function offsetUnset($offset) {
-        foreach($this->store as $obj) {
+    public function offsetSet($offset, $value)
+    {
+        if (empty($offset)) {
+            $offset = count($this->store);
+        }
+
+        foreach ($this->store as $obj) {
+            $key = $this->store->getInfo();
+            if ($key === $offset) {
+                $this->store->detach($obj);
+            }
+        }
+
+        $this->store->attach($value, $offset);
+    }
+
+    /**
+     *
+     * @param  mixed $offset
+     * @return void
+     */
+    public function offsetUnset($offset)
+    {
+        foreach ($this->store as $obj) {
             $data = $this->store->getInfo();
-            if($data === $offset) {
+            if ($data === $offset) {
                 $this->store->detach($obj);
             }
         }
     }
-    
+
     /**
      *
      * @return array
@@ -181,7 +181,7 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
 
         return $final;
     }
-    
+
     /**
      *
      * @return integer

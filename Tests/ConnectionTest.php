@@ -5,8 +5,8 @@ namespace Fwk\Db;
 /**
  * Test class for EventDispatcher.
  */
-class ConnectionTest extends \PHPUnit_Framework_TestCase {
-
+class ConnectionTest extends \PHPUnit_Framework_TestCase
+{
     /**
      * @var Connection
      */
@@ -24,7 +24,6 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         ));
     }
 
-    
     public function testConnect()
     {
         $this->assertFalse($this->object->isConnected());
@@ -39,14 +38,14 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
             'testOpt1' => "value1",
             'testOpt2' => "value2"
         ));
-        
+
         $this->assertEquals(array(
             'memory'    => true,
             'driver'    => 'pdo_sqlite',
             'testOpt1' => "value1",
             'testOpt2' => "value2"
         ), $this->object->getOptions());
-        
+
         $this->assertEquals("value2", $this->object->get('testOpt2'));
         $this->object->setOptions(array(
             'testOpt2' => "merged"
@@ -56,7 +55,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals("override", $this->object->get('testOpt1'));
         $this->assertEquals("default", $this->object->get('inexistant', "default"));
     }
-    
+
     public function testDisconnect()
     {
         $this->assertTrue($this->object->disconnect());
@@ -66,29 +65,29 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($this->object->disconnect());
         $this->assertFalse($this->object->isConnected());
     }
-    
+
     public function testTableNotExists()
     {
         $this->setExpectedException('\Fwk\Db\Exceptions\TableNotFound');
         $this->object->table('nonExistant');
     }
-    
+
     public function testTable()
     {
         $this->prepareTestTable();
         $tbl = $this->object->table('test_table');
         $this->assertInstanceOf('\Fwk\Db\Table', $tbl);
     }
-    
+
     public function testNewQueryBridge()
     {
         $this->assertInstanceOf('\Fwk\Db\QueryBridge', $this->object->newQueryBrige());
     }
-    
+
     protected function prepareTestTable()
     {
         $schema = $this->object->getSchema();
-        
+
         $myTable = $schema->createTable("test_table");
         $myTable->addColumn("id", "integer", array("unsigned" => true));
         $myTable->addColumn("username", "string", array("length" => 32));

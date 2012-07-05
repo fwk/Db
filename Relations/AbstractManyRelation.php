@@ -36,10 +36,10 @@ namespace Fwk\Db\Relations;
 use Fwk\Db\EntityEvents,
     Fwk\Db\Relation,
     Fwk\Db\Registry,
-    Fwk\Db\Exception, 
-    Fwk\Db\Connection, 
+    Fwk\Db\Exception,
+    Fwk\Db\Connection,
     Fwk\Events\Dispatcher,
-    \IteratorAggregate, 
+    \IteratorAggregate,
     Fwk\Db\Accessor;
 
 /**
@@ -52,16 +52,17 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      * @var string
      */
     protected $reference;
-    
+
     /**
      * @var array
      */
     protected $orderBy;
-    
+
     public function offsetExists($offset)
     {
         $this->fetch();
         $array  = $this->toArray();
+
         return \array_key_exists($offset, $array);
     }
 
@@ -69,21 +70,24 @@ abstract class AbstractManyRelation extends AbstractRelation implements
     {
         $this->fetch();
         $array  = $this->toArray();
+
         return (\array_key_exists($offset, $array) ? $array[$offset] : null);
     }
 
     public function offsetSet($offset, $value)
     {
         $this->fetch();
+
         return $this->add($value);
     }
 
     public function offsetUnset($offset)
     {
         $this->fetch();
-        
+
         $obj    = $this->offsetGet($offset);
         if(null === $obj)
+
             return;
 
         return parent::remove($obj);
@@ -95,12 +99,12 @@ abstract class AbstractManyRelation extends AbstractRelation implements
 
         return count($this->getRegistry()->getStore());
     }
-        
+
      /**
      * Sets a column to use as a reference
-     * 
+     *
      * @param string $column
-      * 
+      *
      * @return Relation
      */
     public function setReference($column)
@@ -114,8 +118,8 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      *
      * @param type $column
      * @param type $direction
-     * 
-     * @return Relation 
+     *
+     * @return Relation
      */
     public function setOrderBy($column, $direction = null)
     {
@@ -123,14 +127,14 @@ abstract class AbstractManyRelation extends AbstractRelation implements
 
         return $this;
     }
-    
+
     /**
      *
-     * @return string 
+     * @return string
      */
     public function getReference()
     {
-        
+
         return $this->reference;
     }
 
@@ -140,10 +144,10 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      */
     public function getOrderBy()
     {
-        
+
         return $this->orderBy;
     }
-    
+
     /**
      * Adds an object to the collection
      *
@@ -151,12 +155,12 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      */
     public function add($object, array $identifiers = array())
     {
-        if($this->has($object)) {
+        if ($this->has($object)) {
             return;
         }
-        
+
         $data = array('reference' => null);
-        if(!empty($this->reference)) {
+        if (!empty($this->reference)) {
             $access             = new Accessor($object);
             $reference          = $access->get($this->reference);
             $data['reference']  = $reference;

@@ -72,7 +72,7 @@ class AbstractWorker
 
     public function getEntity()
     {
-        
+
         return $this->entity;
     }
 }

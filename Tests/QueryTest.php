@@ -4,8 +4,8 @@ namespace Fwk\Db;
 
 /**
  */
-class QueryTest extends \PHPUnit_Framework_TestCase {
-
+class QueryTest extends \PHPUnit_Framework_TestCase
+{
     /**
      * @var Query
      */

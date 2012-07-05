@@ -33,11 +33,10 @@
 namespace Fwk\Db;
 
 use Fwk\Db\Query,
-    Fwk\Db\Connection, 
-    Fwk\Db\Accessor, 
+    Fwk\Db\Connection,
+    Fwk\Db\Accessor,
     Fwk\Db\Registry,
     Fwk\Db\Relations\One2Many;
-
 
 /**
  * This class transforms a resultset from a query into a set of corresponding
@@ -83,9 +82,9 @@ class Hydrator
 
     /**
      *
-     * @param Query $query
+     * @param Query      $query
      * @param Connection $connection
-     * @param array $columns 
+     * @param array      $columns
      */
     public function __construct(Query $query, Connection $connection, array $columns)
     {
@@ -174,12 +173,12 @@ class Hydrator
                 $values     = $this->getValuesFromSet($columns, $result);
                 $access->setValues($values);
                 $mainObjRefs    = $ids;
-                
+
                 foreach ($access->getRelations() as $columnName => $relation) {
                     $relation->setConnection($this->connection);
                     $relation->setParentRefs($access->get($relation->getLocal()));
                 }
-                
+
                 if (!$isJoin) {
                     $mainObj        = $obj;
                     $mainObjTable   = $tableName;
@@ -194,7 +193,7 @@ class Hydrator
                 $access     = new Accessor($mainObj);
                 $columnName = $infos['join']['options']['column'];
                 $reference  = $infos['join']['options']['reference'];
-                
+
                 $current = (isset($joinData[$idsHash . $columnName]) ?
                         $joinData[$idsHash . $columnName] :
                         $this->getRelationObject($mainObj, $columnName, $infos['join'], $entityClass)
@@ -213,14 +212,13 @@ class Hydrator
                 unset($access, $values, $isJoin, $columns, $current);
             }
 
-            
             $access = new Accessor($mainObj);
             $relations  = $access->getRelations();
             foreach ($relations as $columnName => $relation) {
                 $tableObj   = $this->connection->table($mainObjTable);
                 $relation->setParent($mainObj, $tableObj->getRegistry()->getEventDispatcher($mainObj));
             }
- 
+
             unset($mainObj, $mainObjRefs);
         }
 
@@ -231,10 +229,10 @@ class Hydrator
 
     /**
      *
-     * @param  mixed                   $object
-     * @param  string                  $columnName
-     * @param  array                   $join
-     * @param  string                  $entityClass
+     * @param  mixed            $object
+     * @param  string           $columnName
+     * @param  array            $join
+     * @param  string           $entityClass
      * @return \Fwk\Db\Relation
      */
     public function getRelationObject($object, $columnName, array $join, $entityClass = '\stdClass')

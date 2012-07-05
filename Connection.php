@@ -33,7 +33,7 @@
 namespace Fwk\Db;
 
 use Fwk\Events\Dispatcher,
-    Fwk\Events\Event, 
+    Fwk\Events\Event,
     Doctrine\DBAL\Connection as DbalConnection,
     Doctrine\DBAL\DriverManager;
 
@@ -54,17 +54,17 @@ class Connection extends Dispatcher
      * @var array
      */
     protected $options = array();
-    
+
     /**
      * Driver object
      *
      * @var DbalConnection
      */
     protected $driver;
-    
+
     /**
      * Schema object
-     * 
+     *
      * @var \Doctrine\DBAL\Schema\Schema
      */
     protected $schema;
@@ -89,7 +89,7 @@ class Connection extends Dispatcher
      * options:
      *      - autoConnect:  (boolean) should connect on construct (defaults to false)
      *
-     * @param array  $options
+     * @param array $options
      *
      * @return void
      */
@@ -106,26 +106,28 @@ class Connection extends Dispatcher
      * Establish connection with database
      *
      * @throws Fwk\Db\Exceptions\ConnectionError
-     * 
+     *
      * @return boolean
      */
     public function connect()
     {
-        if(!$this->isConnected()) {
+        if (!$this->isConnected()) {
             try {
                 $dbal = $this->getDriver();
                 $res  = $dbal->connect();
-            } catch(\Doctrine\DBAL\DBALException $e) {
-            } catch(\PDOException $e) {
+            } catch (\Doctrine\DBAL\DBALException $e) {
+            } catch (\PDOException $e) {
                 $this->setErrorException(new Exceptions\ConnectionError($e->getMessage()));
+
                 return false;
             }
-            
-            if(!$res) {
+
+            if (!$res) {
                 $this->setErrorException(new Exceptions\ConnectionError());
+
                 return false;
             }
-            
+
             $this->setState(self::STATE_CONNECTED);
             $event = new Event(ConnectionEvents::CONNECT, array(
                 'connection'     => $this,
@@ -151,8 +153,8 @@ class Connection extends Dispatcher
         try {
             $dbal = $this->getDriver();
             $dbal->close();
-        } catch(\Doctrine\DBAL\DBALException $e) {
-        } catch(\PDOException $e) {
+        } catch (\Doctrine\DBAL\DBALException $e) {
+        } catch (\PDOException $e) {
             $this->setErrorException(new Exceptions\ConnectionError($e->getMessage()));
         }
 
@@ -228,40 +230,39 @@ class Connection extends Dispatcher
      */
     public function getDriver()
     {
-        if(!isset($this->driver)) {
+        if (!isset($this->driver)) {
             $this->driver = DriverManager::getConnection($this->options);
         }
-        
+
         return $this->driver;
     }
 
     /**
      * Defines a driver
-     * 
-     * @param DbalConnection $driver 
+     *
+     * @param DbalConnection $driver
      */
     public function setDriver(DbalConnection $driver)
     {
         $this->driver = $driver;
     }
-    
+
     /**
      *
      * @return \Doctrine\DBAL\Schema\Schema
      */
     public function getSchema()
     {
-        if(!isset($this->schema)) {
+        if (!isset($this->schema)) {
             $this->connect();
             $this->schema = $this->getDriver()
                     ->getSchemaManager()
                     ->createSchema();
         }
-        
+
         return $this->schema;
     }
 
-        
     /**
      * Tells if the connection is established
      *
@@ -306,21 +307,21 @@ class Connection extends Dispatcher
 
             return $event->results;
         }
-        
+
         $bridge = $this->newQueryBrige();
         $event->bridge = $bridge;
         $stmt = $bridge->execute($query, $params, $options);
-        
-        if($query->getType() == Query::TYPE_SELECT) {
+
+        if ($query->getType() == Query::TYPE_SELECT) {
             $stmt->execute($params);
             $tmp = $stmt->fetchAll();
             $hyd = new Hydrator($query, $this, $bridge->getColumnsAliases());
-            
+
             $results = new ResultSet($hyd->hydrate($tmp));
         } else {
             $results = $stmt;
         }
-        
+
         $event->results = $results;
         $afterEvent = new Event(ConnectionEvents::AFTER_QUERY, $event->getData());
         $this->notify($afterEvent);
@@ -328,16 +329,15 @@ class Connection extends Dispatcher
         return $afterEvent->results;
     }
 
-    
     /**
-     * 
-     * @return QueryBridge 
+     *
+     * @return QueryBridge
      */
     public function newQueryBrige()
     {
         return new QueryBridge($this);
     }
-    
+
     /**
      * Defines current state
      *
@@ -402,7 +402,7 @@ class Connection extends Dispatcher
     public function table($tableName)
     {
         if (!isset($this->tables[$tableName])) {
-            if(!$this->getSchema()->hasTable($tableName)) {
+            if (!$this->getSchema()->hasTable($tableName)) {
                 $this->setErrorException(
                     new Exceptions\TableNotFound(
                         sprintf('Inexistant table "%s"', $tableName)
@@ -411,10 +411,10 @@ class Connection extends Dispatcher
 
                 return false;
             }
-            
+
             $table = new Table($tableName);
             $table->setConnection($this);
-            
+
             $this->tables[$tableName]   = $table;
         }
 

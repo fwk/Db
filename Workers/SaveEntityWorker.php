@@ -53,10 +53,10 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         $access     = new Accessor($this->entity);
         $exec       = true;
 
-        switch($state) {
+        switch ($state) {
             case Registry::STATE_UNKNOWN:
                 throw new \LogicException(sprintf('Entity is in unknown state (%s)', get_class($this->entity)));
-                
+
             case Registry::STATE_NEW:
                 $registry->fireEvent($this->entity, new Event(EntityEvents::BEFORE_SAVE, array('object'  => $this->entity, 'registry' => $registry, 'connection'   => $connection)));
 
@@ -65,7 +65,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $columns    = $table->getColumns();
                 $setted     = 0;
 
-                foreach($columns as $key => $columnObj) {
+                foreach ($columns as $key => $columnObj) {
                     $default = $columnObj->getDefault();
                     $value  = (array_key_exists($key, $values) ? $values[$key] : -1);
                     if(-1 === $value && (!empty($default) || $columnObj->getAutoincrement() == true))
@@ -76,13 +76,13 @@ class SaveEntityWorker extends AbstractWorker implements Worker
 
                     $query->set($key, '?');
                     $queryParams[] = $value;
-                    
+
                     $setted++;
                 }
 
                 if(!$setted)
                     $exec = false;
-                
+
                 $event      = EntityEvents::AFTER_SAVE;
                 break;
 
@@ -100,29 +100,29 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $query->update($table->getName())->where('1 = 1');
                 $ids    = $data['identifiers'];
                 $idKeys = $table->getIdentifiersKeys();
-                
+
                 if(!count($ids))
                     throw new \LogicException(sprintf('Entity %s lacks identifiers and cannot be saved.', get_class($this->entity)));
 
                 $setted     = 0;
-                foreach($changed as $key => $value) {
-                    if($table->hasColumn($key)) {
+                foreach ($changed as $key => $value) {
+                    if ($table->hasColumn($key)) {
                         $query->set($key, '?');
                         $queryParams[] = $value;
                         $setted++;
                     }
                 }
 
-                if(!$setted) {
+                if (!$setted) {
                     $exec   = false;
                 }
 
-                foreach($idKeys as $key) {
+                foreach ($idKeys as $key) {
                     $query->andWhere(sprintf('`%s` = ?', $key));
                     $value = $access->get($key);
                     if(!$value)
                         throw new \RuntimeException(sprintf('Cannot save entity object (%s) because it lacks identifier (%s)', get_class($this->entity), $key));
-                    
+
                     $queryParams[] = $value;
                 }
 
@@ -130,7 +130,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 break;
         }
 
-        if($exec) {
+        if ($exec) {
             $connection->execute($query, $queryParams);
         }
         $registry->defineInitialValues($this->entity);
