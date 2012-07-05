@@ -14,7 +14,7 @@ Dans le cas où vous ne souhaitez pas utiliser Composer, vous pouvez  [télécha
 
 ## Vendors
 
-Lors d'une installation manuelle (càd. sans Composer), vous devrez télécharger également les libraries suivantes et les ajouter également à votre ```include_path```:
+Lors d'une installation manuelle (càd. sans Composer), vous devrez aussi télécharger les libraries suivantes et les ajouter à votre ```include_path```:
 
 * [fwk/Events](https://github.com/fwk/Events/zipball/master)
 * [doctrine/common](https://github.com/doctrine/common/zipball/master)

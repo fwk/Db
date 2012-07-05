@@ -36,6 +36,7 @@ $usersTable = $db->table('users');
 <?php
 
 $finder = $usersTable->finder();
+$finderUser = $usersTable->finder('App\models\User'); // retournera l'entité App\models\User au lieu de \stdClass
 $allUsers = $finder->all(); /* retourne tous les utilisateurs */
 ```
 
