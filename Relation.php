@@ -22,48 +22,141 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- *
- * @package    Fwk
- * @subpackage Db
- * @author     Julien Ballestracci <julien@nitronet.org>
- * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
- * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://www.phpfwk.com
+ * 
+ * @category  Database
+ * @package   Fwk\Db
+ * @author    Julien Ballestracci <julien@nitronet.org>
+ * @copyright 2011-2012 Julien Ballestracci <julien@nitronet.org>
+ * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link      http://www.phpfwk.com
  */
 namespace Fwk\Db;
 
+/**
+ * Relation Interface
+ * 
+ * A Relation describes a database relation between entities. Usually, Relations
+ * and Foreign Keys work together to keep data integrity.
+ * 
+ * @category Interfaces
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.phpfwk.com
+ */
 interface Relation
 {
+    /**
+     * Fetch relation on top query
+     */
     const FETCH_EAGER   = 'eager';
+    
+    /**
+     * Fetch relation only when required
+     */
     const FETCH_LAZY    = 'lazy';
 
+    /**
+     * Tells if data has been fetched yet
+     * 
+     * @return boolean
+     */
     public function isFetched();
 
+    /**
+     * Tells if this is a LAZY relation
+     * 
+     * @return boolean
+     */
     public function isLazy();
 
     /**
-     *
+     * Tells if this is an EAGER relation
+     * 
      * @return boolean
      */
     public function isEager();
 
+    /**
+     * Fetches (if necessary) relation's entities
+     * 
+     * @return void
+     */
     public function fetch();
 
+    /**
+     * Prepares a top-query to fetch this relation's entities at the same time.
+     * On the SQL side, this create some JOINs. 
+     * This only works for FETCH_EAGER relations.
+     * 
+     * @param \Fwk\Db\Query $query      The top-query before execution
+     * @param string        $columnName The column name of this relation
+     * 
+     * @return void
+     */
     public function prepare(\Fwk\Db\Query $query, $columnName);
 
+    /**
+     * Defines a parent entity for this relation.
+     * 
+     * @param mixed                  $object Parent object
+     * @param \Fwk\Events\Dispatcher $evd    Event's dispatcher for parent 
+     * 
+     * @return void
+     */
     public function setParent($object, \Fwk\Events\Dispatcher $evd);
 
+    /**
+     * Returns defined entity for this relation.
+     * 
+     * @return mixed
+     */
     public function getEntity();
 
+    /**
+     * Returns the foreign column name
+     * 
+     * @return string
+     */
     public function getForeign();
 
+    /**
+     * Returns the local column name
+     * 
+     * @return string
+     */
     public function getLocal();
 
+    /**
+     * Change the "fetched" state of this relation.
+     * 
+     * @param boolean $bool Fetched or not Fetched ? 
+     * 
+     * @return void
+     */
     public function setFetched($bool);
 
+    /**
+     * Defines this relation as EAGER or LAZY.
+     * 
+     * @param string $mode Fetch mode {@see Relation::FETCH_ Constants}
+     * 
+     * @return void
+     */
     public function setFetchMode($mode);
 
+    /**
+     * Transforms relation's data to a simple PHP array.
+     * 
+     * @return array
+     */
     public function toArray();
 
+    /**
+     * Returns relation's data to a Traversable iterator.
+     * {@see \Traversable}
+     * 
+     * @return \ArrayIterator
+     */
     public function getIterator();
 }
