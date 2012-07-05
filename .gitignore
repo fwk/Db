@@ -2,3 +2,4 @@ vendor
 /phpunit.xml
 /test.php
 /coverage/
+/build/
