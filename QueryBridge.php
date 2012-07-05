@@ -280,7 +280,9 @@ class QueryBridge
                 list($table, ) = explode(' ', $table);
             }
 
-            $fromAlias = $this->getTableAlias(array_shift(array_keys($this->tablesAliases)));
+            $keys = array_keys($this->tablesAliases);
+            $first = array_shift($keys);
+            $fromAlias = $this->getTableAlias($first);
             $alias = $this->getTableAlias($table);
             $local = $join['local'];
             $foreign = $join['foreign'];
