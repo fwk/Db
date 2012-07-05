@@ -270,7 +270,7 @@ abstract class AbstractRelation implements IteratorAggregate
      *
      * @return boolean true if parent has been changed/defined
      */
-    public function setParent($object)
+    public function setParent($object, Dispatcher $evd)
     {
         if ($this->parent === $object) {
             return false;
