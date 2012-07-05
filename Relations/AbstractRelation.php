@@ -393,7 +393,7 @@ abstract class AbstractRelation implements IteratorAggregate
                     continue;
                 }
 
-                $ref    = $data['reference'];
+                $ref    = (isset($data['reference']) ? $data['reference'] : null);
                 $final[$ref]  = $object;
         }
 

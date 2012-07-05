@@ -75,7 +75,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
     public function offsetSet($offset, $value)
     {
         $this->fetch();
-        return parent::add($value);
+        return $this->add($value);
     }
 
     public function offsetUnset($offset)

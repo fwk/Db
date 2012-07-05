@@ -70,6 +70,13 @@ class Finder
     protected $params;
     
     /**
+     * Entity class name
+     * 
+     * @var string 
+     */
+    protected $entity;
+    
+    /**
      * Constructor
      *
      * @param Table      $table
@@ -87,6 +94,7 @@ class Finder
         $this->connection   = $connection;
         $this->query        = $query;
         $this->params       = array();
+        $this->entity       = $table->getDefaultEntity();
     }
 
     /**
@@ -131,6 +139,8 @@ class Finder
         }
         
         $this->query->where('1 = 1');
+        $this->query->entity($this->entity);
+        
         foreach($identifiers as $key => $value) {
             $this->query->andWhere(sprintf('f.%s = ?', $key));
             $this->params[] = $value;
@@ -164,6 +174,8 @@ class Finder
         }
         
         $this->query->where('1 = 1');
+        $this->query->entity($this->entity);
+        
         foreach($ids as $key) {
             if(!isset($identifiers[$key])) {
                  throw new Exceptions\MissingIdentifier(sprintf('Missing required identifier "%s"', $key));
@@ -187,7 +199,9 @@ class Finder
      */
     public function all()
     {
-         return $this->getResultSet();
+        $this->query->entity($this->entity);
+        
+        return $this->getResultSet();
     }
 
     /**
@@ -201,5 +215,13 @@ class Finder
         }
         
         return $this->resultSet;
+    }
+    
+    public function getEntity() {
+        return $this->entity;
+    }
+
+    public function setEntity($entity) {
+        $this->entity = $entity;
     }
 }

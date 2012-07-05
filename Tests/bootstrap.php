@@ -21,6 +21,7 @@ class FwkDbTestUtil
         $tbl = $schema->createTable('fwkdb_test_users');
         $tbl->addColumn("id", "integer", array("unsigned" => true, "autoincrement" => true));
         $tbl->addColumn("username", "string", array("length" => 32));
+        $tbl->addColumn("phone_id", "integer", array("unsigned" => true, "notnull" => false));
         $tbl->setPrimaryKey(array("id"));
         $tbl->addUniqueIndex(array("username"));
         
@@ -35,6 +36,19 @@ class FwkDbTestUtil
         $tbl->addColumn("user_id", "integer", array("unsigned" => true));
         $tbl->addColumn("email_id", "integer", array("unsigned" => true));
         $tbl->setPrimaryKey(array("user_id", "email_id"));
+        
+        $tbl = $schema->createTable('fwkdb_test_users_metas');
+        $tbl->addColumn("id", "integer", array("unsigned" => true, "autoincrement" => true));
+        $tbl->addColumn("user_id", "integer", array("unsigned" => true));
+        $tbl->addColumn("name", "string", array("length" => 50));
+        $tbl->addColumn("value", "string");
+        $tbl->addIndex(array('user_id'));
+        $tbl->setPrimaryKey(array("id"));
+        
+        $tbl = $schema->createTable('fwkdb_test_phones');
+        $tbl->addColumn("id", "integer", array("unsigned" => true, "autoincrement" => true));
+        $tbl->addColumn("number", "string", array("length" => 50));
+        $tbl->setPrimaryKey(array("id"));
         
         $queries = $schema->toSql($connection->getDriver()->getDatabasePlatform());
         foreach($queries as $query) {

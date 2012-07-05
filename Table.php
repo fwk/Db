@@ -125,10 +125,15 @@ class Table
      *
      * @return Finder
      */
-    public function finder()
+    public function finder($entity = null)
     {
 
-        return new Finder($this, $this->connection);
+        $finder = new Finder($this, $this->connection);
+        if(null !== $entity) {
+            $finder->setEntity($entity);
+        }
+        
+        return $finder;
     }
 
     /**

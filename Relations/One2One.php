@@ -112,6 +112,19 @@ class One2One extends AbstractRelation implements Relation
         return null;
     }
     
+    public function set($object = null)
+    {
+        if(null === $object) {
+            foreach($this->getRegistry()->getStore() as $obj) {
+                $this->remove($obj);
+            }
+            
+            return;
+        }
+        
+        $this->add($object);
+    }
+    
     public function __get($key) {
         $obj = $this->get();
         if(!\is_object($obj))
@@ -223,7 +236,7 @@ class One2One extends AbstractRelation implements Relation
         $registry       = $table->getRegistry();
         
         foreach($this->getWorkersQueue() as $worker) {
-            $worker->setRegistry($registry);
+            $worker->setRegistry($this->registry);
             $entity     = $worker->getEntity();
 
             if($worker instanceof SaveEntityWorker) {
