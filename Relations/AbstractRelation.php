@@ -215,7 +215,7 @@ abstract class AbstractRelation implements IteratorAggregate
     public function hasChanged()
     {
         foreach($this->getRegistry()->getStore() as $obj) {
-            $cgh    = $this->getRegistry()->getChangedValues($obj);
+            $this->getRegistry()->getChangedValues($obj);
             $data   = $this->getRegistry()->getData($obj);
             if($data['state'] != Registry::STATE_FRESH || !empty($data['action']))
                 return true;
@@ -269,7 +269,7 @@ abstract class AbstractRelation implements IteratorAggregate
      * 
      * @return boolean true if parent has been changed/defined
      */
-    public function setParent($object, Dispatcher $evd)
+    public function setParent($object)
     {
         if($this->parent === $object) {
             return false;

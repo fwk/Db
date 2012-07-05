@@ -157,7 +157,7 @@ class One2One extends AbstractRelation implements Relation
 
         $access     = new Accessor($obj);
         try {
-            $ref        = $access->getReflector()->getMethod($name);
+            $access->getReflector()->getMethod($name);
 
             return \call_user_func_array(array($obj, $name), $arguments);
         } catch(\ReflectionException $e) {
@@ -191,7 +191,7 @@ class One2One extends AbstractRelation implements Relation
             $data   = $this->getRegistry()->getData($object);
             $action = (($data['state'] == Registry::STATE_NEW || ($data['state'] == Registry::STATE_CHANGED && $data['action'] != Registry::ACTION_DELETE)) ? Registry::ACTION_SAVE : $data['action']);
             if(empty($data['action'])) {
-                $chg    = $this->getRegistry()->getChangedValues($object);
+                $this->getRegistry()->getChangedValues($object);
                 $data   = $this->getRegistry()->getData($object);
             }
 
@@ -231,9 +231,6 @@ class One2One extends AbstractRelation implements Relation
     public function  onBeforeParentSave(\Fwk\Events\Event $event) {
         $connection     = $event->connection;
         $parent         = $event->object;
-        $parentRegistry = $event->registry;
-        $table          = $connection->table($this->getTableName());
-        $registry       = $table->getRegistry();
         
         foreach($this->getWorkersQueue() as $worker) {
             $worker->setRegistry($this->registry);

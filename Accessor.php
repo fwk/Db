@@ -262,7 +262,7 @@ class Accessor
         \ksort($array);
         $str    = \get_class($this->object);
 
-        foreach ($array as $key => $value) {
+        foreach ($array as $value) {
             $str .= (is_array($value) ? json_encode($value) : $value);
         }
         

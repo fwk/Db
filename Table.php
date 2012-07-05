@@ -309,7 +309,7 @@ class Table
     public function deleteAll()
     {
         $query = Query::factory()->delete($this->getName());
-        $res = $this->getConnection()->execute($query);
+        $this->getConnection()->execute($query);
 
         return $this;
     }

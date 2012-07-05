@@ -87,8 +87,7 @@ class QueryBridge
      * @param array $options
      * @return \Doctrine\DBAL\Query\QueryBuilder 
      */
-    public function execute(Query $query, array $params = array(),
-        array $options = array())
+    public function execute(Query $query, array $params = array())
     {
         $this->queryString = $sql = $this->prepare($query);
 
@@ -262,7 +261,7 @@ class QueryBridge
         $order = $orderBy['order'];
 
         if (strpos($column, '.') !== false) {
-            list($table, $column) = \explode('.', $column);
+            list(, $column) = \explode('.', $column);
         }
 
         $col = $this->getColumnAlias($column);
@@ -272,11 +271,6 @@ class QueryBridge
 
     protected function getSelectJoins(array $joins)
     {
-        $str = null;
-
-        $tbls = \array_values ($this->tablesAliases);
-        $defaultTable = \array_shift ($tbls);
-
         foreach ($joins as $join) {
 
             $type = $join['type'];
@@ -452,7 +446,6 @@ class QueryBridge
                 
                 array_push($joinned, $join['table']);
             }
-            $query['joins'] = $js;
         }
 
         $tbls = array();
@@ -664,7 +657,6 @@ class QueryBridge
         if(!is_array($wheres) OR !count($wheres))
             return;
 
-        $whs = array();
         foreach ($wheres as $w) {
             if($w['type'] == Query::WHERE_OR) {
                 $this->handle->orWhere($w['condition']);

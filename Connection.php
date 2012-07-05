@@ -312,7 +312,7 @@ class Connection extends Dispatcher
         $stmt = $bridge->execute($query, $params, $options);
         
         if($query->getType() == Query::TYPE_SELECT) {
-            $res = $stmt->execute($params);
+            $stmt->execute($params);
             $tmp = $stmt->fetchAll();
             $hyd = new Hydrator($query, $this, $bridge->getColumnsAliases());
             
@@ -379,15 +379,15 @@ class Connection extends Dispatcher
      *
      * @return void
      */
-    public function setErrorException(\Exception $e)
+    public function setErrorException(\Exception $exception)
     {
         $this->setState(self::STATE_ERROR);
 
         $this->notify(new Event(ConnectionEvents::ERROREXCEPTION, array(
-            'exception' => $e
+            'exception' => $exception
         )));
 
-        throw $e;
+        throw $exception;
     }
 
     /**

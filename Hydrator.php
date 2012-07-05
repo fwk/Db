@@ -140,7 +140,6 @@ class Hydrator
             }
 
             $realColumnName = $infos['column'];
-            $function       = (bool) $infos['function'];
             $alias          = $infos['alias'];
 
             $tables[$table]['columns'][$column] =  $realColumnName;
@@ -195,7 +194,7 @@ class Hydrator
                 $access     = new Accessor($mainObj);
                 $columnName = $infos['join']['options']['column'];
                 $reference  = $infos['join']['options']['reference'];
-
+                
                 $current = (isset($joinData[$idsHash . $columnName]) ?
                         $joinData[$idsHash . $columnName] :
                         $this->getRelationObject($mainObj, $columnName, $infos['join'], $entityClass)
@@ -249,7 +248,7 @@ class Hydrator
 
         $ref    = new One2Many($join['local'], $join['foreign'], $join['table'], $entityClass);
         if (!empty($join['options']['reference'])) {
-            $current->setReference($join['options']['reference']);
+            $ref->setReference($join['options']['reference']);
         }
 
         return $ref;

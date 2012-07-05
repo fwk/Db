@@ -351,7 +351,7 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function isChanged($object)
     {
-        $changes    = $this->getChangedValues($object);
+        $this->getChangedValues($object);
 
         return ($this->getState($object) == self::STATE_CHANGED);
     }
@@ -392,9 +392,10 @@ class Registry implements \Countable, \IteratorAggregate
             $chg        = $this->getChangedValues($object);
             $access     = new Accessor($object);
             $relations  = $access->getRelations();
-            foreach ($chg as $key => $value) {
-                if(!\array_key_exists($key, $relations))
+            foreach (array_keys($chg) as $key) {
+                if(!\array_key_exists($key, $relations)) {
                         continue;
+                }
 
                 $relation   = $relations[$key];
                 $relation->setParent($object, $this->getEventDispatcher($object));

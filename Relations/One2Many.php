@@ -122,7 +122,6 @@ class One2Many extends AbstractManyRelation implements Relation
      */
     public function  onParentSave(\Fwk\Events\Event $event) {
         $connection     = $event->connection;
-        $parent         = $event->object;
         $parentRegistry = $event->registry;
         $table          = $connection->table($this->getTableName());
         
@@ -169,7 +168,7 @@ class One2Many extends AbstractManyRelation implements Relation
             $data   = $this->getRegistry()->getData($object);
             $action = (($data['state'] == Registry::STATE_NEW || ($data['state'] == Registry::STATE_CHANGED && $data['action'] != Registry::ACTION_DELETE)) ? Registry::ACTION_SAVE : $data['action']);
             if(empty($data['action'])) {
-                $chg    = $this->getRegistry()->getChangedValues($object);
+                $this->getRegistry()->getChangedValues($object);
                 $data   = $this->getRegistry()->getData($object);
             }
             
