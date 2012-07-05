@@ -22,9 +22,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- *
- * @package    Fwk
- * @subpackage Db
+ * 
+ * @category   Database
+ * @package    Fwk\Db
  * @subpackage Exceptions
  * @author     Julien Ballestracci <julien@nitronet.org>
  * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
@@ -35,4 +35,15 @@ namespace Fwk\Db\Exceptions;
 
 use Fwk\Db\Exception;
 
-class TableColumnNotFound extends Exception { }
+/**
+ * Thrown when a table column is missing.
+ * 
+ * @category Exceptions
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.phpfwk.com
+ */
+class TableColumnNotFound extends Exception
+{
+}
