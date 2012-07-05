@@ -128,4 +128,36 @@ class RegistryTest extends \PHPUnit_Framework_TestCase {
         $this->setExpectedException('\Fwk\Db\Exceptions\UnregisteredEntity');
         $this->object->getEventDispatcher($obj);
     }
+    
+    public function testGetDataFail()
+    {
+        $this->setExpectedException('\Fwk\Db\Exceptions\UnregisteredEntity');
+        $obj = new \stdClass();
+        $this->object->getData($obj);
+    }
+    
+    public function testSetDataFail()
+    {
+        $this->setExpectedException('\Fwk\Db\Exceptions\UnregisteredEntity');
+        $obj = new \stdClass();
+        $this->object->setData($obj, array('test' => 'fail'));
+    }
+    
+    public function testUnknownAction()
+    {
+        $obj = new \stdClass;
+        $this->object->store($obj);
+        $this->object->markForAction($obj, "UnknownAction");
+        
+        $this->setExpectedException('\Fwk\Db\Exception');
+        $this->object->getWorkersQueue();
+    }
+    
+    public function testStoreAlreadyStored()
+    {
+        $obj = new \stdClass();
+        $this->object->store($obj);
+        $this->assertTrue($this->object->contains($obj));
+        $this->object->store($obj);
+    }
 }

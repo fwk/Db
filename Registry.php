@@ -155,19 +155,15 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function getData($object)
     {
-        if(!$this->contains($object))
-            throw new Exceptions\UnregisteredEntity(
-                sprintf('Unregistered entity (%s)', \get_class($object)
-            )
-        );
-
         foreach ($this->store as $obj) {
             if ($obj === $object) {
                 return $this->store->getInfo();
             }
         }
 
-        return array();
+        throw new Exceptions\UnregisteredEntity(
+            sprintf('Unregistered entity (%s)', \get_class($object))
+        );
     }
 
     /**
@@ -177,15 +173,15 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function setData($object, array $data = array())
     {
-        if(!$this->contains($object))
-
-                return;
-
         foreach ($this->store as $obj) {
             if ($obj === $object) {
                 return $this->store->setInfo($data);
             }
         }
+        
+        throw new Exceptions\UnregisteredEntity(
+            sprintf('Unregistered entity (%s)', \get_class($object))
+        );
     }
 
     /**
@@ -204,12 +200,6 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function getEventDispatcher($object)
     {
-        if(!$this->contains($object))
-            throw new Exceptions\UnregisteredEntity(
-                sprintf('Unregistered entity (%s)', \get_class($object)
-            )
-        );
-
         $data   = $this->getData($object);
 
         return $data['dispatcher'];
@@ -349,10 +339,7 @@ class Registry implements \Countable, \IteratorAggregate
         if (count($diff) && $data['state'] == self::STATE_FRESH) {
             $data['state']  =   self::STATE_CHANGED;
             $this->setData($object, $data);
-        } elseif (!count($diff) && $data['state'] == self::STATE_CHANGED) {
-            $data['state']  =   self::STATE_UNKNOWN;
-            $this->setData($object, $data);
-        }
+        } 
 
         return $diff;
     }
@@ -424,7 +411,7 @@ class Registry implements \Countable, \IteratorAggregate
                     break;
 
                 default:
-                    throw new \InvalidArgumentException(sprintf("Unknown registry action '%s'", $action));
+                    throw new Exception(sprintf("Unknown registry action '%s'", $action));
             }
 
             $worker->setRegistry($this);

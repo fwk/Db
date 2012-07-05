@@ -91,10 +91,14 @@ class Finder
                     ->from(sprintf('%s %s', $table->getName(), 'f'));
         
         $this->table        = $table;
-        $this->connection   = $connection;
+        
+        if(null !== $connection) {
+            $this->setConnection($connection);
+        }
+        
         $this->query        = $query;
         $this->params       = array();
-        $this->entity       = $table->getDefaultEntity();
+        $this->setEntity($table->getDefaultEntity());
     }
 
     /**
@@ -139,7 +143,7 @@ class Finder
         }
         
         $this->query->where('1 = 1');
-        $this->query->entity($this->entity);
+        $this->query->entity($this->getEntity());
         
         foreach($identifiers as $key => $value) {
             $this->query->andWhere(sprintf('f.%s = ?', $key));
@@ -174,7 +178,7 @@ class Finder
         }
         
         $this->query->where('1 = 1');
-        $this->query->entity($this->entity);
+        $this->query->entity($this->getEntity());
         
         foreach($ids as $key) {
             if(!isset($identifiers[$key])) {
@@ -199,7 +203,7 @@ class Finder
      */
     public function all()
     {
-        $this->query->entity($this->entity);
+        $this->query->entity($this->getEntity());
         
         return $this->getResultSet();
     }

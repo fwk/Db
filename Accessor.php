@@ -99,14 +99,20 @@ class Accessor
             /**
              * @todo Boucle infinie!!!  $value->hasChanged()
              */
-            $value  = sprintf('relation:%s-%u', (/* $value->hasChanged() */ true ? (string) \microtime() : "static"), (string) $value->isFetched());
+            $value  = sprintf('relation:%s-%s', (string)\microtime(), (string) $value->isFetched());
         }
 
+        if (is_object($value)) {
+            $accessor   = self::factory($value);
+            $value      = $accessor->toArray(array(__CLASS__, __METHOD__));
+        }
+                
         if (\is_array($value)) {
             foreach ($value as $key => $val) {
                 if (is_object($val)) {
                     $accessor   = self::factory($val);
-                    $val        = $accessor->toArray();
+                    $accessor->overrideVisibility($this->force);
+                    $val        = $accessor->toArray(array(__CLASS__, __METHOD__));
                 }
                 $value[$key]    = $val;
             }
@@ -250,25 +256,17 @@ class Accessor
      */
     public function hashCode($algo  = 'md5')
     {
-        $array  = $this->toArray();
+        $old    = $this->force;
+        $this->overrideVisibility(true);
+        $array  = $this->toArray(array($this, 'everythingAsArrayModifier'));
         \ksort($array);
         $str    = \get_class($this->object);
 
         foreach ($array as $key => $value) {
-            if($value instanceof Relation)
-                continue;
-
-            if (is_object($value)) {
-                $tmp    = self::factory($value);
-                $value  = $tmp->toArray();
-            }
-
-            if (is_array($value)) {
-                $value = \json_encode($value);
-            }
-
-            $str .= $value;
+            $str .= (is_array($value) ? json_encode($value) : $value);
         }
+        
+        $this->overrideVisibility($old);
 
         return \hash($algo, $str);
     }

@@ -19,123 +19,120 @@ class TableTest extends \PHPUnit_Framework_TestCase {
      */
     protected $connection;
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->connection = new Connection(array(
-            'memory'    => true,
-            'driver'    => 'pdo_sqlite'
-        ));
-        
+                    'memory' => true,
+                    'driver' => 'pdo_sqlite'
+                ));
+
         $schema = $this->connection->getSchema();
-        
+
         $myTable = $schema->createTable("test_table");
         $myTable->addColumn("id", "integer", array("unsigned" => true));
         $myTable->addColumn("username", "string", array("length" => 32));
         $myTable->setPrimaryKey(array("id"));
         $myTable->addUniqueIndex(array("username"));
+        
+        $myTable = $schema->createTable("test_table2");
+        $myTable->addColumn("id", "integer", array("unsigned" => true));
+        $myTable->addColumn("username", "string", array("length" => 32));
+        
+        $myTable = $schema->createTable("test_table3");
+        $myTable->addColumn("id", "integer", array("unsigned" => true));
+        $myTable->addIndex(array('id'));
     }
-    
+
     /**
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
      */
-    protected function setUp()
-    {
+    protected function setUp() {
         $this->object = new Table('test_table');
+
+        \FwkDbTestUtil::createTestDb($this->connection);
     }
 
     /**
      * Tears down the fixture, for example, closes a network connection.
      * This method is called after a test is executed.
      */
-    protected function tearDown()
-    {
+    protected function tearDown() {
         unset($this->object);
+
+        \FwkDbTestUtil::dropTestDb($this->connection);
     }
 
     /**
      */
-    public function testGetColumnsFail()
-    {
+    public function testGetColumnsFail() {
         $this->setExpectedException('Fwk\Db\Exception');
         $this->assertEquals(2, count($this->object->getColumns()));
     }
 
     /**
      */
-    public function testGetColumns()
-    {
+    public function testGetColumns() {
         $this->object->setConnection($this->connection);
         $this->assertEquals(2, count($this->object->getColumns()));
     }
-    
+
     /**
      */
-    public function testSetConnection()
-    {
+    public function testSetConnection() {
         $this->assertEquals($this->object, $this->object->setConnection($this->connection));
     }
 
     /**
      */
-    public function testGetConnectionFail()
-    {
+    public function testGetConnectionFail() {
         $this->setExpectedException("\Fwk\Db\Exception");
         $this->object->getConnection();
     }
 
     /**
      */
-    public function testGetConnection()
-    {
+    public function testGetConnection() {
         $this->object->setConnection($this->connection);
         $this->assertEquals($this->connection, $this->object->getConnection());
     }
 
-    public function testGetFinder()
-    {
+    public function testGetFinder() {
         $this->assertInstanceOf('\Fwk\Db\Finder', $this->object->finder());
     }
 
     /**
      */
-    public function testGetName()
-    {
+    public function testGetName() {
         $this->assertEquals('test_table', $this->object->getName());
     }
 
-    public function testGetIdentifiersKeys()
-    {
+    public function testGetIdentifiersKeys() {
         $this->object->setConnection($this->connection);
         $this->assertEquals(array('id'), $this->object->getIdentifiersKeys());
     }
 
     /**
      */
-    public function testGetRegistry()
-    {
+    public function testGetRegistry() {
         $this->assertInstanceOf('\Fwk\Db\Registry', $this->object->getRegistry());
     }
 
     /**
      */
-    public function testGetColumnFail()
-    {
+    public function testGetColumnFail() {
         $this->object->setConnection($this->connection);
         $this->setExpectedException('\Fwk\Db\Exceptions\TableColumnNotFound');
         $this->object->getColumn('test');
     }
 
-    public function testGetColumn()
-    {
+    public function testGetColumn() {
         $this->object->setConnection($this->connection);
         $this->assertInstanceOf('\Doctrine\DBAL\Schema\Column', $this->object->getColumn('username'));
     }
 
     /**
      */
-    public function testHasColumn()
-    {
+    public function testHasColumn() {
         $this->object->setConnection($this->connection);
         $this->assertFalse($this->object->hasColumn('test'));
         $this->assertTrue($this->object->hasColumn('username'));
@@ -143,8 +140,7 @@ class TableTest extends \PHPUnit_Framework_TestCase {
 
     /**
      */
-    public function testDefaultEntity()
-    {
+    public function testDefaultEntity() {
         $this->object->setConnection($this->connection);
         $this->assertEquals('\stdClass', $this->object->getDefaultEntity());
         $this->object->setDefaultEntity('\MyTestEntity');
@@ -152,39 +148,31 @@ class TableTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @covers {className}::{origMethodName}
-     * @todo Implement testSave().
      */
-    public function testSave()
+    public function testDeleteAll() {
+        $user = new \stdClass;
+        $user->username = "joebar";
+
+        $u2 = clone $user;
+        $u2->username = "barjoe";
+        
+        $this->connection->table('fwkdb_test_users')->save(array($user, $u2));
+        $this->assertEquals(2, count($this->connection->table('fwkdb_test_users')->finder()->all()));
+
+        $this->connection->table('fwkdb_test_users')->deleteAll();
+        $this->assertEquals(0, count($this->connection->table('fwkdb_test_users')->finder()->all()));
+    }
+    
+    
+    public function testTableLacksIdentifiers()
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-                'This test has not been implemented yet.'
-        );
+        $this->setExpectedException('\Fwk\Db\Exceptions\TableLacksIdentifiers');
+        $this->connection->table('test_table2')->getIdentifiersKeys();
     }
 
-    /**
-     * @covers {className}::{origMethodName}
-     * @todo Implement testDelete().
-     */
-    public function testDelete()
+    public function testTableLacksIdentifiers2()
     {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-                'This test has not been implemented yet.'
-        );
+        $this->setExpectedException('\Fwk\Db\Exceptions\TableLacksIdentifiers');
+        $this->connection->table('test_table3')->getIdentifiersKeys();
     }
-
-    /**
-     * @covers {className}::{origMethodName}
-     * @todo Implement testDeleteAll().
-     */
-    public function testDeleteAll()
-    {
-        // Remove the following lines when you implement this test.
-        $this->markTestIncomplete(
-                'This test has not been implemented yet.'
-        );
-    }
-
 }
