@@ -37,7 +37,7 @@ namespace Fwk\Db;
  * 
  * Represents a database table. 
  * 
- * @category Interfaces
+ * @category Library
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License

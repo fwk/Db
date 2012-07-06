@@ -22,13 +22,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- *
- * @package    Fwk
- * @subpackage Db
- * @author     Julien Ballestracci <julien@nitronet.org>
- * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
- * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://www.phpfwk.com
+ * 
+ * @category  Database
+ * @package   Fwk\Db
+ * @author    Julien Ballestracci <julien@nitronet.org>
+ * @copyright 2011-2012 Julien Ballestracci <julien@nitronet.org>
+ * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link      http://www.phpfwk.com
  */
 namespace Fwk\Db;
 
@@ -39,13 +39,33 @@ use Fwk\Events\Dispatcher,
 
 /**
  * Represents a Connection to a database
- *
+ * 
+ * @category Library
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.phpfwk.com
  */
 class Connection extends Dispatcher
 {
+    /**
+     * State when initialized
+     */
     const STATE_INITIALIZED     = 0;
+    
+    /**
+     * State when connected to SGDB
+     */
     const STATE_CONNECTED       = 1;
+    
+    /**
+     * State when disconnected from SGDB
+     */
     const STATE_DISCONNECTED    = 2;
+    
+    /**
+     * State when an exception has been thrown
+     */
     const STATE_ERROR           = 3;
 
     /**
@@ -56,7 +76,7 @@ class Connection extends Dispatcher
     protected $options = array();
 
     /**
-     * Driver object
+     * DBAL Connection object
      *
      * @var DbalConnection
      */
@@ -74,22 +94,26 @@ class Connection extends Dispatcher
      *
      * @var integer
      */
-    protected $state            = self::STATE_INITIALIZED;
+    protected $state = self::STATE_INITIALIZED;
 
     /**
      * Tables objects (cache)
      *
-     * @var array<Table>
+     * @var array
      */
     protected $tables;
 
     /**
      * Constructor with generic configuration parameters (array)
+     * Options are used by Doctrine\DBAL\Connection, please refer to
+     * documentation:
+     * 
+     * http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest
+     * 
+     * other options:
+     *      - autoConnect:  (boolean) should connect on init (defaults to false)
      *
-     * options:
-     *      - autoConnect:  (boolean) should connect on construct (defaults to false)
-     *
-     * @param array $options
+     * @param array $options Configuration options
      *
      * @return void
      */
@@ -103,10 +127,9 @@ class Connection extends Dispatcher
     }
 
     /**
-     * Establish connection with database
+     * Establish connection to database
      *
-     * @throws Fwk\Db\Exceptions\ConnectionError
-     *
+     * @throws Exceptions\ConnectionError when failing to connect
      * @return boolean
      */
     public function connect()
@@ -117,7 +140,9 @@ class Connection extends Dispatcher
                 $res  = $dbal->connect();
             } catch (\Doctrine\DBAL\DBALException $e) {
             } catch (\PDOException $e) {
-                $this->setErrorException(new Exceptions\ConnectionError($e->getMessage()));
+                $this->setErrorException(
+                    new Exceptions\ConnectionError($e->getMessage())
+                );
 
                 return false;
             }
@@ -129,9 +154,10 @@ class Connection extends Dispatcher
             }
 
             $this->setState(self::STATE_CONNECTED);
-            $event = new Event(ConnectionEvents::CONNECT, array(
-                'connection'     => $this,
-            ));
+            $event = new Event(
+                ConnectionEvents::CONNECT, 
+                array('connection' => $this)
+            );
 
             $this->notify($event);
         }
@@ -140,7 +166,7 @@ class Connection extends Dispatcher
     }
 
     /**
-     * Ends connection to database
+     * End connection to database
      *
      * @return boolean
      */
@@ -155,24 +181,27 @@ class Connection extends Dispatcher
             $dbal->close();
         } catch (\Doctrine\DBAL\DBALException $e) {
         } catch (\PDOException $e) {
-            $this->setErrorException(new Exceptions\ConnectionError($e->getMessage()));
+            $this->setErrorException(
+                new Exceptions\ConnectionError($e->getMessage())
+            );
         }
 
         $this->setState(self::STATE_DISCONNECTED);
-        $event = new Event(ConnectionEvents::DISCONNECT, array(
-            'connection'     => $this,
-        ));
+        $event = new Event(
+            ConnectionEvents::DISCONNECT, 
+            array('connection' => $this)
+        );
 
         $this->notify($event);
-
+        
         return true;
     }
 
     /**
      * Sets an option value
      *
-     * @param string $option
-     * @param mixed  $value
+     * @param string $option Option's key
+     * @param mixed  $value  Option value
      *
      * @return Connection
      */
@@ -184,10 +213,10 @@ class Connection extends Dispatcher
     }
 
     /**
-     * Returns an option value or $default if not defined.
+     * Returns an option value or $default if option is not defined.
      *
-     * @param string $option
-     * @param mixed  $default
+     * @param string $option  Option key
+     * @param mixed  $default Option value
      *
      * @return mixed
      */
@@ -200,20 +229,20 @@ class Connection extends Dispatcher
     }
 
     /**
-     * Returns all options values
+     * Returns all options
      *
      * @return array
      */
     public function getOptions()
     {
-
         return $this->options;
     }
 
     /**
      * Sets (merge) multiple options values
      *
-     * @param  array      $options
+     * @param array $options List of options (keys->values)
+     * 
      * @return Connection
      */
     public function setOptions(array $options = array())
@@ -240,15 +269,20 @@ class Connection extends Dispatcher
     /**
      * Defines a driver
      *
-     * @param DbalConnection $driver
+     * @param DbalConnection $driver The DBAL Connection object
+     * 
+     * @return Connection
      */
     public function setDriver(DbalConnection $driver)
     {
         $this->driver = $driver;
+        
+        return $this;
     }
 
     /**
-     *
+     * Returns current database schema
+     * 
      * @return \Doctrine\DBAL\Schema\Schema
      */
     public function getSchema()
@@ -256,8 +290,8 @@ class Connection extends Dispatcher
         if (!isset($this->schema)) {
             $this->connect();
             $this->schema = $this->getDriver()
-                    ->getSchemaManager()
-                    ->createSchema();
+                ->getSchemaManager()
+                ->createSchema();
         }
 
         return $this->schema;
@@ -288,18 +322,22 @@ class Connection extends Dispatcher
     /**
      * Executes a query and return results
      *
-     * @param Query $query
-     * @param array $params Query values (if any)
+     * @param Query $query   The Query object
+     * @param array $params  Query values (if any)
+     * @param array $options Extras query options
      *
      * @return mixed
      */
     public function execute(Query $query, array $params = array(),
-        array $options = array())
-    {
-        $event = new Event(ConnectionEvents::BEFORE_QUERY, array(
-            'query'     => $query,
-            'results'   => null
-        ));
+        array $options = array()
+    ) {
+        $event = new Event(
+            ConnectionEvents::BEFORE_QUERY, 
+            array(
+                'query'     => $query,
+                'results'   => null
+            )
+        );
 
         $this->notify($event);
 
@@ -323,14 +361,18 @@ class Connection extends Dispatcher
         }
 
         $event->results = $results;
-        $afterEvent = new Event(ConnectionEvents::AFTER_QUERY, $event->getData());
+        $afterEvent = new Event(
+            ConnectionEvents::AFTER_QUERY, 
+            $event->getData()
+        );
         $this->notify($afterEvent);
 
         return $afterEvent->results;
     }
 
     /**
-     *
+     * Returns a new instance of a QueryBridge
+     * 
      * @return QueryBridge
      */
     public function newQueryBrige()
@@ -339,9 +381,9 @@ class Connection extends Dispatcher
     }
 
     /**
-     * Defines current state
+     * Defines current state and trigger a STATE_CHANGE event
      *
-     * @param integer $state
+     * @param integer $state New connection's state
      *
      * @return Connection
      */
@@ -350,13 +392,18 @@ class Connection extends Dispatcher
         $newState       = (int) $state;
 
         if ($newState != $this->state) {
-            $this->notify(new Event(ConnectionEvents::STATE_CHANGE, array(
-                'beforeState' => $this->state,
-                'state'  => $state
-            )));
+            $this->notify(
+                new Event(
+                    ConnectionEvents::STATE_CHANGE, 
+                    array(
+                        'beforeState'   => $this->state,
+                        'state'         => $state
+                    )
+                )
+            );
         }
 
-        $this->state    = $newState;
+        $this->state = $newState;
 
         return $this;
     }
@@ -375,7 +422,7 @@ class Connection extends Dispatcher
     /**
      * Sets an error Exception and throws it
      *
-     * @param \Exception $e
+     * @param \Exception $exception The exception to be thrown
      *
      * @return void
      */
@@ -383,9 +430,14 @@ class Connection extends Dispatcher
     {
         $this->setState(self::STATE_ERROR);
 
-        $this->notify(new Event(ConnectionEvents::ERROREXCEPTION, array(
-            'exception' => $exception
-        )));
+        $this->notify(
+            new Event(
+                ConnectionEvents::ERROREXCEPTION, 
+                array(
+                    'exception' => $exception
+                )
+            )
+        );
 
         throw $exception;
     }
@@ -393,10 +445,9 @@ class Connection extends Dispatcher
     /**
      * Returns a table object representing a database table
      *
-     * @param string $tableName
+     * @param string $tableName Table name
      *
-     * @throws Exceptions\TableNotFound if inexistant table
-     *
+     * @throws Exceptions\TableNotFound if table is not found
      * @return Table
      */
     public function table($tableName)
@@ -421,6 +472,11 @@ class Connection extends Dispatcher
         return $this->tables[$tableName];
     }
 
+    /**
+     * Returns the last inserted ID in the database (if driver supports it)
+     * 
+     * @return integer 
+     */
     public function lastInsertId()
     {
 
