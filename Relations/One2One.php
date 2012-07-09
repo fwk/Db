@@ -22,14 +22,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- *
- * @package    Fwk
- * @subpackage Db
- * @subpackage Relations
- * @author     Julien Ballestracci <julien@nitronet.org>
- * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
- * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://www.phpfwk.com
+ * 
+ * @category  Database
+ * @package   Fwk\Db
+ * @author    Julien Ballestracci <julien@nitronet.org>
+ * @copyright 2011-2012 Julien Ballestracci <julien@nitronet.org>
+ * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link      http://www.phpfwk.com
  */
 namespace Fwk\Db\Relations;
 
@@ -39,35 +38,57 @@ use Fwk\Db\Relation,
     Fwk\Db\EntityEvents,
     Fwk\Db\Registry,
     Fwk\Db\Workers\SaveEntityWorker,
-    Fwk\Db\Workers\DeleteEntityWorker;
+    Fwk\Db\Workers\DeleteEntityWorker, 
+    Fwk\Events\Dispatcher;
 
+/**
+ * Represents a One --> One database relation.
+ *
+ * @category Relations
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.phpfwk.com
+ */
 class One2One extends AbstractRelation implements Relation
 {
     /**
      * Prepares a Query to fetch this relation (only FETCH_EAGER)
      *
-     * @param Query $query
+     * @param Query  $query      The query
+     * @param string $columnName Column name on the parent entity
      *
      * @return void
      */
     public function prepare(Query $query, $columnName)
     {
-        if ($this->isLazy())
-
-            return;
+        if ($this->isLazy()) {
+            return; 
+        }
 
         $this->columnName = $columnName;
         $join = array(
-            'column' => $this->columnName,
-            'relation' => $this,
-            'skipped' => false,
+            'column'    => $this->columnName,
+            'relation'  => $this,
+            'skipped'   => false,
             'reference' => null,
-            'entity' => $this->entity
+            'entity'    => $this->entity
         );
 
-        $query->join($this->tableName, $this->local, $this->foreign, Query::JOIN_LEFT, $join);
+        $query->join(
+            $this->tableName, 
+            $this->local, 
+            $this->foreign, 
+            Query::JOIN_LEFT, 
+            $join
+        );
     }
 
+    /**
+     * Fetches (if necessary) relation's entities
+     * 
+     * @return void 
+     */
     public function fetch()
     {
         if (!$this->fetched && $this->isActive()) {
@@ -75,20 +96,21 @@ class One2One extends AbstractRelation implements Relation
             $query->entity($this->entity);
 
             $query->select()
-                  ->from($this->tableName, 'lazy')
-                  ->where('lazy.'. $this->foreign .'=?');
+                ->from($this->tableName, 'lazy')
+                ->where('lazy.'. $this->foreign .'=?');
 
             $connect    = $this->getConnection();
             $res        = $connect->execute($query, array($this->parentRefs));
-            $idKeys     = $connect->table($this->tableName)->getIdentifiersKeys();
+            $idKeys     = $connect->table($this->tableName)
+                ->getIdentifiersKeys();
 
             if (count($res) >= 1) {
-               $ids     = array();
-               $access  = new Accessor($res[0]);
-               foreach ($idKeys as $key) {
-                   $ids[$key]   = $access->get($key);
-               }
-               $this->add($res[0], $ids);
+                $ids     = array();
+                $access  = new Accessor($res[0]);
+                foreach ($idKeys as $key) {
+                    $ids[$key] = $access->get($key);
+                }
+                $this->add($res[0], $ids);
             }
 
             $this->setFetched(true);
@@ -113,6 +135,15 @@ class One2One extends AbstractRelation implements Relation
         return null;
     }
 
+    /**
+     * Defines the $object as the One.
+     * 
+     * If $object is null, the relation is canceled on the parent object
+     * 
+     * @param mixed $object Entity
+     * 
+     * @return void 
+     */
     public function set($object = null)
     {
         if (null === $object) {
@@ -126,69 +157,128 @@ class One2One extends AbstractRelation implements Relation
         $this->add($object);
     }
 
+    /**
+     * Magic method to allow $parent->relation->propName;
+     * Returns value from the linked object.
+     * 
+     * @param string $key Property/Column name
+     * 
+     * @throws \RuntimeException if relation is empty
+     * @return mixed 
+     */
     public function __get($key)
     {
         $obj = $this->get();
-        if(!\is_object($obj))
-                throw new \RuntimeException (sprintf('Unable to retrieve "%s" parameter from relation (empty)', $key));
-
+        if (!\is_object($obj)) {
+            throw new \RuntimeException('Empty relation');
+        }
+        
         return Accessor::factory($obj)->get($key);
     }
 
+    /**
+     * Magic method to allow $parent->relation->propName = "value"
+     * 
+     * @param string $key   Property/Column name
+     * @param mixed  $value The value
+     * 
+     * @return void 
+     */
     public function __set($key, $value)
     {
         $obj    = $this->get();
-        if(!\is_object($obj))
-                throw new \RuntimeException (sprintf('Unable to set %s parameter on empty relation.', $key));
-
+        if (!\is_object($obj)) {
+            throw new \RuntimeException('Empty relation');
+        }
+        
         return Accessor::factory($obj)->set($key, $value);
     }
 
+    /**
+     * Magic method to allow isset($parent->relation->propName)
+     * 
+     * @param string $key Property/Column name
+     * 
+     * @return boolean 
+     */
     public function __isset($key)
     {
         $obj    = $this->fetch();
-        if(!\is_object($obj))
-                throw new \Exception (sprintf('Unable to retrieve %s parameter from relation (empty)', $key));
-
-        $test       = Accessor::factory($obj)->get($key);
+        if (!\is_object($obj)) {
+            throw new \RuntimeException('Empty relation');
+        }
+        
+        $test = Accessor::factory($obj)->get($key);
 
         return ($test != false ? true : false);
     }
 
+    /**
+     * Magic method to allow calling methods like $parent->relation->call()
+     * 
+     * @param string $name      Method name
+     * @param array  $arguments Call arguments
+     * 
+     * @return mixed 
+     */
     public function __call($name, $arguments)
     {
-        $obj    = $this->get();
-        if(!\is_object($obj))
-                throw new \RuntimeException (sprintf('Unable to call function %s parameter on relation (empty)', $name));
-
-        $access     = new Accessor($obj);
+        $obj = $this->get();
+        if (!\is_object($obj)) {
+            throw new \RuntimeException('Empty relation');
+        }
+        
+        $access = new Accessor($obj);
         try {
             $access->getReflector()->getMethod($name);
 
             return \call_user_func_array(array($obj, $name), $arguments);
         } catch (\ReflectionException $e) {
-            throw new \RuntimeException(sprintf('Unable to call method %s::%s(): %s', get_class($obj), $name, $e->getMessage()));
+            throw new \RuntimeException(
+                sprintf(
+                    'Unable to call method %s::%s(): %s', 
+                    get_class($obj), 
+                    $name, 
+                    $e->getMessage()
+                )
+            );
         }
     }
 
     /**
-     *
-     * @param mixed                  $object
-     * @param \Fwk\Events\Dispatcher $evd
+     * Defines a parent object (the other One) 
+     * 
+     * @param mixed      $object The parent object
+     * @param Dispatcher $evd    The related Events Dispatcher
+     * 
+     * @return void
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd)
+    public function setParent($object, Dispatcher $evd)
     {
-        $return     = parent::setParent($object, $evd);
+        $return = parent::setParent($object, $evd);
         if ($return === true) {
-            $evd->on(EntityEvents::BEFORE_SAVE, array($this, 'onBeforeParentSave'));
-            $evd->on(EntityEvents::BEFORE_UPDATE, array($this, 'onBeforeParentSave'));
+            $evd->on(
+                EntityEvents::BEFORE_SAVE, 
+                array(
+                    $this, 
+                    'onBeforeParentSave'
+                )
+            );
+            $evd->on(
+                EntityEvents::BEFORE_UPDATE, 
+                array(
+                    $this, 
+                    'onBeforeParentSave'
+                )
+            );
         }
 
         return $return;
     }
 
     /**
-     *
+     * Returns to-be-executed workers queue
+     * 
      * @return \SplPriorityQueue
      */
     public function getWorkersQueue()
@@ -200,30 +290,37 @@ class One2One extends AbstractRelation implements Relation
             $action = (($data['state'] == Registry::STATE_NEW || ($data['state'] == Registry::STATE_CHANGED && $data['action'] != Registry::ACTION_DELETE)) ? Registry::ACTION_SAVE : $data['action']);
             if (empty($data['action'])) {
                 $this->getRegistry()->getChangedValues($object);
-                $data   = $this->getRegistry()->getData($object);
+                $data = $this->getRegistry()->getData($object);
             }
 
-            $ts     = ($data['ts_action'] == null ? \microtime(true) : $data['ts_action']);
-            if(empty($action))
+            $ts = ($data['ts_action'] == null ? 
+                    \microtime(true) : 
+                    $data['ts_action']
+                  );
+            
+            if (empty($action)) {
                 continue;
+            }
 
             $priority   = $ts;
             switch ($action) {
-                case Registry::ACTION_DELETE:
-                    $worker = new DeleteEntityWorker($object);
-                    break;
+            case Registry::ACTION_DELETE:
+                $worker = new DeleteEntityWorker($object);
+                break;
 
-                case Registry::ACTION_SAVE:
-                    $worker = new SaveEntityWorker($object);
-                    break;
+            case Registry::ACTION_SAVE:
+                $worker = new SaveEntityWorker($object);
+                break;
 
-                default:
-                    throw new \InvalidArgumentException(sprintf("Unknown registry action '%s'", $action));
-
+            default:
+                throw new \InvalidArgumentException(
+                    sprintf("Unknown registry action '%s'", $action)
+                );
             }
 
-            if(isset($worker))
+            if (isset($worker)) {
                 $queue->insert($worker, $priority);
+            }
         }
 
         return $queue;
@@ -232,7 +329,8 @@ class One2One extends AbstractRelation implements Relation
     /**
      * Listener executed when parent entity is saved
      *
-     * @param  \Fwk\Events\Event $event
+     * @param \Fwk\Events\Event $event Dispatched event
+     * 
      * @return void
      */
     public function  onBeforeParentSave(\Fwk\Events\Event $event)
@@ -245,11 +343,10 @@ class One2One extends AbstractRelation implements Relation
             $entity     = $worker->getEntity();
 
             if ($worker instanceof SaveEntityWorker) {
-               $worker->execute($connection);
-
-               $current = Accessor::factory($entity)->get($this->foreign);
-               Accessor::factory($parent)->set($this->local, $current);
-               $this->getRegistry()->defineInitialValues($entity);
+                $worker->execute($connection);
+                $current = Accessor::factory($entity)->get($this->foreign);
+                Accessor::factory($parent)->set($this->local, $current);
+                $this->getRegistry()->defineInitialValues($entity);
             }
 
             if ($worker instanceof DeleteEntityWorker) {
