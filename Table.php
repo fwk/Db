@@ -301,26 +301,19 @@ class Table
      */
     public function save($entity)
     {
-        if (is_null($entity)) {
-            return;
-        }
-
-        if (!is_array($entity) && !\is_object($entity)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    "You can only save an object or a list of objects"
-                )
-            );
-        }
-        
         if (!\is_array($entity)) {
             $entity = array($entity);
         }
         
         foreach ($entity as $object) {
-            if (is_null($object)) {
-                continue;
+            if (!\is_object($object) || is_null($object)) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        "You can only save an object or a list of objects"
+                    )
+                );
             }
+            
             $this->getRegistry()->markForAction($object, Registry::ACTION_SAVE);
         }
 
@@ -336,25 +329,17 @@ class Table
      */
     public function delete($entity)
     {
-        if (is_null($entity)) {
-            return;
-        }
-
-        if (!is_array($entity) && !\is_object($entity)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    "You can only save an object or a list of objects"
-                )
-            );
-        }
-        
         if (!\is_array($entity)) {
             $entity = array($entity);
         }
 
         foreach ($entity as $object) {
-            if (is_null($object)) {
-                continue;
+            if (!\is_object($object) || is_null($object)) {
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        "You can only save an object or a list of objects"
+                    )
+                );
             }
 
             $this->getRegistry()->markForAction(

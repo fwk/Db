@@ -48,6 +48,18 @@ class ResultSetTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($this->object->offsetExists('pwet'));
     }
 
+    public function testConstructor()
+    {
+        $this->object = new ResultSet(array(
+            'test' => new \stdClass,
+            'newTest' => array('coucou' => 'test', 'prop' => 'value')
+        ));
+        
+        $this->assertInstanceof('\stdClass', $this->object->offsetGet('newTest'));
+        $val = $this->object->filter(function($elem) { return true; });
+        $this->assertArrayHasKey('newTest', $val->toArray());
+    }
+    
     /**
      * @todo Implement testOffsetGet().
      */
@@ -72,9 +84,13 @@ class ResultSetTest extends \PHPUnit_Framework_TestCase
         $std->test = "test";
 
         $this->object = new ResultSet();
-        $this->object[] = $std;
+        $this->object['test'] = $std;
+        
+        $new = clone $std;
 
-        $this->assertEquals($std, $this->object->offsetGet(0));
+        $this->assertEquals($std, $this->object->offsetGet('test'));
+        $this->object->offsetSet('test', $new);
+        $this->assertEquals($new, $this->object->offsetGet('test'));
     }
 
     /**

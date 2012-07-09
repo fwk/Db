@@ -22,16 +22,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- *
- * @package    Fwk
- * @subpackage Db
- * @author     Julien Ballestracci <julien@nitronet.org>
- * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
- * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://www.phpfwk.com
+ * 
+ * @category  Database
+ * @package   Fwk\Db
+ * @author    Julien Ballestracci <julien@nitronet.org>
+ * @copyright 2011-2012 Julien Ballestracci <julien@nitronet.org>
+ * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link      http://www.phpfwk.com
  */
 namespace Fwk\Db;
 
+/**
+ * Finder 
+ * 
+ * Utility class to "navigate" within a database table.
+ * 
+ * @category Library
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.phpfwk.com
+ */
 class Finder
 {
     /**
@@ -79,8 +90,8 @@ class Finder
     /**
      * Constructor
      *
-     * @param Table      $table
-     * @param Connection $connection
+     * @param Table      $table      Main table to query
+     * @param Connection $connection Actual Connection
      *
      * @return void
      */
@@ -104,7 +115,7 @@ class Finder
     /**
      * Defines a connection
      *
-     * @param Connection $connection
+     * @param Connection $connection Actual Connection
      *
      * @return Finder
      */
@@ -118,8 +129,7 @@ class Finder
     /**
      * Returns current connection
      *
-     * @throws Exception
-     *
+     * @throws Exception  if no connection is defined
      * @return Connection
      */
     public function getConnection()
@@ -132,8 +142,11 @@ class Finder
     }
 
     /**
-     *
-     * @param  array     $identifiers
+     * Find one or more results according to the list of $identifiers. 
+     * 
+     * @param array $identifiers List of columns to search
+     * 
+     * @throws Exception if Query already done
      * @return ResultSet
      */
     public function find(array $identifiers)
@@ -154,8 +167,11 @@ class Finder
     }
 
     /**
-     *
-     * @param  mixed $identifiers
+     * Finds one entry according to identifiers. 
+     * 
+     * @param mixed $identifiers List of/single identifiers
+     * 
+     * @throws Exception if Query already done
      * @return mixed
      */
     public function one($identifiers)
@@ -173,16 +189,14 @@ class Finder
             }
         }
 
-        if (count($ids) != count($identifiers)) {
-            throw new Exceptions\MissingIdentifier(sprintf('Table has %u identifiers (%s), only %u provided', count($ids), implode(', ', $ids), count($identifiers)));
-        }
-
         $this->query->where('1 = 1');
         $this->query->entity($this->getEntity());
 
         foreach ($ids as $key) {
             if (!isset($identifiers[$key])) {
-                 throw new Exceptions\MissingIdentifier(sprintf('Missing required identifier "%s"', $key));
+                 throw new Exceptions\MissingIdentifier(
+                     sprintf('Missing required identifier "%s"', $key)
+                 );
             }
 
             $this->query->andWhere(sprintf('f.%s = ?', $key));
@@ -198,7 +212,8 @@ class Finder
     }
 
     /**
-     *
+     * Fetches all entries from the table
+     * 
      * @return ResultSet
      */
     public function all()
@@ -209,23 +224,39 @@ class Finder
     }
 
     /**
-     *
+     * Executes the query (if required) and returns the result set.
+     * 
      * @return ResultSet
      */
     public function getResultSet()
     {
         if (!isset($this->resultSet)) {
-            $this->resultSet = $this->connection->execute($this->query, $this->params);
+            $this->resultSet = $this->getConnection()->execute(
+                $this->query, 
+                $this->params
+            );
         }
 
         return $this->resultSet;
     }
 
+    /**
+     * Entity class name
+     * 
+     * @return string 
+     */
     public function getEntity()
     {
         return $this->entity;
     }
 
+    /**
+     * Defines the entity that should be returned by this Finder
+     * 
+     * @param string $entity The entity class name
+     * 
+     * @return void
+     */
     public function setEntity($entity)
     {
         $this->entity = $entity;

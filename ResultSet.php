@@ -198,7 +198,8 @@ class ResultSet implements \Countable, \IteratorAggregate, \ArrayAccess
     {
         $final= array();
         foreach ($this->store as $object) {
-            $final[] = $object;
+            $key = $this->store->getInfo();
+            $final[$key] = $object;
         }
 
         return $final;

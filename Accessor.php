@@ -113,7 +113,7 @@ class Accessor
      * 
      * @return mixed Filtered value
      */
-    public static function everythingAsArrayModifier($value)
+    public function everythingAsArrayModifier($value)
     {
         if ($value instanceof Relation) {
             /**
@@ -128,17 +128,12 @@ class Accessor
 
         if (is_object($value)) {
             $accessor   = self::factory($value);
-            $value      = $accessor->toArray(array(__CLASS__, __METHOD__));
+            $value      = $accessor->toArray(array($this, __METHOD__));
         }
 
-        if (\is_array($value)) {
+        if (is_array($value)) {
             foreach ($value as $key => $val) {
-                if (is_object($val)) {
-                    $accessor   = self::factory($val);
-                    $accessor->overrideVisibility($this->force);
-                    $val        = $accessor->toArray(array(__CLASS__, __METHOD__));
-                }
-                $value[$key]    = $val;
+                $value[$key] = $val;
             }
         }
 

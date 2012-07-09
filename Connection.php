@@ -137,22 +137,14 @@ class Connection extends Dispatcher
         if (!$this->isConnected()) {
             try {
                 $dbal = $this->getDriver();
-                $res  = $dbal->connect();
+                $dbal->connect();
             } catch (\Doctrine\DBAL\DBALException $e) {
             } catch (\PDOException $e) {
-                $this->setErrorException(
+                throw $this->setErrorException(
                     new Exceptions\ConnectionError($e->getMessage())
                 );
-
-                return false;
             }
-
-            if (!$res) {
-                $this->setErrorException(new Exceptions\ConnectionError());
-
-                return false;
-            }
-
+            
             $this->setState(self::STATE_CONNECTED);
             $event = new Event(
                 ConnectionEvents::CONNECT, 
@@ -168,6 +160,7 @@ class Connection extends Dispatcher
     /**
      * End connection to database
      *
+     * @throws Exceptions\ConnectionError when failing to disconnect (?) 
      * @return boolean
      */
     public function disconnect()
@@ -176,15 +169,8 @@ class Connection extends Dispatcher
             return true;
         }
 
-        try {
-            $dbal = $this->getDriver();
-            $dbal->close();
-        } catch (\Doctrine\DBAL\DBALException $e) {
-        } catch (\PDOException $e) {
-            $this->setErrorException(
-                new Exceptions\ConnectionError($e->getMessage())
-            );
-        }
+        $dbal = $this->getDriver();
+        $dbal->close();
 
         $this->setState(self::STATE_DISCONNECTED);
         $event = new Event(
@@ -260,7 +246,7 @@ class Connection extends Dispatcher
     public function getDriver()
     {
         if (!isset($this->driver)) {
-            $this->driver = DriverManager::getConnection($this->options);
+            $this->setDriver(DriverManager::getConnection($this->options));
         }
 
         return $this->driver;
@@ -389,7 +375,7 @@ class Connection extends Dispatcher
      */
     public function setState($state)
     {
-        $newState       = (int) $state;
+        $newState       = (int)$state;
 
         if ($newState != $this->state) {
             $this->notify(
@@ -420,11 +406,11 @@ class Connection extends Dispatcher
     }
 
     /**
-     * Sets an error Exception and throws it
+     * Sets an error Exception and toggle error state
      *
      * @param \Exception $exception The exception to be thrown
      *
-     * @return void
+     * @return \Exception
      */
     public function setErrorException(\Exception $exception)
     {
@@ -439,7 +425,7 @@ class Connection extends Dispatcher
             )
         );
 
-        throw $exception;
+        return $exception;
     }
 
     /**
@@ -452,24 +438,26 @@ class Connection extends Dispatcher
      */
     public function table($tableName)
     {
-        if (!isset($this->tables[$tableName])) {
-            if (!$this->getSchema()->hasTable($tableName)) {
-                $this->setErrorException(
-                    new Exceptions\TableNotFound(
-                        sprintf('Inexistant table "%s"', $tableName)
-                    )
-                );
-
-                return false;
-            }
-
+        if (isset($this->tables[$tableName])) {
+            return $this->tables[$tableName];
+        }
+        
+        if ($this->getSchema()->hasTable($tableName)) {
             $table = new Table($tableName);
             $table->setConnection($this);
-
-            $this->tables[$tableName]   = $table;
+            $this->tables[$tableName] = $table;
+            
+            return $table;
         }
 
-        return $this->tables[$tableName];
+        throw $this->setErrorException(
+            new Exceptions\TableNotFound(
+                sprintf(
+                    'Inexistant table "%s"', 
+                    $tableName
+                )
+            )
+        );
     }
 
     /**
@@ -514,7 +502,6 @@ class Connection extends Dispatcher
      */
     public function rollBack()
     {
-
         $this->getDriver()->rollBack();
 
         return $this;

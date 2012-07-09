@@ -29,6 +29,44 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($this->object->isConnected());
         $this->assertTrue($this->object->connect());
         $this->assertTrue($this->object->isConnected());
+        $this->assertFalse($this->object->isError());
+    }
+    
+    public function testConnectFail()
+    {
+        $this->setExpectedException('Fwk\Db\Exceptions\ConnectionError');
+        $this->object = new Connection(array(
+            'driver'    => 'pdo_mysql',
+            'host'  => 'inexistant.example.com-no',
+            'user'  => 'test',
+            'autoConnect' => true
+        ));
+    }
+    
+    public function testAutoConnect()
+    {
+        $this->object = new Connection(array(
+            'memory'    => true,
+            'driver'    => 'pdo_sqlite',
+            'autoConnect' => true
+        ));
+        $this->assertTrue($this->object->isConnected());
+        // coverage
+        $this->assertEquals(Connection::STATE_CONNECTED, $this->object->getState());
+    }
+    
+    public function testConnectFailErrorState()
+    {
+        try {
+            $this->object = new Connection(array(
+                'driver' => 'pdo_mysql',
+                'host'  => 'inexistant.example.com-no',
+                'user'  => 'test'
+            ));
+            $this->object->connect();
+        } catch(\Exception $e) { }
+        
+        $this->assertTrue($this->object->isError());
     }
 
     public function testOptions()
@@ -69,14 +107,14 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
     public function testTableNotExists()
     {
         $this->setExpectedException('\Fwk\Db\Exceptions\TableNotFound');
-        $this->object->table('nonExistant');
+        $tbl = $this->object->table('nonExistant');
     }
-
+ 
     public function testTable()
     {
         $this->prepareTestTable();
         $tbl = $this->object->table('test_table');
-        $this->assertInstanceOf('\Fwk\Db\Table', $tbl);
+        $this->assertInstanceOf('Fwk\Db\Table', $tbl);
     }
 
     public function testNewQueryBridge()
@@ -93,5 +131,27 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
         $myTable->addColumn("username", "string", array("length" => 32));
         $myTable->setPrimaryKey(array("id"));
         $myTable->addUniqueIndex(array("username"));
+    }
+    
+    public function testTransaction()
+    {
+        // coverage
+        $this->assertInstanceOf('Fwk\Db\Connection', $this->object->beginTransaction());
+        $this->assertInstanceOf('Fwk\Db\Connection', $this->object->commit());
+        $this->assertInstanceOf('Fwk\Db\Connection', $this->object->beginTransaction());
+        $this->assertInstanceOf('Fwk\Db\Connection', $this->object->rollBack());
+    }
+    
+    public function testEventStopQuery()
+    {
+        $this->object->on(ConnectionEvents::BEFORE_QUERY, function($e) {
+            $e->stop();
+            $e->results = "test";
+        });
+        
+        $query = Query::factory()->select()->from('fwkdb_test_users');
+        $res = $this->object->execute($query);
+        
+        $this->assertEquals($res, "test"); 
     }
 }
