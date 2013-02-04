@@ -168,4 +168,11 @@ abstract class AbstractManyRelation extends AbstractRelation implements
 
         $this->getRegistry()->store($object, $identifiers, Registry::STATE_NEW, $data);
     }
+    
+    public function addAll(array $objects)
+    {
+        foreach ($objects as $object) {
+            $this->add($object);
+        }
+    }
 }

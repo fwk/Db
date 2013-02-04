@@ -195,7 +195,7 @@ class Many2Many extends AbstractManyRelation implements Relation
                     $query->set($this->foreign, '?');
                     $query->set($this->foreignLink, '?');
 
-                    $connection->execute($query, array($access->get($this->foreignRefs), Accessor::factory($entity)->get($this->local)));
+                    $connection->execute($query, array($access->get($this->local), Accessor::factory($entity)->get($this->foreignRefs)));
                     $this->getRegistry()->defineInitialValues($entity);
                 }
             }
