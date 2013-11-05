@@ -102,12 +102,14 @@ class SaveEntityWorker extends AbstractWorker implements Worker
 
             foreach ($columns as $key => $columnObj) {
                 $default = $columnObj->getDefault();
+                $key = $columnObj->getName();
                 $value  = (array_key_exists($key, $values) ? $values[$key] : -1);
                 
                 if (-1 === $value) {
                     if (!empty($default) || 
                         true === $columnObj->getAutoincrement()
                     ) {
+                        $value = $default;
                         continue;
                     } elseif ($columnObj->getNotnull() === true) {
                         throw new \LogicException(
