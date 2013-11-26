@@ -178,7 +178,7 @@ class Query extends \ArrayObject
                 $this['wheres']     = array();
 
         $arr    = $this['wheres'];
-        array_push($arr, array('condition' => $condition, 'type' => 'AND'));
+        array_push($arr, array('condition' => $condition, 'type' => self::WHERE_AND));
         $this['wheres'] = $arr;
 
         return $this;
@@ -196,7 +196,7 @@ class Query extends \ArrayObject
                 $this['wheres']     = array();
 
         $arr    = $this['wheres'];
-        array_push($arr, array('condition' => $condition, 'type' => 'OR'));
+        array_push($arr, array('condition' => $condition, 'type' => self::WHERE_OR));
         $this['wheres'] = $arr;
 
         return $this;
