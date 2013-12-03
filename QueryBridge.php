@@ -364,7 +364,7 @@ class QueryBridge
         srand();
 
         if ($query->getFetchMode() != Query::FETCH_SPECIAL) {
-            return $query['select'];
+            return $this->handle->select($query['select']);
         }
 
         if (!$columns || $columns == '*')
