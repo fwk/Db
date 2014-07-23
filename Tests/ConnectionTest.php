@@ -38,7 +38,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
         $this->object = new Connection(array(
             'driver'    => 'pdo_mysql',
             'host'  => 'inexistant.example.com-no',
-            'user'  => 'test',
+            'user'  => 'testEUH',
             'autoConnect' => true
         ));
     }
@@ -61,7 +61,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
             $this->object = new Connection(array(
                 'driver' => 'pdo_mysql',
                 'host'  => 'inexistant.example.com-no',
-                'user'  => 'test'
+                'user'  => 'testEUH'
             ));
             $this->object->connect();
         } catch(\Exception $e) { }
