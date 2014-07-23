@@ -339,9 +339,14 @@ class Connection extends Dispatcher
         if ($query->getType() == Query::TYPE_SELECT) {
             $stmt->execute($params);
             $tmp = $stmt->fetchAll();
-            $hyd = new Hydrator($query, $this, $bridge->getColumnsAliases());
+            
+            if ($query->getFetchMode() == Query::FETCH_SPECIAL) {
+                $hyd = new Hydrator($query, $this, $bridge->getColumnsAliases());
 
-            $results = new ResultSet($hyd->hydrate($tmp));
+                $results = new ResultSet($hyd->hydrate($tmp));
+            } else {
+                $results = new ResultSet($tmp);
+            }
         } else {
             $results = $stmt;
         }
