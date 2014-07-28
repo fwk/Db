@@ -55,9 +55,16 @@ class Registry implements \Countable, \IteratorAggregate
     /**
      * Storage object
      *
-     * @var \SplObjectStorage
+     * @var array
      */
-    protected $store;
+    protected $store = array();
+
+    /**
+     * Storage data
+     *
+     * @var array
+     */
+    protected $datas = array();
 
     /**
      * @var string
@@ -76,7 +83,6 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function __construct($tableName)
     {
-        $this->store        = new \SplObjectStorage();
         $this->tableName    = $tableName;
     }
 
@@ -90,7 +96,7 @@ class Registry implements \Countable, \IteratorAggregate
     public function store($object, array $identifiers = array(), $state = Registry::STATE_UNKNOWN, array $data = array())
     {
         if ($this->contains($object)) {
-                return $this;
+            return $this;
         }
 
         \ksort($identifiers);
@@ -99,7 +105,7 @@ class Registry implements \Countable, \IteratorAggregate
             $identifiers = array('%hash%' => Accessor::factory($object)->hashCode());
         }
 
-        $dispatcher = new \Fwk\Events\Dispatcher();
+        $dispatcher = new Dispatcher();
         $dispatcher->on(EntityEvents::AFTER_SAVE, array($this, 'getLastInsertId'));
         $dispatcher->addListener($object);
 
@@ -114,26 +120,39 @@ class Registry implements \Countable, \IteratorAggregate
             'dispatcher'    => $dispatcher
         ), $data);
 
-        $this->store->attach($object, $data);
+        $idx = count($this->store);
+        $this->store[$idx] = $object;
+        $this->datas[$idx] = $data;
 
         return $this;
+    }
+
+    protected function getObjectStorageIndex($object)
+    {
+        foreach ($this->store as $idx => $obj) {
+            if ($obj === $object) {
+                return $idx;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Fetches an object
      *
-     * @param  array    $identifiers
-     * @return Registry
+     * @param  array $identifiers
+     *
+     * @return object|null
      */
     public function get(array $identifiers)
     {
         \ksort($identifiers);
 
-        foreach ($this->store as $obj) {
-               $data = $this->store->getInfo();
-            if($data['identifiers'] == $identifiers)
-
-                return $obj;
+        foreach ($this->datas as $idx => $infos) {
+            if($infos['identifiers'] == $identifiers) {
+                return $this->store[$idx];
+            }
         }
 
         return null;
@@ -155,38 +174,40 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function getData($object)
     {
-        foreach ($this->store as $obj) {
-            if ($obj === $object) {
-                return $this->store->getInfo();
-            }
+        $idx = $this->getObjectStorageIndex($object);
+        if ($idx === false) {
+            throw new Exceptions\UnregisteredEntity(
+                sprintf('Unregistered entity (%s)', \get_class($object))
+            );
         }
 
-        throw new Exceptions\UnregisteredEntity(
-            sprintf('Unregistered entity (%s)', \get_class($object))
-        );
+        return $this->datas[$idx];
     }
 
     /**
      *
-     * @param  mixed $object
-     * @return void
+     * @param mixed $object
+     * @param array $data
+     *
+     * @return Registry
      */
     public function setData($object, array $data = array())
     {
-        foreach ($this->store as $obj) {
-            if ($obj === $object) {
-                return $this->store->setInfo($data);
-            }
+        $idx = $this->getObjectStorageIndex($object);
+        if (false === $idx) {
+            throw new Exceptions\UnregisteredEntity(
+                sprintf('Unregistered entity (%s)', \get_class($object))
+            );
         }
 
-        throw new Exceptions\UnregisteredEntity(
-            sprintf('Unregistered entity (%s)', \get_class($object))
-        );
+        $this->datas[$idx] = array_merge($this->datas[$idx], $data);
+
+        return $this;
     }
 
     /**
      *
-     * @param mixed             $object
+     * @param mixed $object
      * @param \Fwk\Events\Event $event
      */
     public function fireEvent($object, Event $event)
@@ -200,9 +221,14 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function getEventDispatcher($object)
     {
-        $data   = $this->getData($object);
+        $idx = $this->getObjectStorageIndex($object);
+        if ($idx === false) {
+            throw new Exceptions\UnregisteredEntity(
+                sprintf('Unregistered entity (%s)', \get_class($object))
+            );
+        }
 
-        return $data['dispatcher'];
+        return $this->datas[$idx]['dispatcher'];
     }
 
     /**
@@ -246,12 +272,15 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function remove($object)
     {
-        foreach ($this->store as $obj) {
-            if ($object === $obj) {
-                $this->store->detach($object);
-                break;
-            }
+        $idx = $this->getObjectStorageIndex($object);
+        if ($idx === false) {
+            throw new Exceptions\UnregisteredEntity(
+                sprintf('Unregistered entity (%s)', \get_class($object))
+            );
         }
+
+        unset($this->store[$idx]);
+        unset($this->datas[$idx]);
 
         return $this;
     }
@@ -259,12 +288,12 @@ class Registry implements \Countable, \IteratorAggregate
     /**
      * Removes an object from its identifiers
      *
-     * @param  array    $identifiers
+     * @param array $identifiers
      * @return Registry
      */
     public function removeByIdentifiers(array $identifiers)
     {
-        $obj    = $this->get($identifiers);
+        $obj = $this->get($identifiers);
         if (null !== $obj) {
             $this->remove($obj);
         }
@@ -279,20 +308,20 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function contains($object)
     {
-        return $this->store->contains($object);
+        return false !== $this->getObjectStorageIndex($object);
     }
 
     /**
      *
-     * @param  mixed  $object
+     * @param object $object
+     *
      * @return string
      */
     public function getState($object)
     {
-        if ($this->contains($object)) {
-            $data   = $this->getData($object);
-
-            return $data['state'];
+        $idx = $this->getObjectStorageIndex($object);
+        if (false !== $idx) {
+            return $this->datas[$idx]['state'];
         }
 
         return self::STATE_UNREGISTERED;
@@ -323,8 +352,11 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function getChangedValues($object)
     {
-        if(!$this->contains($object))
-                throw new \RuntimeException (\sprintf ('Trying to access changed values of an unregistered object'));
+        if(!$this->contains($object)) {
+            throw new Exceptions\UnregisteredEntity(
+                sprintf('Unregistered entity (%s)', \get_class($object))
+            );
+        }
 
         $accessor   = new Accessor($object);
         $data       = $this->getData($object);
@@ -332,12 +364,13 @@ class Registry implements \Countable, \IteratorAggregate
 
         $diff       = array();
         foreach ($values as $key => $val) {
-            if(!isset($data['initial_values'][$key]) || $data['initial_values'][$key] !== $val)
+            if(!isset($data['initial_values'][$key]) || $data['initial_values'][$key] !== $val) {
                 $diff[$key] = $val;
+            }
         }
 
         if (count($diff) && $data['state'] == self::STATE_FRESH) {
-            $data['state']  =   self::STATE_CHANGED;
+            $data['state'] = self::STATE_CHANGED;
             $this->setData($object, $data);
         }
 
@@ -381,20 +414,21 @@ class Registry implements \Countable, \IteratorAggregate
     {
         $queue  = new \SplPriorityQueue();
 
-        foreach ($this->store as $object) {
-            $data   = $this->getData($object);
+        foreach ($this->store as $idx => $object) {
+            $data   = $this->datas[$idx];
             $action = $data['action'];
             $ts     = $data['ts_action'];
 
-            if(empty($action) || null === $ts)
+            if(empty($action) || null === $ts) {
                 continue;
+            }
 
             $chg        = $this->getChangedValues($object);
             $access     = new Accessor($object);
             $relations  = $access->getRelations();
             foreach (array_keys($chg) as $key) {
                 if (!\array_key_exists($key, $relations)) {
-                        continue;
+                    continue;
                 }
 
                 $relation   = $relations[$key];
@@ -424,12 +458,7 @@ class Registry implements \Countable, \IteratorAggregate
 
     public function toArray()
     {
-        $final= array();
-        foreach ($this->store as $object) {
-            $final[] = $object;
-        }
-
-        return $final;
+        return $this->store;
     }
 
     /**
@@ -438,7 +467,7 @@ class Registry implements \Countable, \IteratorAggregate
      */
     public function count()
     {
-        return $this->store->count();
+        return count($this->store);
     }
 
     /**
