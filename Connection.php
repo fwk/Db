@@ -32,6 +32,12 @@
  */
 namespace Fwk\Db;
 
+use Fwk\Db\Events\AfterQueryEvent;
+use Fwk\Db\Events\BeforeQueryEvent;
+use Fwk\Db\Events\ConnectEvent;
+use Fwk\Db\Events\ConnectionErrorEvent;
+use Fwk\Db\Events\ConnectionStateChangeEvent;
+use Fwk\Db\Events\DisconnectEvent;
 use Fwk\Events\Dispatcher,
     Fwk\Events\Event,
     Doctrine\DBAL\Connection as DbalConnection,
@@ -146,12 +152,7 @@ class Connection extends Dispatcher
             }
             
             $this->setState(self::STATE_CONNECTED);
-            $event = new Event(
-                ConnectionEvents::CONNECT, 
-                array('connection' => $this)
-            );
-
-            $this->notify($event);
+            $this->notify(new ConnectEvent($this));
         }
 
         return true;
@@ -173,12 +174,7 @@ class Connection extends Dispatcher
         $dbal->close();
 
         $this->setState(self::STATE_DISCONNECTED);
-        $event = new Event(
-            ConnectionEvents::DISCONNECT, 
-            array('connection' => $this)
-        );
-
-        $this->notify($event);
+        $this->notify(new DisconnectEvent($this));
         
         return true;
     }
@@ -208,10 +204,9 @@ class Connection extends Dispatcher
      */
     public function get($option, $default = null)
     {
-
-        return (\array_key_exists($option, $this->options) ?
+        return array_key_exists($option, $this->options) ?
                 $this->options[$option] :
-                $default);
+                $default;
     }
 
     /**
@@ -233,7 +228,7 @@ class Connection extends Dispatcher
      */
     public function setOptions(array $options = array())
     {
-        $this->options = \array_merge($this->options, $options);
+        $this->options = array_merge($this->options, $options);
 
         return $this;
     }
@@ -317,18 +312,9 @@ class Connection extends Dispatcher
     public function execute(Query $query, array $params = array(),
         array $options = array()
     ) {
-        $event = new Event(
-            ConnectionEvents::BEFORE_QUERY, 
-            array(
-                'query'     => $query,
-                'results'   => null
-            )
-        );
-
-        $this->notify($event);
+        $this->notify($event = new BeforeQueryEvent($this, $query, $params, $options));
 
         if ($event->isStopped()) {
-
             return $event->results;
         }
 
@@ -342,7 +328,6 @@ class Connection extends Dispatcher
             
             if ($query->getFetchMode() == Query::FETCH_SPECIAL) {
                 $hyd = new Hydrator($query, $this, $bridge->getColumnsAliases());
-
                 $results = new ResultSet($hyd->hydrate($tmp));
             } else {
                 $results = new ResultSet($tmp);
@@ -351,12 +336,7 @@ class Connection extends Dispatcher
             $results = $stmt;
         }
 
-        $event->results = $results;
-        $afterEvent = new Event(
-            ConnectionEvents::AFTER_QUERY, 
-            $event->getData()
-        );
-        $this->notify($afterEvent);
+        $this->notify($afterEvent = new AfterQueryEvent($this, $query, $params, $options, $results));
 
         return $afterEvent->results;
     }
@@ -381,20 +361,10 @@ class Connection extends Dispatcher
     public function setState($state)
     {
         $newState       = (int)$state;
-
         if ($newState != $this->state) {
-            $this->notify(
-                new Event(
-                    ConnectionEvents::STATE_CHANGE, 
-                    array(
-                        'beforeState'   => $this->state,
-                        'state'         => $state
-                    )
-                )
-            );
+            $this->notify(new ConnectionStateChangeEvent($this, $this->state, $newState));
+            $this->state = $newState;
         }
-
-        $this->state = $newState;
 
         return $this;
     }
@@ -406,7 +376,6 @@ class Connection extends Dispatcher
      */
     public function getState()
     {
-
         return $this->state;
     }
 
@@ -420,15 +389,7 @@ class Connection extends Dispatcher
     public function setErrorException(\Exception $exception)
     {
         $this->setState(self::STATE_ERROR);
-
-        $this->notify(
-            new Event(
-                ConnectionEvents::ERROREXCEPTION, 
-                array(
-                    'exception' => $exception
-                )
-            )
-        );
+        $this->notify(new ConnectionErrorEvent($this, $exception));
 
         return $exception;
     }

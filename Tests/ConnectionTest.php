@@ -1,6 +1,7 @@
 <?php
 
 namespace Fwk\Db;
+use Fwk\Db\Events\BeforeQueryEvent;
 
 /**
  * Test class for EventDispatcher.
@@ -144,7 +145,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
     
     public function testEventStopQuery()
     {
-        $this->object->on(ConnectionEvents::BEFORE_QUERY, function($e) {
+        $this->object->on(BeforeQueryEvent::EVENT_NAME, function(BeforeQueryEvent $e) {
             $e->stop();
             $e->results = "test";
         });
