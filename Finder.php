@@ -204,7 +204,7 @@ class Finder
         }
 
         $res = $this->getResultSet();
-        if ($res->count() >= 1) {
+        if (count($res) >= 1) {
             return $res[0];
         }
 

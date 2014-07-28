@@ -39,7 +39,6 @@ use Fwk\Db\Events\ConnectionErrorEvent;
 use Fwk\Db\Events\ConnectionStateChangeEvent;
 use Fwk\Db\Events\DisconnectEvent;
 use Fwk\Events\Dispatcher,
-    Fwk\Events\Event,
     Doctrine\DBAL\Connection as DbalConnection,
     Doctrine\DBAL\DriverManager;
 
@@ -324,13 +323,13 @@ class Connection extends Dispatcher
 
         if ($query->getType() == Query::TYPE_SELECT) {
             $stmt->execute($params);
-            $tmp = $stmt->fetchAll();
+            $tmp = $stmt->fetchAll(($query->getFetchMode() != Query::FETCH_SPECIAL ? $query->getFetchMode() : \PDO::FETCH_ASSOC));
             
-            if ($query->getFetchMode() == Query::FETCH_SPECIAL) {
+            if ($query->getFetchMode() === Query::FETCH_SPECIAL) {
                 $hyd = new Hydrator($query, $this, $bridge->getColumnsAliases());
-                $results = new ResultSet($hyd->hydrate($tmp));
+                $results = $hyd->hydrate($tmp);
             } else {
-                $results = new ResultSet($tmp);
+                $results = $tmp;
             }
         } else {
             $results = $stmt;

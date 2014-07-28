@@ -87,9 +87,9 @@ class QueryBridge
      * @param  array                             $options
      * @return \Doctrine\DBAL\Query\QueryBuilder
      */
-    public function execute(Query $query, array $params = array())
+    public function execute(Query $query, array $params = array(), array $options = array())
     {
-        $this->queryString = $sql = $this->prepare($query);
+        $this->queryString = $sql = $this->prepare($query, $options);
 
         if ($query->getType() == Query::TYPE_INSERT) {
             return $this->connection->getDriver()->executeUpdate($sql, $params);
