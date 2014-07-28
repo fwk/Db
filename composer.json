@@ -13,8 +13,7 @@
     "require": {
         "php": ">=5.3.3",
         "fwk/events": "dev-master",
-        "doctrine/dbal": "v2.4.2",
-        "psr/log": "~1.0"
+        "doctrine/dbal": "v2.4.2"
     },
     "autoload": {
         "psr-0": {

@@ -280,7 +280,7 @@ class Accessor
      * 
      * @return string
      */
-    public function hashCode($algo  = 'md5')
+    public function hashCode($algo  = 'crc32')
     {
         $old    = $this->force;
         $this->overrideVisibility(true);
