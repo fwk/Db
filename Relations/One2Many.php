@@ -39,7 +39,6 @@ use Fwk\Db\Events\AfterUpdateEvent;
 use Fwk\Db\Relation,
     Fwk\Db\Query,
     Fwk\Db\Accessor,
-    Fwk\Db\EntityEvents,
     Fwk\Db\Registry,
     Fwk\Db\Workers\SaveEntityWorker,
     Fwk\Db\Workers\DeleteEntityWorker;

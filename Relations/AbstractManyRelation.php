@@ -33,13 +33,8 @@
  */
 namespace Fwk\Db\Relations;
 
-use Fwk\Db\EntityEvents,
-    Fwk\Db\Relation,
+use Fwk\Db\Relation,
     Fwk\Db\Registry,
-    Fwk\Db\Exception,
-    Fwk\Db\Connection,
-    Fwk\Events\Dispatcher,
-    \IteratorAggregate,
     Fwk\Db\Accessor;
 
 /**
