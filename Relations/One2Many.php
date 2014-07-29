@@ -33,6 +33,9 @@
  */
 namespace Fwk\Db\Relations;
 
+use Fwk\Db\Events\AbstractEntityEvent;
+use Fwk\Db\Events\AfterSaveEvent;
+use Fwk\Db\Events\AfterUpdateEvent;
 use Fwk\Db\Relation,
     Fwk\Db\Query,
     Fwk\Db\Accessor,
@@ -110,8 +113,8 @@ class One2Many extends AbstractManyRelation implements Relation
     {
         $return     = parent::setParent($object, $evd);
         if ($return === true) {
-            $evd->on(EntityEvents::AFTER_SAVE, array($this, 'onParentSave'));
-            $evd->on(EntityEvents::AFTER_UPDATE, array($this, 'onParentSave'));
+            $evd->on(AfterSaveEvent::EVENT_NAME, array($this, 'onParentSave'));
+            $evd->on(AfterUpdateEvent::EVENT_NAME, array($this, 'onParentSave'));
         }
 
         return $return;
@@ -123,10 +126,10 @@ class One2Many extends AbstractManyRelation implements Relation
      * @param  \Fwk\Events\Event $event
      * @return void
      */
-    public function  onParentSave(\Fwk\Events\Event $event)
+    public function  onParentSave(AbstractEntityEvent $event)
     {
-        $connection     = $event->connection;
-        $parentRegistry = $event->registry;
+        $connection     = $event->getConnection();
+        $parentRegistry = $event->getTable()->getRegistry();
         $table          = $connection->table($this->getTableName());
 
         $registry       = $table->getRegistry();

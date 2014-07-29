@@ -32,6 +32,9 @@
  */
 namespace Fwk\Db;
 
+use Fwk\Db\Events\AbstractEntityEvent;
+use Fwk\Db\Events\AfterSaveEvent;
+use Fwk\Db\Events\FreshEvent;
 use Fwk\Events\Dispatcher,
     Fwk\Events\Event,
     Fwk\Db\Workers\DeleteEntityWorker,
@@ -106,7 +109,7 @@ class Registry implements \Countable, \IteratorAggregate
         }
 
         $dispatcher = new Dispatcher();
-        $dispatcher->on(EntityEvents::AFTER_SAVE, array($this, 'getLastInsertId'));
+        $dispatcher->on(AfterSaveEvent::EVENT_NAME, array($this, 'getLastInsertId'));
         $dispatcher->addListener($object);
 
         $data       = array_merge(array(
@@ -237,11 +240,11 @@ class Registry implements \Countable, \IteratorAggregate
      * @param  \Fwk\Events\Event $event
      * @return void
      */
-    public function getLastInsertId(Event $event)
+    public function getLastInsertId(AbstractEntityEvent $event)
     {
-        $connx  = $event->connection;
+        $connx  = $event->getConnection();
         $table  = $connx->table($this->getTableName());
-        $obj    = $event->object;
+        $obj    = $event->getEntity();
 
         foreach ($table->getColumns() as $column) {
             if(!$column->getAutoincrement())
@@ -342,7 +345,7 @@ class Registry implements \Countable, \IteratorAggregate
         $data['state']          = Registry::STATE_FRESH;
         $this->setData($object, $data);
 
-        $data['dispatcher']->notify(new Event(EntityEvents::FRESH));
+        $data['dispatcher']->notify(new FreshEvent());
     }
 
     /**

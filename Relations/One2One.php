@@ -32,6 +32,9 @@
  */
 namespace Fwk\Db\Relations;
 
+use Fwk\Db\Events\AbstractEntityEvent;
+use Fwk\Db\Events\BeforeSaveEvent;
+use Fwk\Db\Events\BeforeUpdateEvent;
 use Fwk\Db\Relation,
     Fwk\Db\Query,
     Fwk\Db\Accessor,
@@ -87,7 +90,7 @@ class One2One extends AbstractRelation implements Relation
     /**
      * Fetches (if necessary) relation's entities
      * 
-     * @return void 
+     * @return One2One
      */
     public function fetch()
     {
@@ -251,26 +254,14 @@ class One2One extends AbstractRelation implements Relation
      * @param mixed      $object The parent object
      * @param Dispatcher $evd    The related Events Dispatcher
      * 
-     * @return void
+     * @return boolean
      */
     public function setParent($object, Dispatcher $evd)
     {
         $return = parent::setParent($object, $evd);
         if ($return === true) {
-            $evd->on(
-                EntityEvents::BEFORE_SAVE, 
-                array(
-                    $this, 
-                    'onBeforeParentSave'
-                )
-            );
-            $evd->on(
-                EntityEvents::BEFORE_UPDATE, 
-                array(
-                    $this, 
-                    'onBeforeParentSave'
-                )
-            );
+            $evd->on(BeforeSaveEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));
+            $evd->on(BeforeUpdateEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));
         }
 
         return $return;
@@ -333,10 +324,10 @@ class One2One extends AbstractRelation implements Relation
      * 
      * @return void
      */
-    public function  onBeforeParentSave(\Fwk\Events\Event $event)
+    public function  onBeforeParentSave(AbstractEntityEvent $event)
     {
-        $connection     = $event->connection;
-        $parent         = $event->object;
+        $connection     = $event->getConnection();
+        $parent         = $event->getEntity();
 
         foreach ($this->getWorkersQueue() as $worker) {
             $worker->setRegistry($this->registry);

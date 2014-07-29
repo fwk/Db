@@ -33,10 +33,10 @@
  */
 namespace Fwk\Db\Workers;
 
+use Fwk\Db\Events\AfterDeleteEvent;
+use Fwk\Db\Events\BeforeDeleteEvent;
 use Fwk\Db\Registry,
     Fwk\Db\Worker,
-    Fwk\Events\Event,
-    Fwk\Db\EntityEvents,
     Fwk\Db\Accessor,
     Fwk\Db\Connection;
 
@@ -85,16 +85,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
 
         case Registry::STATE_FRESH:
         case Registry::STATE_CHANGED:
-            $registry->fireEvent(
-                $this->entity, 
-                new Event(
-                    EntityEvents::BEFORE_DELETE, 
-                    array(
-                        'object'        => $this->entity, 
-                        'connection'    => $connection
-                    )
-                )
-            );
+            $registry->fireEvent($this->entity, new BeforeDeleteEvent($connection, $table, $this->entity));
 
             $changed    = $registry->getChangedValues($this->entity);
             $data       = $registry->getData($this->entity);
@@ -144,17 +135,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         }
 
         $connection->execute($query, $queryParams);
-        $registry->fireEvent(
-            $this->entity, 
-            new Event(
-                EntityEvents::AFTER_DELETE, 
-                array(
-                    'object'        => $this->entity, 
-                    'registry'      => $registry, 
-                    'connection'    => $connection
-                )
-            )
-        );
+        $registry->fireEvent($this->entity, new AfterDeleteEvent($connection, $table, $this->entity));
         $registry->remove($this->entity);
     }
 }

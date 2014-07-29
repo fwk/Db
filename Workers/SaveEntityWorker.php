@@ -33,10 +33,12 @@
  */
 namespace Fwk\Db\Workers;
 
+use Fwk\Db\Events\AfterSaveEvent;
+use Fwk\Db\Events\AfterUpdateEvent;
+use Fwk\Db\Events\BeforeSaveEvent;
+use Fwk\Db\Events\BeforeUpdateEvent;
 use Fwk\Db\Registry,
     Fwk\Db\Worker,
-    Fwk\Events\Event,
-    Fwk\Db\EntityEvents,
     Fwk\Db\Accessor,
     Fwk\Db\Connection;
 
@@ -83,17 +85,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             );
             
         case Registry::STATE_NEW:
-            $registry->fireEvent(
-                $this->entity, 
-                new Event(
-                    EntityEvents::BEFORE_SAVE, 
-                    array(
-                        'object'        => $this->entity, 
-                        'connection'    => $connection,
-                        'registry'      => $registry
-                    )
-                )
-            );
+            $registry->fireEvent($this->entity, new BeforeSaveEvent($connection, $table, $this->entity));
             
             $query->insert($table->getName());
             $values     = $access->toArray();
@@ -132,7 +124,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $exec = false;
             }
             
-            $event      = EntityEvents::AFTER_SAVE;
+            $event = $event = new AfterSaveEvent($connection, $table, $this->entity);;
             break;
 
         case Registry::STATE_FRESH:
@@ -141,17 +133,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             $data       = $registry->getData($this->entity);
             $state      = $data['state'];
 
-            $registry->fireEvent(
-                $this->entity, 
-                new Event(
-                    EntityEvents::BEFORE_UPDATE, 
-                    array(
-                        'object'        => $this->entity,
-                        'registry'      => $registry,
-                        'connection'    => $connection
-                    )
-                )
-            );
+            $registry->fireEvent($this->entity, new BeforeUpdateEvent($connection, $table, $this->entity));
             
             // reload changed values in case the event changed some...
             $changed    = $registry->getChangedValues($this->entity);
@@ -199,7 +181,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $queryParams[] = $value;
             }
 
-            $event      = EntityEvents::AFTER_UPDATE;
+            $event = new AfterUpdateEvent($connection, $table, $this->entity);
             break;
         }
 
@@ -207,16 +189,8 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             $connection->execute($query, $queryParams);
         }
         $registry->defineInitialValues($this->entity);
-        $registry->fireEvent(
-            $this->entity, 
-            new Event(
-                $event, 
-                array(
-                    'object'        => $this->entity, 
-                    'registry'      => $registry, 
-                    'connection'    => $connection
-                )
-            )
-        );
+        if (isset($event)) {
+            $registry->fireEvent($this->entity, $event);
+        }
     }
 }
