@@ -48,7 +48,7 @@ class Finder
     /**
      * Results
      *
-     * @var ResultSet
+     * @var array
      */
     protected $resultSet;
 
@@ -147,7 +147,7 @@ class Finder
      * @param array $identifiers List of columns to search
      * 
      * @throws Exception if Query already done
-     * @return ResultSet
+     * @return array
      */
     public function find(array $identifiers)
     {
@@ -214,7 +214,7 @@ class Finder
     /**
      * Fetches all entries from the table
      * 
-     * @return ResultSet
+     * @return array
      */
     public function all()
     {
@@ -226,7 +226,7 @@ class Finder
     /**
      * Executes the query (if required) and returns the result set.
      * 
-     * @return ResultSet
+     * @return array
      */
     public function getResultSet()
     {
