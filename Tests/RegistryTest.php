@@ -93,7 +93,7 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
         $obj->test      = "pfff";
 
         $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2));
-        $this->object->defineInitialValues($obj);
+        $this->object->defineInitialValues($obj, null, null);
         $this->assertEquals(Registry::STATE_FRESH, $this->object->getState($obj));
 
         $this->assertFalse($this->object->isChanged($obj));

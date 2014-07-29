@@ -164,8 +164,9 @@ abstract class AbstractRelation implements IteratorAggregate
     {
         $this->fetched = (bool) $bool;
         if ($this->fetched) {
+            $table = $this->connection->table($this->tableName);
             foreach ($this->getRegistry()->getStore() as $object) {
-                $this->getRegistry()->defineInitialValues($object);
+                $this->getRegistry()->defineInitialValues($object, $this->connection, $table);
             }
         }
 

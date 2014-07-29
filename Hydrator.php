@@ -328,9 +328,20 @@ class Hydrator
         if (null === $obj) {
             $obj = new $entityClass;
             $registry->store($obj, $identifiers, Registry::STATE_FRESH);
+            if ($obj instanceof EventSubscriber) {
+                $dispatcher = $registry->getEventDispatcher($obj);
+                foreach ($obj->getListeners() as $key => $listener) {
+                    if (is_object($listener)) {
+                        $dispatcher->addListener($listener);
+                    } elseif (is_callable($listener)) {
+                        $dispatcher->on($key, $listener);
+                    }
+                }
+            }
             $this->markAsFresh[] = array(
                 'registry' => $registry, 
-                'entity' => $obj
+                'entity' => $obj,
+                'table' => $tableObj
             );
         }
 
@@ -349,7 +360,7 @@ class Hydrator
         }
         
         foreach ($this->markAsFresh as $infos) {
-            $infos['registry']->defineInitialValues($infos['entity']);
+            $infos['registry']->defineInitialValues($infos['entity'], $this->connection, $infos['table']);
         }
 
         unset($this->markAsFresh);

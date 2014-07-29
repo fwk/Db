@@ -3,12 +3,12 @@ namespace Fwk\Db\Events;
 
 use Fwk\Events\Event;
 
-class FreshEvent extends Event
+class FreshEvent extends AbstractEntityEvent
 {
     const EVENT_NAME = 'fresh';
 
-    public function __construct()
+    public function getEventName()
     {
-        parent::__construct(self::EVENT_NAME, array());
+        return self::EVENT_NAME;
     }
 }

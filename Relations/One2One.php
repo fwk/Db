@@ -337,7 +337,7 @@ class One2One extends AbstractRelation implements Relation
                 $worker->execute($connection);
                 $current = Accessor::factory($entity)->get($this->foreign);
                 Accessor::factory($parent)->set($this->local, $current);
-                $this->getRegistry()->defineInitialValues($entity);
+                $this->getRegistry()->defineInitialValues($entity, $connection, $connection->table($this->tableName));
             }
 
             if ($worker instanceof DeleteEntityWorker) {

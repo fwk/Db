@@ -263,7 +263,7 @@ class Registry implements \Countable, \IteratorAggregate
             $data = $this->getData($obj);
             $data['identifiers'][$columnName] = $lastInsertId;
             $this->setData($obj, $data);
-            $this->defineInitialValues($obj);
+            $this->defineInitialValues($obj, $event->getConnection(), $table);
         }
     }
 
@@ -335,7 +335,7 @@ class Registry implements \Countable, \IteratorAggregate
      *
      * @param <type> $object
      */
-    public function defineInitialValues($object)
+    public function defineInitialValues($object, Connection $connection = null, Table $table = null)
     {
         $accessor   = new Accessor($object);
         $data       = $this->getData($object);
@@ -345,7 +345,9 @@ class Registry implements \Countable, \IteratorAggregate
         $data['state']          = Registry::STATE_FRESH;
         $this->setData($object, $data);
 
-        $data['dispatcher']->notify(new FreshEvent());
+        if ($connection !== null && $table !== null) {
+            $data['dispatcher']->notify(new FreshEvent($connection, $table, $object));
+        }
     }
 
     /**

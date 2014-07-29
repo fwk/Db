@@ -255,10 +255,12 @@ class Finder
      * 
      * @param string $entity The entity class name
      * 
-     * @return void
+     * @return Finder
      */
     public function setEntity($entity)
     {
         $this->entity = $entity;
+
+        return $this;
     }
 }
