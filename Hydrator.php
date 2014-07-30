@@ -32,11 +32,7 @@
  */
 namespace Fwk\Db;
 
-use Fwk\Db\Query,
-    Fwk\Db\Connection,
-    Fwk\Db\Accessor,
-    Fwk\Db\Registry,
-    Fwk\Db\Relations\One2Many;
+use Fwk\Db\Relations\One2Many;
 
 /**
  * This class transforms a resultset from a query into a set of corresponding
@@ -142,16 +138,15 @@ class Hydrator
                 $tables[$table]['columns']  = array();
                 if ($jointure) {
                     $tables[$table]['join'] = $joinOpt;
+                    $tables[$table]['entity'] = $joinOpt['options']['entity'];
+                    $tables[$table]['entityListeners'] = $joinOpt['options']['entityListeners'];
+                } else {
+                    $tables[$table]['entity'] = ($it == 1 ? $query['entity'] : "\stdClass");
+                    $tables[$table]['entityListeners'] = (count($query['entityListeners'])  ? $query['entityListeners'] : $this->connection->table($table)->getDefaultEntityListeners());
                 }
-                
-                $tables[$table]['entity']   = ($jointure ? 
-                    $joinOpt['options']['entity'] : 
-                    ($it == 1 ? $query['entity'] : "\stdClass")
-                );
             }
 
             $realColumnName = $infos['column'];
-            $alias          = $infos['alias'];
 
             $tables[$table]['columns'][$column] =  $realColumnName;
         }
@@ -182,7 +177,7 @@ class Hydrator
                 $isJoin     = (isset($infos['join']) ? true : false);
                 $entityClass= $infos['entity'];
                 $ids        = $this->getIdentifiers($tableName, $result);
-                $obj        = $this->loadEntityClass($tableName, $ids, $entityClass);
+                $obj        = $this->loadEntityClass($tableName, $ids, $entityClass, $infos['entityListeners']);
                 $access     = new Accessor($obj);
                 $values     = $this->getValuesFromSet($columns, $result);
                 $access->setValues($values);
@@ -271,17 +266,26 @@ class Hydrator
         if ($test instanceof \Fwk\Db\Relation) {
             return $test;
         }
-        
+
+        if (strpos($join['table'], ' ') !== false) {
+            list($table, ) = explode(' ', $join['table']);
+        } else {
+            $table = $join['table'];
+        }
+
         $ref    = new One2Many(
             $join['local'], 
             $join['foreign'], 
-            $join['table'], 
-            $entityClass
+            $table,
+            $entityClass,
+            $join['options']['entityListeners']
         );
         
         if (!empty($join['options']['reference'])) {
             $ref->setReference($join['options']['reference']);
         }
+
+        $ref->setConnection($this->connection);
 
         return $ref;
     }
@@ -314,30 +318,20 @@ class Hydrator
      * @return mixed 
      */
     protected function loadEntityClass($tableName, array $identifiers, 
-        $entityClass = null
+        $entityClass = null, array $listeners = array()
     ) {
         $tableObj   = $this->connection->table($tableName);
         $registry   = $tableObj->getRegistry();
 
         if ($entityClass === null) {
-                $entityClass = $tableObj->getDefaultEntity();
+            $entityClass = $tableObj->getDefaultEntity();
         }
         
         $obj        = $registry->get($identifiers);
 
         if (null === $obj) {
             $obj = new $entityClass;
-            $registry->store($obj, $identifiers, Registry::STATE_FRESH);
-            if ($obj instanceof EventSubscriber) {
-                $dispatcher = $registry->getEventDispatcher($obj);
-                foreach ($obj->getListeners() as $key => $listener) {
-                    if (is_object($listener)) {
-                        $dispatcher->addListener($listener);
-                    } elseif (is_callable($listener)) {
-                        $dispatcher->on($key, $listener);
-                    }
-                }
-            }
+            $registry->store($obj, $identifiers, Registry::STATE_FRESH, array('listeners' => $listeners));
             $this->markAsFresh[] = array(
                 'registry' => $registry, 
                 'entity' => $obj,

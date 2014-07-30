@@ -136,23 +136,9 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
     
     public function testTransaction()
     {
-        // coverage
         $this->assertInstanceOf('Fwk\Db\Connection', $this->object->beginTransaction());
         $this->assertInstanceOf('Fwk\Db\Connection', $this->object->commit());
         $this->assertInstanceOf('Fwk\Db\Connection', $this->object->beginTransaction());
         $this->assertInstanceOf('Fwk\Db\Connection', $this->object->rollBack());
-    }
-    
-    public function testEventStopQuery()
-    {
-        $this->object->on(BeforeQueryEvent::EVENT_NAME, function(BeforeQueryEvent $e) {
-            $e->stop();
-            $e->results = "test";
-        });
-        
-        $query = Query::factory()->select()->from('fwkdb_test_users');
-        $res = $this->object->execute($query);
-        
-        $this->assertEquals($res, "test"); 
     }
 }

@@ -83,7 +83,7 @@ class Query extends \ArrayObject
     public function select($columns = null)
     {
         $this->type = self::TYPE_SELECT;
-        $this['select']    = $columns;
+        $this['select'] = $columns;
 
         return $this;
     }
@@ -265,15 +265,17 @@ class Query extends \ArrayObject
     {
         if (\strpos($table, ' ') !== false) {
             list($columnName, ) = \explode(' ', $table);
-        } else
+        } else {
             $columnName = $table;
+        }
 
         $opts = array_merge(array(
             'column'    => $columnName,
             'relation'  => false,
             'skipped'   => false,
             'reference' => null,
-            'entity'    => '\stdClass'
+            'entity'    => '\stdClass',
+            'entityListeners' => array()
         ), $options);
 
         $join = array(
@@ -305,9 +307,10 @@ class Query extends \ArrayObject
      * @param  string $entityClass
      * @return Query
      */
-    public function entity($entityClass)
+    public function entity($entityClass, array $listeners = array())
     {
-        $this['entity']         = $entityClass;
+        $this['entity']             = $entityClass;
+        $this['entityListeners']    = $listeners;
 
         return $this;
     }
@@ -320,9 +323,9 @@ class Query extends \ArrayObject
      */
     public function offsetGet($key)
     {
-        if(!$this->offsetExists($key))
-
-                return null;
+        if(!$this->offsetExists($key)) {
+            return null;
+        }
 
         return parent::offsetGet($key);
     }

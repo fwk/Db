@@ -81,6 +81,13 @@ class Table
     protected $defaultEntity;
 
     /**
+     * List of default entity listeners to be used with this table
+     *
+     * @var array
+     */
+    protected $defaultEntityListeners = array();
+
+    /**
      * Constructor
      *
      * @param string $tableName This table name
@@ -147,13 +154,11 @@ class Table
      * 
      * @return Finder
      */
-    public function finder($entity = null)
+    public function finder($entity = null, array $listeners = array())
     {
 
         $finder = new Finder($this, $this->connection);
-        if (null !== $entity) {
-            $finder->setEntity($entity);
-        }
+        $finder->setEntity($entity, $listeners);
 
         return $finder;
     }
@@ -293,13 +298,38 @@ class Table
     }
 
     /**
+     * Defines the default entity listeners to be used with this table
+     *
+     * @param array $listeners List of listeners
+     *
+     * @return Table
+     */
+    public function setDefaultEntityListeners(array $listeners)
+    {
+        $this->defaultEntityListeners = $listeners;
+
+        return $this;
+    }
+
+    /**
+     * Returns the default entity listeners used this table
+     *
+     * @return array
+     */
+    public function getDefaultEntityListeners()
+    {
+        return $this->defaultEntityListeners;
+    }
+
+    /**
      * Save one or more entities into this table
      * 
-     * @param mixed $entity Entity or List of entities 
+     * @param mixed $entity    Entity or List of entities
+     * @param array $listeners Overrides default entity listeners
      * 
      * @return void 
      */
-    public function save($entity)
+    public function save($entity, array $listeners = array())
     {
         if (!\is_array($entity)) {
             $entity = array($entity);
@@ -314,7 +344,11 @@ class Table
                 );
             }
             
-            $this->getRegistry()->markForAction($object, Registry::ACTION_SAVE);
+            $this->getRegistry()->markForAction(
+                $object,
+                Registry::ACTION_SAVE,
+                (count($listeners) ? $listeners : $this->getDefaultEntityListeners())
+            );
         }
 
         $this->work();
@@ -323,11 +357,12 @@ class Table
     /**
      * Delete one or more entities from this table
      * 
-     * @param mixed $entity Entity or List of entities 
+     * @param mixed $entity    Entity or List of entities
+     * @param array $listeners Overrides default entity listeners
      * 
      * @return void 
      */
-    public function delete($entity)
+    public function delete($entity, array $listeners = array())
     {
         if (!\is_array($entity)) {
             $entity = array($entity);
@@ -344,7 +379,8 @@ class Table
 
             $this->getRegistry()->markForAction(
                 $object, 
-                Registry::ACTION_DELETE
+                Registry::ACTION_DELETE,
+                (count($listeners) ? $listeners : $this->getDefaultEntityListeners())
             );
         }
 

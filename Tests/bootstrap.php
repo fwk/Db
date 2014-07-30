@@ -23,6 +23,8 @@ class FwkDbTestUtil
         $tbl->addColumn("id", "integer", array("unsigned" => true, "autoincrement" => true));
         $tbl->addColumn("username", "string", array("length" => 32));
         $tbl->addColumn("phone_id", "integer", array("unsigned" => true, "notnull" => false));
+        $tbl->addColumn('created_at', 'datetime', array('notnull' => false));
+        $tbl->addColumn('updated_at', 'datetime', array('notnull' => false));
         $tbl->setPrimaryKey(array("id"));
         $tbl->addUniqueIndex(array("username"));
 
@@ -51,6 +53,7 @@ class FwkDbTestUtil
         $tbl->addColumn("number", "string", array("length" => 50));
         $tbl->setPrimaryKey(array("id"));
 
+        $connection->connect();
         $queries = $schema->toSql($connection->getDriver()->getDatabasePlatform());
         foreach ($queries as $query) {
             $connection->getDriver()->exec($query);
@@ -62,7 +65,6 @@ class FwkDbTestUtil
     public static function dropTestDb(\Fwk\Db\Connection $connection)
     {
         if(self::$created == false)
-
             return;
 
         $schema = $connection->getSchema();

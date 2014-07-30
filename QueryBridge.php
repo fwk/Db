@@ -144,9 +144,6 @@ class QueryBridge
                 );
                 $call = array($this, 'updateQuery');
                 break;
-
-            default:
-                throw new Exception(sprintf('Unknown query type "%s"', (string) $type));
         }
 
         foreach ($parts as $part => $required) {
@@ -359,12 +356,12 @@ class QueryBridge
      *
      * @return string
      */
-    protected function getSelectColumns($columns, $tables, $query, $joins = null)
+    protected function getSelectColumns($columns, $tables, Query $query, $joins = null)
     {
         srand();
 
         if ($query->getFetchMode() != Query::FETCH_SPECIAL) {
-            return $this->handle->select($query['select']);
+            return $this->handle->select((empty($query['select']) ? '*' : $query['select']));
         }
 
         if (!$columns || $columns == '*')

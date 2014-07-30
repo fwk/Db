@@ -7,6 +7,8 @@ use Fwk\Db\Connection;
 
 abstract class AbstractEntityEvent extends Event
 {
+    const EVENT_NAME = 'dbEvent';
+
     /**
      * Constructor
      *
@@ -23,7 +25,10 @@ abstract class AbstractEntityEvent extends Event
         ));
     }
 
-    abstract public function getEventName();
+    public function getEventName()
+    {
+        return static::EVENT_NAME;
+    }
 
     /**
      * @return Connection

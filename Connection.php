@@ -314,7 +314,7 @@ class Connection extends Dispatcher
         $this->notify($event = new BeforeQueryEvent($this, $query, $params, $options));
 
         if ($event->isStopped()) {
-            return $event->results;
+            return $event->getResults();
         }
 
         $bridge = $this->newQueryBrige();

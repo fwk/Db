@@ -2,6 +2,8 @@
 namespace Fwk\Db;
 
 use Fwk\Db\Events\FreshEvent;
+use Fwk\Db\Listeners\Timestampable;
+use Fwk\Db\Listeners\Typable;
 
 class TestListener
 {
@@ -20,6 +22,7 @@ class User2 extends \stdClass implements EventSubscriber
     public $phone;
 
     public $property = null;
+    public $callableProperty = null;
 
     public function __construct()
     {
@@ -49,8 +52,14 @@ class User2 extends \stdClass implements EventSubscriber
     public function getListeners()
     {
         return array(
-            new TestListener()
+            new TestListener(),
+            'fresh' => array($this, 'listenerMethod')
         );
+    }
+
+    public function listenerMethod(FreshEvent $event)
+    {
+        $this->callableProperty = 'callableCalled!';
     }
 }
 
@@ -85,7 +94,11 @@ class EventSubscriberTest extends \PHPUnit_Framework_TestCase
 
         $obj = new \stdClass;
         $obj->username = "joeBar";
-        $this->connection->table("fwkdb_test_users")->save($obj);
+
+        $obj2 = new \stdClass;
+        $obj2->username = "joeBar4";
+        $obj2->created_at = date('Y-m-d H:i:s');
+        $this->connection->table("fwkdb_test_users")->save(array($obj, $obj2));
     }
 
     protected function tearDown()
@@ -96,7 +109,41 @@ class EventSubscriberTest extends \PHPUnit_Framework_TestCase
     public function testListenerIsTriggered()
     {
         $obj = $this->connection->table("fwkdb_test_users")->finder()->setEntity('Fwk\Db\User2')->all();
-        $this->assertEquals(1, count($obj));
+        $this->assertEquals(2, count($obj));
         $this->assertEquals("listener!", $obj[0]->property);
+    }
+
+    public function testCallableListenerIsTriggered()
+    {
+        $obj = $this->connection->table("fwkdb_test_users")->finder()->setEntity('Fwk\Db\User2')->all();
+        $this->assertEquals(2, count($obj));
+        $this->assertEquals("callableCalled!", $obj[0]->callableProperty);
+    }
+
+    public function testCustomTableListeners()
+    {
+        $table = $this->connection->table("fwkdb_test_users");
+        $table->setDefaultEntityListeners(array(new Timestampable()));
+
+        $obj = new \stdClass;
+        $obj->username = "joeBar2";
+
+        $this->assertFalse(isset($obj->created_at));
+        $this->connection->table("fwkdb_test_users")->save($obj);
+
+        $this->assertTrue(isset($obj->created_at));
+        $this->assertNotNull($obj->created_at);
+    }
+
+    public function testFinderListeners()
+    {
+        $table = $this->connection->table("fwkdb_test_users");
+
+        $obj = $table->finder(null, array(new Typable()))->one(2);
+
+        $this->assertTrue($obj instanceof \stdClass);
+        $this->assertTrue(isset($obj->created_at));
+        $this->assertNotNull($obj->created_at);
+        $this->assertTrue(isset($obj->created_at));
     }
 }

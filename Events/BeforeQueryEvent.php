@@ -9,6 +9,11 @@ class BeforeQueryEvent extends Event
 {
     const EVENT_NAME = 'beforeQuery';
 
+    protected $query;
+    protected $queryOptions = array();
+    protected $queryParameters = array();
+    protected $results = null;
+
     /**
      * Constructor
      *
@@ -19,14 +24,15 @@ class BeforeQueryEvent extends Event
      *
      * @return void
      */
-    public function __construct(Connection $connection, Query $query, $queryParams = array(), $queryOptions = array())
-    {
-        parent::__construct(self::EVENT_NAME, array(
+    public function __construct(Connection $connection, Query $query, $queryParams = array(), $queryOptions = array(),
+        $results = array()
+    ) {
+        parent::__construct(static::EVENT_NAME, array(
             'connection'    => $connection,
             'query'         => $query,
             'queryParameters'   => (array)$queryParams,
             'queryOptions'  => (array)$queryOptions,
-            'results'       => array()
+            'results'       => $results
         ));
     }
 
@@ -69,5 +75,37 @@ class BeforeQueryEvent extends Event
     public function getResults()
     {
         return $this->results;
+    }
+
+    /**
+     * @param mixed $query
+     */
+    public function setQuery(Query $query)
+    {
+        $this->query = $query;
+    }
+
+    /**
+     * @param mixed $queryOptions
+     */
+    public function setQueryOptions($queryOptions)
+    {
+        $this->queryOptions = $queryOptions;
+    }
+
+    /**
+     * @param mixed $queryParameters
+     */
+    public function setQueryParameters($queryParameters)
+    {
+        $this->queryParameters = $queryParameters;
+    }
+
+    /**
+     * @param mixed $results
+     */
+    public function setResults($results)
+    {
+        $this->results = $results;
     }
 }

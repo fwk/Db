@@ -129,12 +129,10 @@ class SaveEntityWorker extends AbstractWorker implements Worker
 
         case Registry::STATE_FRESH:
         case Registry::STATE_CHANGED:
-            $changed    = $registry->getChangedValues($this->entity);
-            $data       = $registry->getData($this->entity);
-            $state      = $data['state'];
-
             $registry->fireEvent($this->entity, new BeforeUpdateEvent($connection, $table, $this->entity));
-            
+
+            $data       = $registry->getData($this->entity);
+
             // reload changed values in case the event changed some...
             $changed    = $registry->getChangedValues($this->entity);
 

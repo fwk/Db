@@ -124,19 +124,25 @@ abstract class AbstractRelation implements IteratorAggregate
     protected $tableName;
 
     /**
+     * @var array
+     */
+    protected $listeners = array();
+
+    /**
      *
      * @param string $local
      * @param string $foreign
      * @param string $table
      * @param string $entity
      */
-    public function __construct($local, $foreign, $table, $entity = null)
+    public function __construct($local, $foreign, $table, $entity = null, array $entityListeners = array())
     {
         $this->tableName = $table;
         $this->registry = new Registry($table);
         $this->local    = $local;
         $this->foreign  = $foreign;
         $this->entity   = ($entity === null ? '\stdClass' : $entity);
+        $this->listeners = $entityListeners;
     }
 
     /**
@@ -510,5 +516,13 @@ abstract class AbstractRelation implements IteratorAggregate
         $this->fetch();
 
         return new \ArrayIterator($this->toArray());
+    }
+
+    /**
+     * @return array
+     */
+    public function getListeners()
+    {
+        return $this->listeners;
     }
 }

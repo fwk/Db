@@ -88,6 +88,13 @@ class Finder
     protected $entity;
 
     /**
+     * List of entity listeners
+     *
+     * @array
+     */
+    protected $listeners;
+
+    /**
      * Constructor
      *
      * @param Table      $table      Main table to query
@@ -109,7 +116,7 @@ class Finder
 
         $this->query        = $query;
         $this->params       = array();
-        $this->setEntity($table->getDefaultEntity());
+        $this->setEntity($table->getDefaultEntity(), $table->getDefaultEntityListeners());
     }
 
     /**
@@ -190,7 +197,7 @@ class Finder
         }
 
         $this->query->where('1 = 1');
-        $this->query->entity($this->getEntity());
+        $this->query->entity($this->getEntity(), $this->listeners);
 
         foreach ($ids as $key) {
             if (!isset($identifiers[$key])) {
@@ -251,15 +258,27 @@ class Finder
     }
 
     /**
+     * List of entity listeners
+     *
+     * @return array
+     */
+    public function getListeners()
+    {
+        return $this->listeners;
+    }
+
+    /**
      * Defines the entity that should be returned by this Finder
      * 
-     * @param string $entity The entity class name
+     * @param string $entity    The entity class name
+     * @param array  $listeners List of listeners to be used with this entity (table defaults are overriden)
      * 
      * @return Finder
      */
-    public function setEntity($entity)
+    public function setEntity($entity, array $listeners = array())
     {
-        $this->entity = $entity;
+        $this->entity       = $entity;
+        $this->listeners    = $listeners;
 
         return $this;
     }

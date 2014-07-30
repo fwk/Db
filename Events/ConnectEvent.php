@@ -17,7 +17,7 @@ class ConnectEvent extends Event
      */
     public function __construct(Connection $connection)
     {
-        parent::__construct(self::EVENT_NAME, array(
+        parent::__construct(static::EVENT_NAME, array(
             'connection' => $connection
         ));
     }

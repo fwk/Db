@@ -108,10 +108,6 @@ class Registry implements \Countable, \IteratorAggregate
             $identifiers = array('%hash%' => Accessor::factory($object)->hashCode());
         }
 
-        $dispatcher = new Dispatcher();
-        $dispatcher->on(AfterSaveEvent::EVENT_NAME, array($this, 'getLastInsertId'));
-        $dispatcher->addListener($object);
-
         $data       = array_merge(array(
             'className'     => get_class($object),
             'identifiers'          => $identifiers,
@@ -120,8 +116,31 @@ class Registry implements \Countable, \IteratorAggregate
             'ts_stored'     => \microtime(true),
             'ts_action'     => 0,
             'action'        => null,
-            'dispatcher'    => $dispatcher
+            'dispatcher'    => (isset($data['dispatcher']) ? $data['dispatcher'] : new Dispatcher()),
+            'listeners'     => array()
         ), $data);
+
+        $dispatcher = $data['dispatcher'];
+        $dispatcher->on(AfterSaveEvent::EVENT_NAME, array($this, 'getLastInsertId'));
+        $dispatcher->addListener($object);
+
+        if ($object instanceof EventSubscriber) {
+            foreach ($object->getListeners() as $key => $listener) {
+                if (is_object($listener)) {
+                    $dispatcher->addListener($listener);
+                } elseif (is_callable($listener)) {
+                    $dispatcher->on($key, $listener);
+                }
+            }
+        }
+
+        foreach ($data['listeners'] as $key => $listener) {
+            if (is_object($listener)) {
+                $dispatcher->addListener($listener);
+            } elseif (is_callable($listener)) {
+                $dispatcher->on($key, $listener);
+            }
+        }
 
         $idx = count($this->store);
         $this->store[$idx] = $object;
@@ -398,12 +417,13 @@ class Registry implements \Countable, \IteratorAggregate
      *
      * @param mixed $object
      */
-    public function markForAction($object, $action)
+    public function markForAction($object, $action, array $listeners = array())
     {
         $state  = $this->getState($object);
         if ($state == self::STATE_UNREGISTERED) {
-            $this->store($object, array(), self::STATE_NEW);
+            $this->store($object, array(), self::STATE_NEW, array('listeners' => $listeners));
         }
+
         $data   = $this->getData($object);
         $data['action']     = $action;
         $data['ts_action']  = $this->_priority;
