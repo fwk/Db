@@ -15,7 +15,7 @@ before_script:
 script:
   - phpunit --coverage-clover ./build/clover.xml
 
-after_script:
+after_success:
   - wget https://scrutinizer-ci.com/ocular.phar
   - php ocular.phar code-coverage:upload --format=php-clover ./build/clover.xml
 
