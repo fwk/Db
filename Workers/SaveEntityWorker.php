@@ -75,6 +75,10 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         $access     = new Accessor($this->entity);
         $exec       = true;
 
+        if (in_array($this->entity, self::$working, true)) {
+            return;
+        }
+
         switch ($state) {
         case Registry::STATE_UNKNOWN:
             throw new \LogicException(
@@ -85,14 +89,25 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             );
             
         case Registry::STATE_NEW:
-            $registry->fireEvent($this->entity, new BeforeSaveEvent($connection, $table, $this->entity));
-            
+            array_push(self::$working, $this->entity);
+
+            // echo var_dump("Saving %s ... ", get_class($this->entity) ."\n");
+            foreach ($access->getRelations() as $relation) {
+                $relation->setParent($this->entity, $this->getRegistry()->getEventDispatcher($this->entity), true);
+            }
+
+            $registry->fireEvent($this->entity, $event = new BeforeSaveEvent($connection, $table, $this->entity));
+
+            if ($event->isStopped()) {
+                return;
+            }
+
             $query->insert($table->getName());
             $values     = $access->toArray();
             $columns    = $table->getColumns();
             $setted     = 0;
 
-            foreach ($columns as $key => $columnObj) {
+            foreach ($columns as $columnObj) {
                 $default = $columnObj->getDefault();
                 $key = $columnObj->getName();
                 $value  = (array_key_exists($key, $values) ? $values[$key] : -1);
@@ -106,9 +121,10 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                     } elseif ($columnObj->getNotnull() === true) {
                         throw new \LogicException(
                             sprintf(
-                                'Column %s (%s) does not allow null value', 
+                                'Column "%s" (table: %s, entity: %s) does not allow null value',
                                 $key, 
-                                $table->getName()
+                                $table->getName(),
+                                get_class($this->entity)
                             )
                         );
                     }
@@ -124,11 +140,13 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $exec = false;
             }
             
-            $event = $event = new AfterSaveEvent($connection, $table, $this->entity);;
+            $event = new AfterSaveEvent($connection, $table, $this->entity);;
             break;
 
         case Registry::STATE_FRESH:
         case Registry::STATE_CHANGED:
+            array_push(self::$working, $this->entity);
+
             $registry->fireEvent($this->entity, new BeforeUpdateEvent($connection, $table, $this->entity));
 
             $data       = $registry->getData($this->entity);
@@ -141,6 +159,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             $idKeys = $table->getIdentifiersKeys();
 
             if (!count($ids)) {
+                self::removeFromSaving($this->entity);
                 throw new \LogicException(
                     sprintf(
                         'Entity %s lacks identifiers and cannot be saved.', 
@@ -166,6 +185,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $query->andWhere(sprintf('`%s` = ?', $key));
                 $value = $access->get($key);
                 if (!$value) {
+                    self::removeFromSaving($this->entity);
                     throw new \RuntimeException(
                         sprintf(
                             'Cannot save entity object (%s) because it lacks '. 
@@ -190,5 +210,6 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         if (isset($event)) {
             $registry->fireEvent($this->entity, $event);
         }
+        self::removeFromWorking($this->entity);
     }
 }

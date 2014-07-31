@@ -108,9 +108,9 @@ class One2Many extends AbstractManyRelation implements Relation
      * @param mixed                       $object
      * @param \Fwk\Events\EventDispatcher $evd
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd)
+    public function setParent($object, \Fwk\Events\Dispatcher $evd, $new = false)
     {
-        $return     = parent::setParent($object, $evd);
+        $return     = parent::setParent($object, $evd, $new);
         if ($return === true) {
             $evd->on(AfterSaveEvent::EVENT_NAME, array($this, 'onParentSave'));
             $evd->on(AfterUpdateEvent::EVENT_NAME, array($this, 'onParentSave'));
@@ -138,7 +138,7 @@ class One2Many extends AbstractManyRelation implements Relation
 
             if ($worker instanceof SaveEntityWorker) {
                 if(!isset($this->parent))
-                        throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
+                    throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
 
                 $access = new Accessor($this->parent);
                 $data   = $parentRegistry->getData($this->parent);
@@ -148,7 +148,7 @@ class One2Many extends AbstractManyRelation implements Relation
                     throw new \RuntimeException (sprintf('Parent (%s) have no identifiers defined', get_class($this->parent)));
 
                 if(count($ids) > 1 && !\array_key_exists($this->local, $ids))
-                        throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', $this->local, $registry->getTableName()));
+                    throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', $this->local, $registry->getTableName()));
 
                 $value  = $access->get($this->local);
                 Accessor::factory($entity)->set($this->foreign, $value);

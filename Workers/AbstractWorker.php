@@ -61,6 +61,13 @@ abstract class AbstractWorker
     protected $registry;
 
     /**
+     * Prevent many workers to work on the same entity
+     *
+     * @var array
+     */
+    protected static $working = array();
+
+    /**
      * Constructor
      * 
      * @param mixed $entity The object involved with this worker
@@ -104,5 +111,19 @@ abstract class AbstractWorker
     {
 
         return $this->entity;
+    }
+
+
+    protected static function removeFromWorking($entity)
+    {
+        $final = array();
+        foreach (self::$working as $obj) {
+            if ($obj === $entity) {
+                continue;
+            }
+            $final[] = $obj;
+        }
+
+        self::$working = $final;
     }
 }

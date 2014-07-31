@@ -100,11 +100,14 @@ interface Relation
      * Defines a parent entity for this relation.
      * 
      * @param mixed                  $object Parent object
-     * @param \Fwk\Events\Dispatcher $evd    Event's dispatcher for parent 
+     * @param \Fwk\Events\Dispatcher $evd    Event's dispatcher for parent
+     * @param boolean                $new    Is the parent 'new' ?
      * 
      * @return void
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd);
+    public function setParent($object, \Fwk\Events\Dispatcher $evd, $new = false);
+
+    public function setParentNew($parentNew);
 
     /**
      * Returns defined entity for this relation.
@@ -159,4 +162,6 @@ interface Relation
      * @return \ArrayIterator
      */
     public function getIterator();
+
+    public function getTableName();
 }

@@ -201,7 +201,6 @@ class Hydrator
 
                 $access     = new Accessor($mainObj);
                 $columnName = $infos['join']['options']['column'];
-                $reference  = $infos['join']['options']['reference'];
 
                 $current = (isset($joinData[$idsHash . $columnName]) ?
                     $joinData[$idsHash . $columnName] :
@@ -237,6 +236,7 @@ class Hydrator
                     $mainObj, 
                     $tableObj->getRegistry()->getEventDispatcher($mainObj)
                 );
+                $relation->setParentNew(false);
             }
 
             unset($mainObj, $mainObjRefs);

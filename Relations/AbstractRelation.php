@@ -128,6 +128,8 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     protected $listeners = array();
 
+    protected $parentNew = false;
+
     /**
      *
      * @param string $local
@@ -276,15 +278,24 @@ abstract class AbstractRelation implements IteratorAggregate
      *
      * @return boolean true if parent has been changed/defined
      */
-    public function setParent($object, Dispatcher $evd)
+    public function setParent($object, Dispatcher $evd, $new = false)
     {
         if ($this->parent === $object) {
             return false;
         }
 
-        $this->parent   = $object;
+        $this->parent       = $object;
+        $this->parentNew    = $new;
 
         return true;
+    }
+
+    /**
+     * @param boolean $parentNew
+     */
+    public function setParentNew($parentNew)
+    {
+        $this->parentNew = (bool)$parentNew;
     }
 
     /**
@@ -294,7 +305,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isFetched()
     {
-
         return $this->fetched;
     }
 
@@ -305,7 +315,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isLazy()
     {
-
         return ($this->fetchMode === Relation::FETCH_LAZY);
     }
 
@@ -481,7 +490,7 @@ abstract class AbstractRelation implements IteratorAggregate
     public function add($object, array $identifiers = array())
     {
         if ($this->has($object)) {
-            return;
+            return $this;
         }
 
         $this->getRegistry()->store($object, $identifiers, Registry::STATE_NEW);

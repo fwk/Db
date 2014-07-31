@@ -253,7 +253,7 @@ class Reference
         $this->commits = new Many2Many(
             'id',
             'refId',
-            'refs',
+            'commits',
             'commits_refs',
             'id',
             'commitId',
@@ -613,7 +613,7 @@ class RelationsTest extends \PHPUnit_Framework_TestCase
         $commit2->setMessage("test commit 2");
         $commit2->setIndexDate(date('Y-m-d H:i:s'));
         $commit2->getPush()->add($push);
-        $commit2->setHash(sha1("testCommit2"));
+        $commit2->setHash(sha1("tes2"));
 
         $ref->getCommits()->add($commit);
         $ref->getCommits()->add($commit2);

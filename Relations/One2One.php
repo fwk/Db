@@ -33,6 +33,8 @@
 namespace Fwk\Db\Relations;
 
 use Fwk\Db\Events\AbstractEntityEvent;
+use Fwk\Db\Events\AfterSaveEvent;
+use Fwk\Db\Events\AfterUpdateEvent;
 use Fwk\Db\Events\BeforeSaveEvent;
 use Fwk\Db\Events\BeforeUpdateEvent;
 use Fwk\Db\Relation,
@@ -193,7 +195,7 @@ class One2One extends AbstractRelation implements Relation
             throw new \RuntimeException('Empty relation');
         }
         
-        return Accessor::factory($obj)->set($key, $value);
+        Accessor::factory($obj)->set($key, $value);
     }
 
     /**
@@ -255,9 +257,9 @@ class One2One extends AbstractRelation implements Relation
      * 
      * @return boolean
      */
-    public function setParent($object, Dispatcher $evd)
+    public function setParent($object, Dispatcher $evd, $new = false)
     {
-        $return = parent::setParent($object, $evd);
+        $return = parent::setParent($object, $evd, $new);
         if ($return === true) {
             $evd->on(BeforeSaveEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));
             $evd->on(BeforeUpdateEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));

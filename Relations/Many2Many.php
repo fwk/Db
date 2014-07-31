@@ -103,9 +103,9 @@ class Many2Many extends AbstractManyRelation implements Relation
      * @param mixed                  $object
      * @param \Fwk\Events\Dispatcher $evd
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd)
+    public function setParent($object, \Fwk\Events\Dispatcher $evd, $new = false)
     {
-        $return     = parent::setParent($object, $evd);
+        $return     = parent::setParent($object, $evd, $new);
         if ($return === true) {
             $evd->on(AfterSaveEvent::EVENT_NAME, array($this, 'onParentSave'));
             $evd->on(AfterUpdateEvent::EVENT_NAME, array($this, 'onParentSave'));
@@ -143,7 +143,7 @@ class Many2Many extends AbstractManyRelation implements Relation
                     throw new \RuntimeException (sprintf('Parent (%s) have no identifiers defined', get_class($this->parent)));
 
                 if(!\array_key_exists($this->local, $ids))
-                        throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', $this->local, $registry->getTableName()));
+                    throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', $this->local, $registry->getTableName()));
 
                 $value  = $access->get($this->local);
                 if(empty($value))
@@ -165,8 +165,6 @@ class Many2Many extends AbstractManyRelation implements Relation
                 $connection->execute($query, $params);
                 $this->getRegistry()->remove($entity);
                 continue;
-
-                $exec = false;
             }
 
             if ($worker instanceof SaveEntityWorker) {
@@ -180,7 +178,7 @@ class Many2Many extends AbstractManyRelation implements Relation
                     throw new \RuntimeException (sprintf('Parent (%s) have no identifiers defined', get_class($this->parent)));
 
                 if(!\array_key_exists($this->local, $ids))
-                        throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', implode(', ', array_keys($ids)), $registry->getTableName()));
+                    throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', implode(', ', array_keys($ids)), $registry->getTableName()));
 
                 $value  = $access->get($this->local);
                 Accessor::factory($entity)->set($this->foreign, $value);
