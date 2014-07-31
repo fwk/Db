@@ -37,10 +37,10 @@ use Fwk\Db\Events\AfterSaveEvent;
 use Fwk\Db\Events\AfterUpdateEvent;
 use Fwk\Db\Events\BeforeSaveEvent;
 use Fwk\Db\Events\BeforeUpdateEvent;
-use Fwk\Db\Registry,
-    Fwk\Db\Worker,
-    Fwk\Db\Accessor,
-    Fwk\Db\Connection;
+use Fwk\Db\Registry;
+use Fwk\Db\Worker;
+use Fwk\Db\Accessor;
+use Fwk\Db\Connection;
 
 /**
  * Save Entity Worker
@@ -85,7 +85,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             case Registry::STATE_NEW:
                 array_push(static::$working, $this->entity);
                 foreach ($access->getRelations() as $relation) {
-                    $relation->setParent($this->entity, $this->getRegistry()->getEventDispatcher($this->entity), true);
+                    $relation->setParent($this->entity, $this->getRegistry()->getEventDispatcher($this->entity));
                 }
 
                 $registry->fireEvent($this->entity, $event = new BeforeSaveEvent($connection, $table, $this->entity));

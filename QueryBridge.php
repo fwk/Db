@@ -32,9 +32,9 @@
  */
 namespace Fwk\Db;
 
-use Fwk\Db\Connection,
-    Fwk\Db\Query,
-    Doctrine\DBAL\Query\QueryBuilder;
+use Fwk\Db\Connection;
+use Fwk\Db\Query;
+use Doctrine\DBAL\Query\QueryBuilder;
 
 /**
  * This class transform a Fwk\Db\Query object into a SQL query string

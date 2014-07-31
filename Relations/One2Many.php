@@ -36,12 +36,12 @@ namespace Fwk\Db\Relations;
 use Fwk\Db\Events\AbstractEntityEvent;
 use Fwk\Db\Events\AfterSaveEvent;
 use Fwk\Db\Events\AfterUpdateEvent;
-use Fwk\Db\Relation,
-    Fwk\Db\Query,
-    Fwk\Db\Accessor,
-    Fwk\Db\Registry,
-    Fwk\Db\Workers\SaveEntityWorker,
-    Fwk\Db\Workers\DeleteEntityWorker;
+use Fwk\Db\Relation;
+use Fwk\Db\Query;
+use Fwk\Db\Accessor;
+use Fwk\Db\Registry;
+use Fwk\Db\Workers\SaveEntityWorker;
+use Fwk\Db\Workers\DeleteEntityWorker;
 
 class One2Many extends AbstractManyRelation implements Relation
 {

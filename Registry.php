@@ -35,10 +35,10 @@ namespace Fwk\Db;
 use Fwk\Db\Events\AbstractEntityEvent;
 use Fwk\Db\Events\AfterSaveEvent;
 use Fwk\Db\Events\FreshEvent;
-use Fwk\Events\Dispatcher,
-    Fwk\Events\Event,
-    Fwk\Db\Workers\DeleteEntityWorker,
-    Fwk\Db\Workers\SaveEntityWorker;
+use Fwk\Events\Dispatcher;
+use Fwk\Events\Event;
+use Fwk\Db\Workers\DeleteEntityWorker;
+use Fwk\Db\Workers\SaveEntityWorker;
 
 /**
  * Entity registry object

@@ -35,10 +35,10 @@ namespace Fwk\Db\Workers;
 
 use Fwk\Db\Events\AfterDeleteEvent;
 use Fwk\Db\Events\BeforeDeleteEvent;
-use Fwk\Db\Registry,
-    Fwk\Db\Worker,
-    Fwk\Db\Accessor,
-    Fwk\Db\Connection;
+use Fwk\Db\Registry;
+use Fwk\Db\Worker;
+use Fwk\Db\Accessor;
+use Fwk\Db\Connection;
 
 /**
  * Save Entity Worker

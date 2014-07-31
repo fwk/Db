@@ -38,9 +38,9 @@ use Fwk\Db\Events\ConnectEvent;
 use Fwk\Db\Events\ConnectionErrorEvent;
 use Fwk\Db\Events\ConnectionStateChangeEvent;
 use Fwk\Db\Events\DisconnectEvent;
-use Fwk\Events\Dispatcher,
-    Doctrine\DBAL\Connection as DbalConnection,
-    Doctrine\DBAL\DriverManager;
+use Fwk\Events\Dispatcher;
+use Doctrine\DBAL\Connection as DbalConnection;
+use Doctrine\DBAL\DriverManager;
 
 /**
  * Represents a Connection to a database

@@ -33,9 +33,9 @@
  */
 namespace Fwk\Db\Relations;
 
-use Fwk\Db\Relation,
-    Fwk\Db\Registry,
-    Fwk\Db\Accessor;
+use Fwk\Db\Relation;
+use Fwk\Db\Registry;
+use Fwk\Db\Accessor;
 
 /**
  * Abstract utility class for *Many Relations
