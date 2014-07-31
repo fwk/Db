@@ -259,8 +259,12 @@ class One2One extends AbstractRelation implements Relation
     {
         $return = parent::setParent($object, $evd);
         if ($return === true) {
-            $evd->on(BeforeSaveEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));
-            $evd->on(BeforeUpdateEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));
+            $evd->on(
+                BeforeSaveEvent::EVENT_NAME, array($this, 'onBeforeParentSave')
+            );
+            $evd->on(
+                BeforeUpdateEvent::EVENT_NAME, array($this, 'onBeforeParentSave')
+            );
         }
 
         return $return;
@@ -277,39 +281,41 @@ class One2One extends AbstractRelation implements Relation
 
         foreach ($this->getRegistry()->getStore() as $object) {
             $data   = $this->getRegistry()->getData($object);
-            $action = (($data['state'] == Registry::STATE_NEW || ($data['state'] == Registry::STATE_CHANGED && $data['action'] != Registry::ACTION_DELETE)) ? Registry::ACTION_SAVE : $data['action']);
+
+            $action = $data['action'];
+
+            if ($data['state'] == Registry::STATE_NEW
+                || ($data['state'] == Registry::STATE_CHANGED
+                && $data['action'] != Registry::ACTION_DELETE)
+            ) {
+                $action = Registry::ACTION_SAVE;
+            }
+
             if (empty($data['action'])) {
                 $this->getRegistry()->getChangedValues($object);
                 $data = $this->getRegistry()->getData($object);
             }
 
-            $ts = ($data['ts_action'] == null ? 
-                    \microtime(true) : 
-                    $data['ts_action']
-                  );
-            
+            $ts = (!$data['ts_action'] ? microtime(true) : $data['ts_action']);
+
             if (empty($action)) {
                 continue;
             }
 
-            $priority   = $ts;
+            $priority = $ts;
             switch ($action) {
             case Registry::ACTION_DELETE:
-                $worker = new DeleteEntityWorker($object);
+                $queue->insert(new DeleteEntityWorker($object), $priority);
                 break;
 
             case Registry::ACTION_SAVE:
-                $worker = new SaveEntityWorker($object);
+                $queue->insert(new SaveEntityWorker($object), $priority);
                 break;
 
             default:
                 throw new \InvalidArgumentException(
                     sprintf("Unknown registry action '%s'", $action)
                 );
-            }
-
-            if (isset($worker)) {
-                $queue->insert($worker, $priority);
             }
         }
 
@@ -323,20 +329,24 @@ class One2One extends AbstractRelation implements Relation
      * 
      * @return void
      */
-    public function  onBeforeParentSave(AbstractEntityEvent $event)
+    public function onBeforeParentSave(AbstractEntityEvent $event)
     {
-        $connection     = $event->getConnection();
-        $parent         = $event->getEntity();
+        $connection = $event->getConnection();
+        $parent     = $event->getEntity();
 
         foreach ($this->getWorkersQueue() as $worker) {
             $worker->setRegistry($this->registry);
-            $entity     = $worker->getEntity();
+            $entity = $worker->getEntity();
 
             if ($worker instanceof SaveEntityWorker) {
                 $worker->execute($connection);
                 $current = Accessor::factory($entity)->get($this->foreign);
                 Accessor::factory($parent)->set($this->local, $current);
-                $this->getRegistry()->defineInitialValues($entity, $connection, $connection->table($this->tableName));
+                $this->getRegistry()->defineInitialValues(
+                    $entity,
+                    $connection,
+                    $connection->table($this->tableName)
+                );
             }
 
             if ($worker instanceof DeleteEntityWorker) {
@@ -359,7 +369,7 @@ class One2One extends AbstractRelation implements Relation
         $list = $this->getRegistry()->getStore();
         foreach ($list as $object) {
             $data = $this->getRegistry()->getData($object);
-            if($data['action'] == 'delete') {
+            if ($data['action'] == 'delete') {
                 continue;
             }
 

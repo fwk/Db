@@ -160,5 +160,10 @@ interface Relation
      */
     public function getIterator();
 
+    /**
+     * Return the table name for this relation
+     *
+     * @return string
+     */
     public function getTableName();
 }

@@ -35,7 +35,8 @@ namespace Fwk\Db;
 use Fwk\Db\Relations\One2Many;
 
 /**
- * This class transforms a resultset from a query into a set of corresponding entities.
+ * This class transforms a resultset from a query into a set of corresponding
+ * entities.
  *
  * @category Utilities
  * @package  Fwk\Db
@@ -110,7 +111,7 @@ class Hydrator
 
             $skipped    = false;
             $jointure   = false;
-            $joinOpt       = false;
+            $joinOpt    = false;
 
             foreach ($joins as $join) {
                 $jointure = false;
@@ -142,10 +143,16 @@ class Hydrator
             if ($jointure) {
                 $tables[$table]['join'] = $joinOpt;
                 $tables[$table]['entity'] = $joinOpt['options']['entity'];
-                $tables[$table]['entityListeners'] = $joinOpt['options']['entityListeners'];
+                $tables[$table]['entityListeners']
+                    = $joinOpt['options']['entityListeners'];
             } else {
-                $tables[$table]['entity'] = ($itx == 1 ? $query['entity'] : "\stdClass");
-                $tables[$table]['entityListeners'] = (count($query['entityListeners'])  ? $query['entityListeners'] : $this->connection->table($table)->getDefaultEntityListeners());
+                $tables[$table]['entity']
+                    = ($itx == 1 ? $query['entity'] : "\stdClass");
+                $tables[$table]['entityListeners']
+                    = (count($query['entityListeners'])  ?
+                        $query['entityListeners'] :
+                        $this->connection->table($table)->getDefaultEntityListeners()
+                    );
             }
             $tables[$table]['columns'][$column] =  $infos['column'];
         }
@@ -175,11 +182,16 @@ class Hydrator
                 $isJoin     = (isset($infos['join']) ? true : false);
                 $entityClass= $infos['entity'];
                 $ids        = $this->getIdentifiers($tableName, $result);
-                $obj        = $this->loadEntityClass($tableName, $ids, $entityClass, $infos['entityListeners']);
+                $obj        = $this->loadEntityClass(
+                    $tableName,
+                    $ids,
+                    $entityClass,
+                    $infos['entityListeners']
+                );
                 $access     = new Accessor($obj);
                 $values     = $this->getValuesFromSet($columns, $result);
                 $access->setValues($values);
-                $mainObjRefs    = $ids;
+                $mainObjRefs = $ids;
 
                 foreach ($access->getRelations() as $relation) {
                     $relation->setConnection($this->connection);
@@ -311,7 +323,8 @@ class Hydrator
      * @param string $tableName   Table's name
      * @param array  $identifiers Entity identifiers
      * @param string $entityClass Entity class name
-     * 
+     * @param array  $listeners   Entity's listeners
+     *
      * @return mixed 
      */
     protected function loadEntityClass($tableName, array $identifiers, 
@@ -328,7 +341,11 @@ class Hydrator
 
         if (null === $obj) {
             $obj = new $entityClass;
-            $registry->store($obj, $identifiers, Registry::STATE_FRESH, array('listeners' => $listeners));
+            $registry->store(
+                $obj, $identifiers, Registry::STATE_FRESH, array(
+                    'listeners' => $listeners
+                )
+            );
             $this->markAsFresh[] = array(
                 'registry' => $registry, 
                 'entity' => $obj,
@@ -351,7 +368,10 @@ class Hydrator
         }
         
         foreach ($this->markAsFresh as $infos) {
-            $infos['registry']->defineInitialValues($infos['entity'], $this->connection, $infos['table']);
+            $infos['registry']->defineInitialValues(
+                $infos['entity'],
+                $this->connection, $infos['table']
+            );
         }
 
         unset($this->markAsFresh);
@@ -376,7 +396,9 @@ class Hydrator
 
         $final = array();
         foreach ((array) $this->columns as $colName  => $infos) {
-            if ($infos['table'] == $tableName && in_array($infos['column'], $tableIds)) {
+            if ($infos['table'] == $tableName
+                && in_array($infos['column'], $tableIds)
+            ) {
                 $final[$infos['column']] = $results[$colName];
             }
         }

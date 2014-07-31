@@ -90,7 +90,13 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         case Registry::STATE_FRESH:
         case Registry::STATE_CHANGED:
             array_push(static::$working, $this->entity);
-            $registry->fireEvent($this->entity, new BeforeDeleteEvent($connection, $table, $this->entity));
+            $registry->fireEvent(
+                $this->entity, new BeforeDeleteEvent(
+                    $connection,
+                    $table,
+                    $this->entity
+                )
+            );
 
             $changed    = $registry->getChangedValues($this->entity);
             $data       = $registry->getData($this->entity);
@@ -142,7 +148,9 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         }
 
         $connection->execute($query, $queryParams);
-        $registry->fireEvent($this->entity, new AfterDeleteEvent($connection, $table, $this->entity));
+        $registry->fireEvent(
+            $this->entity, new AfterDeleteEvent($connection, $table, $this->entity)
+        );
         $registry->remove($this->entity);
         static::removeFromWorking($this->entity);
     }

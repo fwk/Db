@@ -150,8 +150,9 @@ class Table
     /**
      * Returns a Finder instance to navigate into this table
      *
-     * @param string $entity Entity class to be returned by this Finder
-     * 
+     * @param string $entity    Entity class to be returned by this Finder
+     * @param array  $listeners Overrides default entity/table listeners
+     *
      * @return Finder
      */
     public function finder($entity = null, array $listeners = array())
@@ -325,7 +326,7 @@ class Table
      * Save one or more entities into this table
      * 
      * @param mixed $entity    Entity or List of entities
-     * @param array $listeners Overrides default entity listeners
+     * @param array $listeners Overrides default entity/table listeners
      * 
      * @return void 
      */

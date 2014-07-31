@@ -113,7 +113,13 @@ abstract class AbstractWorker
         return $this->entity;
     }
 
-
+    /**
+     * Unmark the entity from the working scope
+     *
+     * @param object $entity The entity
+     *
+     * @return void
+     */
     protected static function removeFromWorking($entity)
     {
         $final = array();

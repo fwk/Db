@@ -331,7 +331,13 @@ class Connection extends Dispatcher
                 return false; // never happend
             }
 
-            $tmp = $stmt->fetchAll(($query->getFetchMode() != Query::FETCH_SPECIAL ? $query->getFetchMode() : \PDO::FETCH_ASSOC));
+            $tmp = $stmt->fetchAll(
+                ($query->getFetchMode() != Query::FETCH_SPECIAL ?
+                    $query->getFetchMode() :
+                    \PDO::FETCH_ASSOC
+                )
+            );
+
             if ($query->getFetchMode() === Query::FETCH_SPECIAL) {
                 $hyd = new Hydrator($query, $this, $bridge->getColumnsAliases());
                 $results = $hyd->hydrate($tmp);
@@ -342,10 +348,10 @@ class Connection extends Dispatcher
             $results = $stmt;
         }
 
-        $afterEvent = new AfterQueryEvent($this, $query, $params, $options, $results);
-        $this->notify($afterEvent);
+        $aevent = new AfterQueryEvent($this, $query, $params, $options, $results);
+        $this->notify($aevent);
 
-        return $afterEvent->results;
+        return $aevent->results;
     }
 
     /**
@@ -369,7 +375,9 @@ class Connection extends Dispatcher
     {
         $newState       = (int)$state;
         if ($newState != $this->state) {
-            $this->notify(new ConnectionStateChangeEvent($this, $this->state, $newState));
+            $this->notify(
+                new ConnectionStateChangeEvent($this, $this->state, $newState)
+            );
             $this->state = $newState;
         }
 

@@ -116,7 +116,10 @@ class Finder
 
         $this->query        = $query;
         $this->params       = array();
-        $this->setEntity($table->getDefaultEntity(), $table->getDefaultEntityListeners());
+        $this->setEntity(
+            $table->getDefaultEntity(),
+            $table->getDefaultEntityListeners()
+        );
     }
 
     /**
@@ -271,7 +274,8 @@ class Finder
      * Defines the entity that should be returned by this Finder
      * 
      * @param string $entity    The entity class name
-     * @param array  $listeners List of listeners to be used with this entity (table defaults are overriden)
+     * @param array  $listeners List of listeners to be used with this entity
+     *                          (table defaults are overriden)
      * 
      * @return Finder
      */
