@@ -2,6 +2,7 @@
 namespace Fwk\Db\Events;
 
 use Fwk\Db\Query;
+use Fwk\Db\QueryBridge;
 use Fwk\Events\Event;
 use Fwk\Db\Connection;
 
@@ -21,18 +22,20 @@ class BeforeQueryEvent extends Event
      * @param Query      $query        The Query
      * @param array      $queryParams  Query Parameters
      * @param array      $queryOptions Query Options
+     * @param mixed      $results      Query results/pre-results
      *
      * @return void
      */
-    public function __construct(Connection $connection, Query $query, $queryParams = array(), $queryOptions = array(),
-        $results = array()
+    public function __construct(Connection $connection, Query $query, array $queryParams = array(),
+        array $queryOptions = array(), $results = array()
     ) {
         parent::__construct(static::EVENT_NAME, array(
             'connection'    => $connection,
             'query'         => $query,
             'queryParameters'   => (array)$queryParams,
             'queryOptions'  => (array)$queryOptions,
-            'results'       => $results
+            'results'       => &$results,
+            'bridge'        => null
         ));
     }
 
@@ -70,7 +73,7 @@ class BeforeQueryEvent extends Event
     }
 
     /**
-     * @return array
+     * @return mixed
      */
     public function getResults()
     {
@@ -78,7 +81,7 @@ class BeforeQueryEvent extends Event
     }
 
     /**
-     * @param mixed $query
+     * @param Query $query
      */
     public function setQuery(Query $query)
     {
@@ -86,17 +89,17 @@ class BeforeQueryEvent extends Event
     }
 
     /**
-     * @param mixed $queryOptions
+     * @param array $queryOptions
      */
-    public function setQueryOptions($queryOptions)
+    public function setQueryOptions(array $queryOptions)
     {
         $this->queryOptions = $queryOptions;
     }
 
     /**
-     * @param mixed $queryParameters
+     * @param array $queryParameters
      */
-    public function setQueryParameters($queryParameters)
+    public function setQueryParameters(array $queryParameters)
     {
         $this->queryParameters = $queryParameters;
     }
@@ -107,5 +110,19 @@ class BeforeQueryEvent extends Event
     public function setResults($results)
     {
         $this->results = $results;
+    }
+
+    public function setQueryBridge(QueryBridge $bridge)
+    {
+        $this->bridge = $bridge;
+    }
+
+    /**
+     *
+     * @return QueryBridge
+     */
+    public function getQueryBridge()
+    {
+        return $this->bridge;
     }
 }

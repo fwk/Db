@@ -311,14 +311,16 @@ class Connection extends Dispatcher
     public function execute(Query $query, array $params = array(),
         array $options = array()
     ) {
-        $this->notify($event = new BeforeQueryEvent($this, $query, $params, $options));
+        $bridge = $this->newQueryBrige();
+        $event  = new BeforeQueryEvent($this, $query, $params, $options);
+        $event->setQueryBridge($bridge);
+
+        $this->notify($event);
 
         if ($event->isStopped()) {
             return $event->getResults();
         }
 
-        $bridge = $this->newQueryBrige();
-        $event->bridge = $bridge;
         $stmt = $bridge->execute($query, $params, $options);
 
         if ($query->getType() == Query::TYPE_SELECT) {
@@ -335,7 +337,8 @@ class Connection extends Dispatcher
             $results = $stmt;
         }
 
-        $this->notify($afterEvent = new AfterQueryEvent($this, $query, $params, $options, $results));
+        $afterEvent = new AfterQueryEvent($this, $query, $params, $options, $results);
+        $this->notify($afterEvent);
 
         return $afterEvent->results;
     }

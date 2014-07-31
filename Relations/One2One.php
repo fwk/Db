@@ -257,9 +257,9 @@ class One2One extends AbstractRelation implements Relation
      * 
      * @return boolean
      */
-    public function setParent($object, Dispatcher $evd, $new = false)
+    public function setParent($object, Dispatcher $evd)
     {
-        $return = parent::setParent($object, $evd, $new);
+        $return = parent::setParent($object, $evd);
         if ($return === true) {
             $evd->on(BeforeSaveEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));
             $evd->on(BeforeUpdateEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));
@@ -321,7 +321,7 @@ class One2One extends AbstractRelation implements Relation
     /**
      * Listener executed when parent entity is saved
      *
-     * @param \Fwk\Events\Event $event Dispatched event
+     * @param AbstractEntityEvent $event Dispatched event
      * 
      * @return void
      */
@@ -346,5 +346,28 @@ class One2One extends AbstractRelation implements Relation
                 parent::remove($entity);
             }
         }
+    }
+
+    /**
+     * Returns an array of all entities in this relation
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        $this->fetch();
+
+        $final = array();
+        $list = $this->getRegistry()->getStore();
+        foreach ($list as $object) {
+            $data = $this->getRegistry()->getData($object);
+            if($data['action'] == 'delete') {
+                continue;
+            }
+
+            $final[] = $object;
+        }
+
+        return $final;
     }
 }

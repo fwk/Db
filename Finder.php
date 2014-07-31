@@ -239,7 +239,7 @@ class Finder
     {
         if (!isset($this->resultSet)) {
             $this->resultSet = $this->getConnection()->execute(
-                $this->query, 
+                $this->query,
                 $this->params
             );
         }

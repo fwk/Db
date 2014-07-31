@@ -104,12 +104,12 @@ class QueryBridge
      *
      * @param Query $query
      *
-     * @return void
+     * @return string
      */
     public function prepare(Query $query)
     {
         if ($this->state !== self::STATE_INIT) {
-            return;
+            return null;
         }
 
         $this->handle   = $this->connection->getDriver()->createQueryBuilder();
@@ -144,6 +144,9 @@ class QueryBridge
                 );
                 $call = array($this, 'updateQuery');
                 break;
+
+            default:
+                return null;
         }
 
         foreach ($parts as $part => $required) {
@@ -154,12 +157,14 @@ class QueryBridge
 
         $table = $query['from'];
         if (!empty($table)) {
-            if(strpos($table, ' '))
-                    list($table, ) = explode(' ', $table);
+            if(strpos($table, ' ')) {
+                list($table, ) = explode(' ', $table);
+            }
 
-            $decl   = $this->connection->table($table)->getDefaultEntity($table);
-            if(empty($query['entity']) || $query['entity'] == "\stdClass")
+            $decl = $this->connection->table($table)->getDefaultEntity($table);
+            if(empty($query['entity']) || $query['entity'] == "\stdClass") {
                 $query->entity($decl);
+            }
         }
 
         if (!empty($query['entity']) && $query['entity'] != "\stdClass") {
@@ -506,22 +511,27 @@ class QueryBridge
     {
         srand();
 
-        if (is_string($tables) && \strpos($tables, ',') !== false)
+        if (is_string($tables) && \strpos($tables, ',') !== false) {
             $tables = \explode(',', $tables);
-
-        if (!is_array($tables))
-            $tables = array($tables);
-
-        if (is_array($joins) && count($joins)) {
-            foreach($joins as $join)
-                array_push($tables, $join['table']);
         }
 
-        foreach ($tables as $table) {
-             $table = trim($table);
+        if (!is_array($tables)) {
+            $tables = array($tables);
+        }
 
-             if (is_string($table) && \strpos($table, ' ') !== false)
+        if (is_array($joins) && count($joins)) {
+            foreach ($joins as $join) {
+                array_push($tables, $join['table']);
+            }
+        }
+
+        $columns = array();
+        foreach ($tables as $table) {
+            $table = trim($table);
+
+            if (is_string($table) && \strpos($table, ' ') !== false) {
                 list($table, ) = \explode(' ', $table);
+            }
 
             $cols = $this->connection->table($table)->getColumns();
             foreach ($cols as $column) {
@@ -533,13 +543,12 @@ class QueryBridge
                 }
 
                 $columns[$asName] = array(
-                         'table'        => $table,
-                         'column'       => $colName,
-                         'function'     => false,
-                         'alias'        => false
-                     );
+                    'table'        => $table,
+                    'column'       => $colName,
+                    'function'     => false,
+                    'alias'        => false
+                );
             }
-            $asName = 'c'. \rand(1000, 9999);
         }
 
         return $columns;
@@ -559,7 +568,6 @@ class QueryBridge
         $currentIsFunc = false;
         $columns = array();
         for ($x = 0; $x < strlen($str); $x++) {
-
             $letter = $str{$x};
             $current .= $letter;
 
@@ -575,7 +583,7 @@ class QueryBridge
                 $currentIsFunc = true;
             }
 
-             $tbls = \array_values ($this->tablesAliases);
+            $tbls = \array_values ($this->tablesAliases);
             $defaultTable = \array_shift ($tbls);
 
             if (($letter == ',' || $x == strlen($str) -1) && $funcLevel == 0) {
@@ -583,51 +591,48 @@ class QueryBridge
 
                 if (!$currentIsFunc) {
                     if (\strpos($column, '.') !== false) {
-
                         list($table, $column) = \explode ('.', $column);
-
-                        if(isset($this->tablesAliases[trim($table)]))
+                        if (isset($this->tablesAliases[trim($table)])) {
                                 $table = $this->tablesAliases[trim($table)];
-
+                        }
                         if ($column == '*') {
                             $columns = array_merge($columns, $this->getSelectColumnsFromTables($table));
                             $x++;
                             $current = null;
                             continue;
                         }
-
                     } else {
                         $table = $defaultTable;
                     }
 
                     if (\stripos($column, 'AS') !== false) {
                         list($column, $asName) = explode((\strpos($column, 'as') !== false ? ' as ' : ' AS '), $column);
-                    } else
+                    } else {
                         $asName = $column . '__'. \rand(1000, 9999);
+                    }
 
-                     $columns[$asName] = array(
-                         'table'        => trim($table),
-                         'column'       => trim($column),
-                         'function'     => false,
-                         'alias'        => true
-                     );
-
+                    $columns[$asName] = array(
+                        'table'        => trim($table),
+                        'column'       => trim($column),
+                        'function'     => false,
+                        'alias'        => true
+                    );
                 } else {
-
-                    if (\stripos($column, 'AS') !== false) {
-                        if (\preg_match_all('/\) AS ([A-Za-z0-9_]+)/i', $column, $matchesarray)) {
-                                $asName = $matchesarray[1][0];
-                                $column = \substr($column, 0, strlen($column) - strlen($asName) - 4);
-                        }
-                    } else
+                    if (\stripos($column, 'AS') !== false
+                        && \preg_match_all('/\) AS ([A-Za-z0-9_]+)/i', $column, $matchesarray)
+                    ) {
+                        $asName = $matchesarray[1][0];
+                        $column = \substr($column, 0, strlen($column) - strlen($asName) - 4);
+                    } else {
                         $asName = 'func__'. \rand(1000, 9999);
+                    }
 
-                     $columns[$asName] = array(
-                         'table'        => $defaultTable,
-                         'column'       => trim($column),
-                         'function'     => true,
-                         'alias'        => true
-                     );
+                    $columns[$asName] = array(
+                        'table'        => $defaultTable,
+                        'column'       => trim($column),
+                        'function'     => true,
+                        'alias'        => true
+                    );
                 }
 
                 $current = null;

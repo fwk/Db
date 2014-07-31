@@ -89,7 +89,7 @@ class Accessor
     /**
      * Returns all relations from an entity
      *
-     * @return array Found relations
+     * @return array<Relation> Found relations
      */
     public function getRelations()
     {

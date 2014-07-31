@@ -71,7 +71,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         $queryParams = array();
         $access     = new Accessor($this->entity);
 
-        if (in_array($this->entity, self::$working, true)) {
+        if (in_array($this->entity, static::$working, true)) {
             return;
         }
 
@@ -89,7 +89,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
 
         case Registry::STATE_FRESH:
         case Registry::STATE_CHANGED:
-            array_push(self::$working, $this->entity);
+            array_push(static::$working, $this->entity);
             $registry->fireEvent($this->entity, new BeforeDeleteEvent($connection, $table, $this->entity));
 
             $changed    = $registry->getChangedValues($this->entity);
@@ -99,7 +99,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
             $ids    = $data['identifiers'];
             $idKeys = $table->getIdentifiersKeys();
             if (!count($ids)) {
-                self::removeFromWorking($this->entity);
+                static::removeFromWorking($this->entity);
                 throw new \LogicException(
                     sprintf(
                         'Entity %s lacks identifiers and cannot be deleted.', 
@@ -110,7 +110,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
             
             foreach ($changed as $key => $value) {
                 if (\array_key_exists($key, $ids)) {
-                    self::removeFromWorking($this->entity);
+                    static::removeFromWorking($this->entity);
                     throw new \LogicException(
                         sprintf(
                             'Unable to delete entity because identifiers (%s) '.
@@ -125,7 +125,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
                 $query->andWhere(sprintf('`%s` = ?', $key));
                 $value = $access->get($key);
                 if (!$value) {
-                    self::removeFromWorking($this->entity);
+                    static::removeFromWorking($this->entity);
                     throw new \RuntimeException(
                         sprintf(
                             'Cannot delete entity object (%s) because it '. 
@@ -144,6 +144,6 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         $connection->execute($query, $queryParams);
         $registry->fireEvent($this->entity, new AfterDeleteEvent($connection, $table, $this->entity));
         $registry->remove($this->entity);
-        self::removeFromWorking($this->entity);
+        static::removeFromWorking($this->entity);
     }
 }

@@ -256,7 +256,8 @@ class Registry implements \Countable, \IteratorAggregate
     /**
      * Listener to fetch last insert ID on auto-increment columns
      *
-     * @param  \Fwk\Events\Event $event
+     * @param AbstractEntityEvent $event
+     *
      * @return void
      */
     public function getLastInsertId(AbstractEntityEvent $event)

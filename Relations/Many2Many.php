@@ -103,9 +103,9 @@ class Many2Many extends AbstractManyRelation implements Relation
      * @param mixed                  $object
      * @param \Fwk\Events\Dispatcher $evd
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd, $new = false)
+    public function setParent($object, \Fwk\Events\Dispatcher $evd)
     {
-        $return     = parent::setParent($object, $evd, $new);
+        $return     = parent::setParent($object, $evd);
         if ($return === true) {
             $evd->on(AfterSaveEvent::EVENT_NAME, array($this, 'onParentSave'));
             $evd->on(AfterUpdateEvent::EVENT_NAME, array($this, 'onParentSave'));
@@ -117,7 +117,7 @@ class Many2Many extends AbstractManyRelation implements Relation
     /**
      * Listener executed when parent entity is saved
      *
-     * @param  \Fwk\Events\Event $event
+     * @param AbstractEntityEvent $event
      * @return void
      */
     public function  onParentSave(AbstractEntityEvent $event)
@@ -125,79 +125,65 @@ class Many2Many extends AbstractManyRelation implements Relation
         $connection     = $event->getConnection();
         $parentRegistry = $event->getTable()->getRegistry();
         $table          = $connection->table($this->getTableName());
-
         $registry       = $table->getRegistry();
+
         foreach ($this->getWorkersQueue() as $worker) {
             $worker->setRegistry($registry);
             $entity     = $worker->getEntity();
-            $exec       = true;
+            $access = new Accessor($this->parent);
+            $data   = $parentRegistry->getData($this->parent);
+            $ids    = $data['identifiers'];
+            if (!count($ids)) {
+                throw new \RuntimeException (sprintf('Parent (%s) have no identifiers defined', get_class($this->parent)));
+            }
+
+            if (!array_key_exists($this->local, $ids)) {
+                throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', $this->local, $registry->getTableName()));
+            }
 
             if ($worker instanceof DeleteEntityWorker) {
-                 if(!isset($this->parent))
-                        throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
-
-                $access = new Accessor($this->parent);
-                $data   = $parentRegistry->getData($this->parent);
-                $ids    = $data['identifiers'];
-                if(!count($ids))
-                    throw new \RuntimeException (sprintf('Parent (%s) have no identifiers defined', get_class($this->parent)));
-
-                if(!\array_key_exists($this->local, $ids))
-                    throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', $this->local, $registry->getTableName()));
-
                 $value  = $access->get($this->local);
-                if(empty($value))
+                if (empty($value)) {
                     throw new \RuntimeException (sprintf('Identifier not set on %s (column: %s)', get_class($this->parent), $this->local));
-
-                $query  = Query::factory()
-                        ->delete($this->foreignTable)
-                        ->where(sprintf('%s = ?', $this->foreign))
-                        ->andWhere(sprintf('%s = ?', $this->foreignLink));
+                }
 
                 $params[]   = $value;
-
                 $acc        = Accessor::factory($entity)->get($this->local);
                 $params[]   = $acc;
 
-                if(empty($acc))
+                if (empty($acc)) {
                     throw new \RuntimeException (sprintf('Identifier not set on %s (column: %s)', get_class($entity), $this->local));
+                }
 
-                $connection->execute($query, $params);
+                $connection->execute(
+                    Query::factory()
+                        ->delete($this->foreignTable)
+                        ->where(sprintf('%s = ?', $this->foreign))
+                        ->andWhere(sprintf('%s = ?', $this->foreignLink)),
+                    $params
+                );
+
                 $this->getRegistry()->remove($entity);
                 continue;
             }
 
             if ($worker instanceof SaveEntityWorker) {
-                if(!isset($this->parent))
-                        throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
-
-                $access = new Accessor($this->parent);
-                $data   = $parentRegistry->getData($this->parent);
-                $ids    = $data['identifiers'];
-                if(!count($ids))
-                    throw new \RuntimeException (sprintf('Parent (%s) have no identifiers defined', get_class($this->parent)));
-
-                if(!\array_key_exists($this->local, $ids))
-                    throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', implode(', ', array_keys($ids)), $registry->getTableName()));
-
                 $value  = $access->get($this->local);
                 Accessor::factory($entity)->set($this->foreign, $value);
                 $registry->markForAction($entity, Registry::ACTION_SAVE);
             }
 
-            if ($exec) {
-                $worker->execute($connection);
+            $worker->execute($connection);
 
-                if ($worker instanceof SaveEntityWorker && $this->getRegistry()->getState($entity) == Registry::STATE_NEW) {
-                    $query  = Query::factory()
-                        ->insert($this->foreignTable);
-
-                    $query->set($this->foreign, '?');
-                    $query->set($this->foreignLink, '?');
-
-                    $connection->execute($query, array($access->get($this->local), Accessor::factory($entity)->get($this->foreignRefs)));
-                    $this->getRegistry()->defineInitialValues($entity, $connection, $table);
-                }
+            if ($worker instanceof SaveEntityWorker && $this->getRegistry()->getState($entity) == Registry::STATE_NEW) {
+                $connection->execute(
+                    Query::factory()
+                        ->insert($this->foreignTable)
+                        ->set($this->foreign, '?')
+                        ->set($this->foreignLink, '?'),
+                    array($access->get($this->local), Accessor::factory($entity)->get($this->foreignRefs))
+                );
+                $this->getRegistry()->defineInitialValues($entity, $connection, $table);
             }
         }
     }
@@ -218,8 +204,8 @@ class Many2Many extends AbstractManyRelation implements Relation
             }
 
              $join1 = array(
-                    'column'    => 'skipped_join',
-                    'skipped'   => true,
+                'column'    => 'skipped_join',
+                'skipped'   => true,
              );
 
             $query->join($this->foreignTable .' j', 'lazy.'. $this->foreignRefs, $this->foreignLink, Query::JOIN_LEFT, $join1);
@@ -295,7 +281,6 @@ class Many2Many extends AbstractManyRelation implements Relation
 
                 default:
                     throw new \InvalidArgumentException(sprintf("Unknown registry action '%s'", $action));
-
             }
 
             if(isset($worker))

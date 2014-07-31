@@ -128,8 +128,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     protected $listeners = array();
 
-    protected $parentNew = false;
-
     /**
      *
      * @param string $local
@@ -278,24 +276,15 @@ abstract class AbstractRelation implements IteratorAggregate
      *
      * @return boolean true if parent has been changed/defined
      */
-    public function setParent($object, Dispatcher $evd, $new = false)
+    public function setParent($object, Dispatcher $evd)
     {
         if ($this->parent === $object) {
             return false;
         }
 
         $this->parent       = $object;
-        $this->parentNew    = $new;
 
         return true;
-    }
-
-    /**
-     * @param boolean $parentNew
-     */
-    public function setParentNew($parentNew)
-    {
-        $this->parentNew = (bool)$parentNew;
     }
 
     /**
@@ -389,32 +378,6 @@ abstract class AbstractRelation implements IteratorAggregate
         $this->fetched = false;
 
         return $this;
-    }
-
-    /**
-     * Returns an array of all entities in this relation
-     *
-     * @return array
-     */
-     public function toArray()
-    {
-         $this->fetch();
-        $final= array();
-        foreach ($this->getRegistry()->getStore() as $object) {
-                $data   = $this->getRegistry()->getData($object);
-                if($data['action'] == 'delete')
-                    continue;
-
-                if (empty($this->reference)) {
-                    $final[] = $object;
-                    continue;
-                }
-
-                $ref    = (isset($data['reference']) ? $data['reference'] : null);
-                $final[$ref]  = $object;
-        }
-
-        return $final;
     }
 
     /**

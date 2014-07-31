@@ -101,13 +101,10 @@ interface Relation
      * 
      * @param mixed                  $object Parent object
      * @param \Fwk\Events\Dispatcher $evd    Event's dispatcher for parent
-     * @param boolean                $new    Is the parent 'new' ?
-     * 
+     *
      * @return void
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd, $new = false);
-
-    public function setParentNew($parentNew);
+    public function setParent($object, \Fwk\Events\Dispatcher $evd);
 
     /**
      * Returns defined entity for this relation.

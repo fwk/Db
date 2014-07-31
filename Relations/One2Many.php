@@ -108,9 +108,9 @@ class One2Many extends AbstractManyRelation implements Relation
      * @param mixed                       $object
      * @param \Fwk\Events\EventDispatcher $evd
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd, $new = false)
+    public function setParent($object, \Fwk\Events\Dispatcher $evd)
     {
-        $return     = parent::setParent($object, $evd, $new);
+        $return     = parent::setParent($object, $evd);
         if ($return === true) {
             $evd->on(AfterSaveEvent::EVENT_NAME, array($this, 'onParentSave'));
             $evd->on(AfterUpdateEvent::EVENT_NAME, array($this, 'onParentSave'));
@@ -122,7 +122,7 @@ class One2Many extends AbstractManyRelation implements Relation
     /**
      * Listener executed when parent entity is saved
      *
-     * @param  \Fwk\Events\Event $event
+     * @param AbstractEntityEvent $event
      * @return void
      */
     public function  onParentSave(AbstractEntityEvent $event)

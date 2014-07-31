@@ -35,8 +35,7 @@ namespace Fwk\Db;
 use Fwk\Db\Relations\One2Many;
 
 /**
- * This class transforms a resultset from a query into a set of corresponding
- * entities.
+ * This class transforms a resultset from a query into a set of corresponding entities.
  *
  * @category Utilities
  * @package  Fwk\Db
@@ -98,57 +97,57 @@ class Hydrator
 
         $joins      = (array) $query['joins'];
         $tables     = array();
-        $it         = 0;
+        $itx        = 0;
 
         foreach ($columns as $column => $infos) {
-            $it++;
+            $itx++;
             $table          = $infos['table'];
 
-            if (!isset($tables[$table])) {
-                $skipped    = false;
-                $jointure   = false;
-                $joinOpt       = false;
+            if (isset($tables[$table])) {
+                $tables[$table]['columns'][$column] =  $infos['column'];
+                continue;
+            }
 
-                foreach ($joins as $join) {
-                    $jointure = false;
-                    $skipped  = false;
+            $skipped    = false;
+            $jointure   = false;
+            $joinOpt       = false;
 
-                    if (\strpos($join['table'], ' ') !== false) {
-                        list($joinTable, $alias) = explode(' ', $join['table']);
-                    } else {
-                        $joinTable  = $join['table'];
-                        $alias      = null;
-                    }
+            foreach ($joins as $join) {
+                $jointure = false;
+                $skipped  = false;
 
-                    if ($joinTable == $table) {
-                        if ($join['options']['skipped'] == true) {
-                            $skipped = true;
-                        }
-
-                        $jointure  = true;
-                        $joinOpt   = $join;
-                        break;
-                    }
-                }
-
-                if ($skipped && $jointure) {
-                    continue;
-                }
-
-                $tables[$table]['columns']  = array();
-                if ($jointure) {
-                    $tables[$table]['join'] = $joinOpt;
-                    $tables[$table]['entity'] = $joinOpt['options']['entity'];
-                    $tables[$table]['entityListeners'] = $joinOpt['options']['entityListeners'];
+                if (\strpos($join['table'], ' ') !== false) {
+                    list($joinTable, $alias) = explode(' ', $join['table']);
                 } else {
-                    $tables[$table]['entity'] = ($it == 1 ? $query['entity'] : "\stdClass");
-                    $tables[$table]['entityListeners'] = (count($query['entityListeners'])  ? $query['entityListeners'] : $this->connection->table($table)->getDefaultEntityListeners());
+                    $joinTable  = $join['table'];
+                    $alias      = null;
+                }
+
+                if ($joinTable == $table) {
+                    if ($join['options']['skipped'] == true) {
+                        $skipped = true;
+                    }
+
+                    $jointure  = true;
+                    $joinOpt   = $join;
+                    break;
                 }
             }
 
-            $realColumnName = $infos['column'];
+            if ($skipped && $jointure) {
+                continue;
+            }
 
-            $tables[$table]['columns'][$column] =  $realColumnName;
+            $tables[$table]['columns']  = array();
+            if ($jointure) {
+                $tables[$table]['join'] = $joinOpt;
+                $tables[$table]['entity'] = $joinOpt['options']['entity'];
+                $tables[$table]['entityListeners'] = $joinOpt['options']['entityListeners'];
+            } else {
+                $tables[$table]['entity'] = ($itx == 1 ? $query['entity'] : "\stdClass");
+                $tables[$table]['entityListeners'] = (count($query['entityListeners'])  ? $query['entityListeners'] : $this->connection->table($table)->getDefaultEntityListeners());
+            }
+            $tables[$table]['columns'][$column] =  $infos['column'];
         }
 
         $this->stack = $tables;
@@ -165,7 +164,6 @@ class Hydrator
     {
         $final      = array();
         $joinData   = array();
-        $mainObj    = null;
 
         foreach ($results as $result) {
             $mainObj        = null;
@@ -183,7 +181,7 @@ class Hydrator
                 $access->setValues($values);
                 $mainObjRefs    = $ids;
 
-                foreach ($access->getRelations() as $columnName => $relation) {
+                foreach ($access->getRelations() as $relation) {
                     $relation->setConnection($this->connection);
                     $relation->setParentRefs($access->get($relation->getLocal()));
                 }
@@ -191,7 +189,6 @@ class Hydrator
                 if (!$isJoin) {
                     $mainObj        = $obj;
                     $mainObjTable   = $tableName;
-                    $idsHash        = $tableName . implode(':', $ids);
                     unset($access, $values, $isJoin, $columns);
                     if (!in_array($mainObj, $final, true)) {
                         array_push($final, $mainObj);
@@ -199,6 +196,7 @@ class Hydrator
                     continue;
                 }
 
+                $idsHash    = $tableName . implode(':', $ids);
                 $access     = new Accessor($mainObj);
                 $columnName = $infos['join']['options']['column'];
 
@@ -230,13 +228,12 @@ class Hydrator
 
             $access = new Accessor($mainObj);
             $relations  = $access->getRelations();
-            foreach ($relations as $columnName => $relation) {
+            foreach ($relations as $relation) {
                 $tableObj   = $this->connection->table($mainObjTable);
                 $relation->setParent(
                     $mainObj, 
                     $tableObj->getRegistry()->getEventDispatcher($mainObj)
                 );
-                $relation->setParentNew(false);
             }
 
             unset($mainObj, $mainObjRefs);
@@ -320,14 +317,14 @@ class Hydrator
     protected function loadEntityClass($tableName, array $identifiers, 
         $entityClass = null, array $listeners = array()
     ) {
-        $tableObj   = $this->connection->table($tableName);
-        $registry   = $tableObj->getRegistry();
+        $tableObj = $this->connection->table($tableName);
+        $registry = $tableObj->getRegistry();
 
         if ($entityClass === null) {
             $entityClass = $tableObj->getDefaultEntity();
         }
         
-        $obj        = $registry->get($identifiers);
+        $obj = $registry->get($identifiers);
 
         if (null === $obj) {
             $obj = new $entityClass;
@@ -378,11 +375,9 @@ class Hydrator
         }
 
         $final = array();
-        foreach ($tableIds as $identifier) {
-            foreach ((array) $this->columns as $colName  => $infos) {
-                if ($infos['table'] == $tableName && in_array($infos['column'], $tableIds)) {
-                    $final[$infos['column']] = $results[$colName];
-                }
+        foreach ((array) $this->columns as $colName  => $infos) {
+            if ($infos['table'] == $tableName && in_array($infos['column'], $tableIds)) {
+                $final[$infos['column']] = $results[$colName];
             }
         }
 

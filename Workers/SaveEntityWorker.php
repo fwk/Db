@@ -69,138 +69,113 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         $data       = $registry->getData($this->entity);
         $state      = $data['state'];
         $table      = $connection->table($registry->getTableName());
-
         $query      = \Fwk\Db\Query::factory();
         $queryParams = array();
         $access     = new Accessor($this->entity);
         $exec       = true;
 
-        if (in_array($this->entity, self::$working, true)) {
+        if (in_array($this->entity, static::$working, true)) {
             return;
         }
 
         switch ($state) {
-        case Registry::STATE_UNKNOWN:
-            throw new \LogicException(
-                sprintf(
-                    'Entity is in unknown state (%s)', 
-                    get_class($this->entity)
-                )
-            );
-            
-        case Registry::STATE_NEW:
-            array_push(self::$working, $this->entity);
+            case Registry::STATE_UNKNOWN:
+                throw new \LogicException(sprintf('Entity is in unknown state (%s)', get_class($this->entity)));
 
-            // echo var_dump("Saving %s ... ", get_class($this->entity) ."\n");
-            foreach ($access->getRelations() as $relation) {
-                $relation->setParent($this->entity, $this->getRegistry()->getEventDispatcher($this->entity), true);
-            }
-
-            $registry->fireEvent($this->entity, $event = new BeforeSaveEvent($connection, $table, $this->entity));
-
-            if ($event->isStopped()) {
-                return;
-            }
-
-            $query->insert($table->getName());
-            $values     = $access->toArray();
-            $columns    = $table->getColumns();
-            $setted     = 0;
-
-            foreach ($columns as $columnObj) {
-                $default = $columnObj->getDefault();
-                $key = $columnObj->getName();
-                $value  = (array_key_exists($key, $values) ? $values[$key] : -1);
-                
-                if (-1 === $value) {
-                    if (!empty($default) || 
-                        true === $columnObj->getAutoincrement()
-                    ) {
-                        $value = $default;
-                        continue;
-                    } elseif ($columnObj->getNotnull() === true) {
-                        throw new \LogicException(
-                            sprintf(
-                                'Column "%s" (table: %s, entity: %s) does not allow null value',
-                                $key, 
-                                $table->getName(),
-                                get_class($this->entity)
-                            )
-                        );
-                    }
+            case Registry::STATE_NEW:
+                array_push(static::$working, $this->entity);
+                foreach ($access->getRelations() as $relation) {
+                    $relation->setParent($this->entity, $this->getRegistry()->getEventDispatcher($this->entity), true);
                 }
-                
-                $query->set($key, '?');
-                $queryParams[] = $value;
 
-                $setted++;
-            }
+                $registry->fireEvent($this->entity, $event = new BeforeSaveEvent($connection, $table, $this->entity));
+                if ($event->isStopped()) {
+                    return;
+                }
 
-            if (!$setted) {
-                $exec = false;
-            }
-            
-            $event = new AfterSaveEvent($connection, $table, $this->entity);;
-            break;
+                $query->insert($table->getName());
+                $values     = $access->toArray();
+                $columns    = $table->getColumns();
+                $setted     = 0;
 
-        case Registry::STATE_FRESH:
-        case Registry::STATE_CHANGED:
-            array_push(self::$working, $this->entity);
+                foreach ($columns as $columnObj) {
+                    $default = $columnObj->getDefault();
+                    $key = $columnObj->getName();
+                    $value  = (array_key_exists($key, $values) ? $values[$key] : -1);
 
-            $registry->fireEvent($this->entity, new BeforeUpdateEvent($connection, $table, $this->entity));
+                    if (-1 === $value) {
+                        if (!empty($default) || true === $columnObj->getAutoincrement()
+                            || $columnObj->getNotnull() === true
+                        ) {
+                            continue;
+                        }
+                    }
 
-            $data       = $registry->getData($this->entity);
-
-            // reload changed values in case the event changed some...
-            $changed    = $registry->getChangedValues($this->entity);
-
-            $query->update($table->getName())->where('1 = 1');
-            $ids    = $data['identifiers'];
-            $idKeys = $table->getIdentifiersKeys();
-
-            if (!count($ids)) {
-                self::removeFromSaving($this->entity);
-                throw new \LogicException(
-                    sprintf(
-                        'Entity %s lacks identifiers and cannot be saved.', 
-                        get_class($this->entity)
-                    )
-                );
-            }
-            
-            $setted     = 0;
-            foreach ($changed as $key => $value) {
-                if ($table->hasColumn($key)) {
                     $query->set($key, '?');
                     $queryParams[] = $value;
                     $setted++;
                 }
-            }
 
-            if (!$setted) {
-                $exec   = false;
-            }
-
-            foreach ($idKeys as $key) {
-                $query->andWhere(sprintf('`%s` = ?', $key));
-                $value = $access->get($key);
-                if (!$value) {
-                    self::removeFromSaving($this->entity);
-                    throw new \RuntimeException(
-                        sprintf(
-                            'Cannot save entity object (%s) because it lacks '. 
-                            'identifier (%s)', 
-                            get_class($this->entity), 
-                            $key
-                        )
-                    );
+                if (!$setted) {
+                    $exec = false;
                 }
-                
-                $queryParams[] = $value;
-            }
 
-            $event = new AfterUpdateEvent($connection, $table, $this->entity);
-            break;
+                $event = new AfterSaveEvent($connection, $table, $this->entity);;
+                break;
+
+            case Registry::STATE_FRESH:
+            case Registry::STATE_CHANGED:
+                array_push(static::$working, $this->entity);
+
+                $registry->fireEvent($this->entity, new BeforeUpdateEvent($connection, $table, $this->entity));
+
+                $data       = $registry->getData($this->entity);
+
+                // reload changed values in case the event changed some...
+                $changed    = $registry->getChangedValues($this->entity);
+
+                $query->update($table->getName())->where('1 = 1');
+                $ids    = $data['identifiers'];
+                $idKeys = $table->getIdentifiersKeys();
+
+                if (!count($ids)) {
+                    static::removeFromSaving($this->entity);
+                    throw new \LogicException(sprintf('Entity %s lacks identifiers and cannot be saved.', get_class($this->entity)));
+                }
+
+                $setted     = 0;
+                foreach ($changed as $key => $value) {
+                    if ($table->hasColumn($key)) {
+                        $query->set($key, '?');
+                        $queryParams[] = $value;
+                        $setted++;
+                    }
+                }
+
+                if (!$setted) {
+                    $exec   = false;
+                }
+
+                foreach ($idKeys as $key) {
+                    $query->andWhere(sprintf('`%s` = ?', $key));
+                    $value = $access->get($key);
+                    if (!$value) {
+                        static::removeFromSaving($this->entity);
+                        throw new \RuntimeException(
+                            sprintf(
+                                'Cannot save entity object (%s) because it lacks '.
+                                'identifier (%s)',
+                                get_class($this->entity),
+                                $key
+                            )
+                        );
+                    }
+
+                    $queryParams[] = $value;
+                }
+
+                $event = new AfterUpdateEvent($connection, $table, $this->entity);
+                break;
         }
 
         if ($exec) {
@@ -210,6 +185,6 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         if (isset($event)) {
             $registry->fireEvent($this->entity, $event);
         }
-        self::removeFromWorking($this->entity);
+        static::removeFromWorking($this->entity);
     }
 }

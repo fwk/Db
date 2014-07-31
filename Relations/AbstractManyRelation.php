@@ -170,4 +170,33 @@ abstract class AbstractManyRelation extends AbstractRelation implements
             $this->add($object);
         }
     }
+
+    /**
+     * Returns an array of all entities in this relation
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        $this->fetch();
+
+        $final = array();
+        $list = $this->getRegistry()->getStore();
+        foreach ($list as $object) {
+            $data = $this->getRegistry()->getData($object);
+            if($data['action'] == 'delete') {
+                continue;
+            }
+
+            if (empty($this->reference)) {
+                $final[] = $object;
+                continue;
+            }
+
+            $ref    = (isset($data['reference']) ? $data['reference'] : null);
+            $final[$ref]  = $object;
+        }
+
+        return $final;
+    }
 }
