@@ -32,6 +32,7 @@
  */
 namespace Fwk\Db;
 
+use Doctrine\DBAL\Driver\PDOStatement;
 use Fwk\Db\Events\AfterQueryEvent;
 use Fwk\Db\Events\BeforeQueryEvent;
 use Fwk\Db\Events\ConnectEvent;
@@ -325,8 +326,12 @@ class Connection extends Dispatcher
 
         if ($query->getType() == Query::TYPE_SELECT) {
             $stmt->execute($params);
+
+            if (!$stmt instanceof PDOStatement) {
+                return false; // never happend
+            }
+
             $tmp = $stmt->fetchAll(($query->getFetchMode() != Query::FETCH_SPECIAL ? $query->getFetchMode() : \PDO::FETCH_ASSOC));
-            
             if ($query->getFetchMode() === Query::FETCH_SPECIAL) {
                 $hyd = new Hydrator($query, $this, $bridge->getColumnsAliases());
                 $results = $hyd->hydrate($tmp);

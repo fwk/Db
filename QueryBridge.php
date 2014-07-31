@@ -359,38 +359,33 @@ class QueryBridge
      *
      * @param mixed $tables
      *
-     * @return string
+     * @return void
      */
     protected function getSelectColumns($columns, $tables, Query $query, $joins = null)
     {
-        srand();
-
         if ($query->getFetchMode() != Query::FETCH_SPECIAL) {
-            return $this->handle->select((empty($query['select']) ? '*' : $query['select']));
+            $this->handle->select((empty($query['select']) ? '*' : $query['select']));
+            return;
         }
 
-        if (!$columns || $columns == '*')
-            $columns = $this->getSelectColumnsFromTables($tables, $joins);
-
-        elseif (is_string($columns))
-            $columns = $this->getSelectColumnsFromString($columns, $tables);
-
-        $this->columnsAliases = $columns;
+        if (!$columns || $columns == '*') {
+            $columns = $this->columnsAliases = $this->getSelectColumnsFromTables($tables, $joins);
+        } elseif (is_string($columns)) {
+            $columns = $this->columnsAliases = $this->getSelectColumnsFromString($columns, $tables);
+        }
 
         $final = array();
         foreach ($columns as $alias => $column) {
-            if(!$column['function'])
-                \array_push($final, $this->getTableAlias($column['table']) .'.'. trim($column['column']) .' AS '. $alias);
-
-            else
+            if (!$column['function']) {
+                array_push($final, $this->getTableAlias($column['table']) .'.'. trim($column['column']) .' AS '. $alias);
+            } else {
                 // it's a function
-                \array_push($final, $column['column'] .' AS '. $alias);
+                array_push($final, $column['column'] .' AS '. $alias);
+            }
         }
 
         $this->handle->select(\implode(', ', $final));
     }
-
-
 
     /**
      *
@@ -401,14 +396,18 @@ class QueryBridge
         return (is_array($this->columnsAliases) ? $this->columnsAliases : array());
     }
 
+    /**
+     * @param string $colName
+     *
+     * @return int|string
+     */
     public function getColumnAlias($colName)
     {
         $columns = $this->getColumnsAliases();
-
         foreach ($columns as $alias => $column) {
-            if($column['column'] == $colName)
-
+            if ($column['column'] == $colName) {
                 return $alias;
+            }
         }
 
         return $colName;
@@ -640,8 +639,9 @@ class QueryBridge
             }
         }
 
-        if(isset($wasStar))
+        if (isset($wasStar)) {
             $columns = array_merge($columns, $this->getSelectColumnsFromTables($tables));
+        }
 
         return $columns;
     }

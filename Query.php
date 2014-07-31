@@ -56,7 +56,7 @@ class Query extends \ArrayObject
 
     /**
      *
-     * @var integer
+     * @var string
      */
     protected $type;
 

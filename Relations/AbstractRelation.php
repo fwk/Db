@@ -477,6 +477,10 @@ abstract class AbstractRelation implements IteratorAggregate
         return $this;
     }
 
+    abstract public function fetch();
+
+    abstract public function toArray();
+
     /**
      * Return this relation data within an Iterator (foreach ...)
      * {@see \Traversable}

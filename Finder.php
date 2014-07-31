@@ -238,7 +238,7 @@ class Finder
     public function getResultSet()
     {
         if (!isset($this->resultSet)) {
-            $this->resultSet = $this->getConnection()->execute(
+            $this->resultSet = (array)$this->getConnection()->execute(
                 $this->query,
                 $this->params
             );
