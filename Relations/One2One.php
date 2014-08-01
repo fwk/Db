@@ -74,13 +74,13 @@ class One2One extends AbstractRelation implements Relation
             'relation'  => $this,
             'skipped'   => false,
             'reference' => null,
-            'entity'    => $this->entity
+            'entity'    => $this->getEntity()
         );
 
         $query->join(
-            $this->tableName, 
-            $this->local, 
-            $this->foreign, 
+            $this->getTableName(),
+            $this->getLocal(),
+            $this->getForeign(),
             Query::JOIN_LEFT, 
             $join
         );
@@ -95,15 +95,15 @@ class One2One extends AbstractRelation implements Relation
     {
         if (!$this->fetched && $this->isActive()) {
             $query = new Query();
-            $query->entity($this->entity);
+            $query->entity($this->getEntity());
 
             $query->select()
-                ->from($this->tableName, 'lazy')
-                ->where('lazy.'. $this->foreign .'=?');
+                ->from($this->getTableName(), 'lazy')
+                ->where('lazy.'. $this->getForeign() .'=?');
 
             $connect    = $this->getConnection();
             $res        = $connect->execute($query, array($this->parentRefs));
-            $idKeys     = $connect->table($this->tableName)
+            $idKeys     = $connect->table($this->getTableName())
                 ->getIdentifiersKeys();
 
             if (count($res) >= 1) {
@@ -112,7 +112,7 @@ class One2One extends AbstractRelation implements Relation
                 foreach ($idKeys as $key) {
                     $ids[$key] = $access->get($key);
                 }
-                $this->add($res[0], $ids);
+                parent::add($res[0], $ids);
             }
 
             $this->setFetched(true);
@@ -156,7 +156,7 @@ class One2One extends AbstractRelation implements Relation
             return;
         }
 
-        $this->add($object);
+        parent::add($object);
     }
 
     /**
@@ -268,58 +268,6 @@ class One2One extends AbstractRelation implements Relation
         }
 
         return $return;
-    }
-
-    /**
-     * Returns to-be-executed workers queue
-     * 
-     * @return \SplPriorityQueue
-     */
-    public function getWorkersQueue()
-    {
-        $queue  = new \SplPriorityQueue();
-
-        foreach ($this->getRegistry()->getStore() as $object) {
-            $data   = $this->getRegistry()->getData($object);
-
-            $action = $data['action'];
-
-            if ($data['state'] == Registry::STATE_NEW
-                || ($data['state'] == Registry::STATE_CHANGED
-                && $data['action'] != Registry::ACTION_DELETE)
-            ) {
-                $action = Registry::ACTION_SAVE;
-            }
-
-            if (empty($data['action'])) {
-                $this->getRegistry()->getChangedValues($object);
-                $data = $this->getRegistry()->getData($object);
-            }
-
-            $ts = (!$data['ts_action'] ? microtime(true) : $data['ts_action']);
-
-            if (empty($action)) {
-                continue;
-            }
-
-            $priority = $ts;
-            switch ($action) {
-            case Registry::ACTION_DELETE:
-                $queue->insert(new DeleteEntityWorker($object), $priority);
-                break;
-
-            case Registry::ACTION_SAVE:
-                $queue->insert(new SaveEntityWorker($object), $priority);
-                break;
-
-            default:
-                throw new \InvalidArgumentException(
-                    sprintf("Unknown registry action '%s'", $action)
-                );
-            }
-        }
-
-        return $queue;
     }
 
     /**

@@ -2,7 +2,7 @@
 /**
  * Fwk
  *
- * Copyright (c) 2011-2012, Julien Ballestracci <julien@nitronet.org>.
+ * Copyright (c) 2011-2014, Julien Ballestracci <julien@nitronet.org>.
  * All rights reserved.
  *
  * For the full copyright and license information, please view the LICENSE
@@ -23,13 +23,13 @@
  *
  * PHP Version 5.3
  *
+ * @category   Database
  * @package    Fwk
  * @subpackage Db
- * @subpackage Relations
  * @author     Julien Ballestracci <julien@nitronet.org>
- * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
+ * @copyright  2011-2014 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://www.phpfwk.com
+ * @link       http://www.nitronet.org/fwk
  */
 namespace Fwk\Db\Relations;
 
@@ -42,13 +42,26 @@ use Fwk\Db\Accessor;
 use Fwk\Db\Registry;
 use Fwk\Db\Workers\SaveEntityWorker;
 use Fwk\Db\Workers\DeleteEntityWorker;
+use Fwk\Events\Dispatcher;
 
+/**
+ * One to Many Relation
+ *
+ * Represents a 1-n relation in the database
+ *
+ * @category Relations
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.nitronet.org/fwk
+ */
 class One2Many extends AbstractManyRelation implements Relation
 {
     /**
-     * Prepares a Query to fetch this relation
+     * Prepares a Query to fetch this relation (if FETCH_EAGER)
      *
-     * @param Query $query
+     * @param Query  $query      The running Query
+     * @param string $columnName The column name (property) for this relation
      *
      * @return void
      */
@@ -67,34 +80,46 @@ class One2Many extends AbstractManyRelation implements Relation
             'entity' => $this->entity
         );
 
-        $query->join($this->tableName, $this->local, $this->foreign, Query::JOIN_LEFT, $join);
+        $query->join(
+            $this->tableName,
+            $this->local,
+            $this->foreign,
+            Query::JOIN_LEFT,
+            $join
+        );
     }
 
+    /**
+     * Fetches data from the database an fills this relation
+     *
+     * @return Relation
+     */
     public function fetch()
     {
         if (!$this->fetched && $this->isActive()) {
             $query = new Query();
-            $query->entity($this->entity);
-
-            $query->select()
-                    ->from($this->tableName, 'lazy')
-                    ->where('lazy.' . $this->foreign . '=?');
+            $query->entity($this->getEntity())
+                ->select()
+                ->from($this->getTableName(), 'lazy')
+                ->where('lazy.' . $this->getForeign() . '=?');
 
             if (isset($this->orderBy)) {
-                $query->orderBy($this->orderBy['column'], $this->orderBy['direction']);
+                $query->orderBy(
+                    $this->orderBy['column'],
+                    $this->orderBy['direction']
+                );
             }
 
-            $connect    = $this->getConnection();
-            $res        = $connect->execute($query, array($this->parentRefs));
-            $idKeys     = $connect->table($this->tableName)->getIdentifiersKeys();
-
+            $connect   = $this->getConnection();
+            $res    = $connect->execute($query, array($this->parentRefs));
+            $idKeys = $connect->table($this->getTableName())->getIdentifiersKeys();
             foreach ($res as $result) {
-               $ids     = array();
-               $access  = new Accessor($result);
-               foreach ($idKeys as $key) {
-                   $ids[$key]   = $access->get($key);
-               }
-               $this->add($result, $ids);
+                $ids     = array();
+                $access  = new Accessor($result);
+                foreach ($idKeys as $key) {
+                    $ids[$key]   = $access->get($key);
+                }
+                parent::add($result, $ids);
             }
 
             $this->setFetched(true);
@@ -104,11 +129,14 @@ class One2Many extends AbstractManyRelation implements Relation
     }
 
     /**
+     * Defines a parent entity for this relation
      *
-     * @param mixed                       $object
-     * @param \Fwk\Events\EventDispatcher $evd
+     * @param object     $object The parent entity
+     * @param Dispatcher $evd    The related events dispatcher
+     *
+     * @return boolean
      */
-    public function setParent($object, \Fwk\Events\Dispatcher $evd)
+    public function setParent($object, Dispatcher $evd)
     {
         $return     = parent::setParent($object, $evd);
         if ($return === true) {
@@ -122,33 +150,52 @@ class One2Many extends AbstractManyRelation implements Relation
     /**
      * Listener executed when parent entity is saved
      *
-     * @param AbstractEntityEvent $event
+     * @param AbstractEntityEvent $event The EntityEvent
+     *
      * @return void
      */
-    public function  onParentSave(AbstractEntityEvent $event)
+    public function onParentSave(AbstractEntityEvent $event)
     {
         $connection     = $event->getConnection();
         $parentRegistry = $event->getTable()->getRegistry();
         $table          = $connection->table($this->getTableName());
-
         $registry       = $table->getRegistry();
+
         foreach ($this->getWorkersQueue() as $worker) {
             $worker->setRegistry($registry);
             $entity     = $worker->getEntity();
 
             if ($worker instanceof SaveEntityWorker) {
-                if(!isset($this->parent))
-                    throw new \RuntimeException (sprintf('No parent defined for entity %s', get_class($entity)));
+                if (!isset($this->parent)) {
+                    throw new \RuntimeException(
+                        sprintf(
+                            'No parent defined for entity %s',
+                            get_class($entity)
+                        )
+                    );
+                }
 
                 $access = new Accessor($this->parent);
                 $data   = $parentRegistry->getData($this->parent);
-
                 $ids    = $data['identifiers'];
-                if(!count($ids))
-                    throw new \RuntimeException (sprintf('Parent (%s) have no identifiers defined', get_class($this->parent)));
+                if (!count($ids)) {
+                    throw new \RuntimeException(
+                        sprintf(
+                            'Parent (%s) have no identifiers defined',
+                            get_class($this->parent)
+                        )
+                    );
+                }
 
-                if(count($ids) > 1 && !\array_key_exists($this->local, $ids))
-                    throw new \RuntimeException (sprintf('Local key "%s" is not a valid identifier (primary key on %s)', $this->local, $registry->getTableName()));
+                if (count($ids) > 1 && !array_key_exists($this->local, $ids)) {
+                    throw new \RuntimeException(
+                        sprintf(
+                            'Local key "%s" is not a valid identifier (primary key on %s)',
+                            $this->local,
+                            $registry->getTableName()
+                        )
+                    );
+                }
 
                 $value  = $access->get($this->local);
                 Accessor::factory($entity)->set($this->foreign, $value);
@@ -156,53 +203,9 @@ class One2Many extends AbstractManyRelation implements Relation
             }
 
             $worker->execute($connection);
-
             if ($worker instanceof DeleteEntityWorker) {
                 parent::getRegistry()->remove($entity);
             }
         }
-    }
-
-    /**
-     *
-     * @return \SplPriorityQueue
-     */
-    public function getWorkersQueue()
-    {
-        $queue  = new \SplPriorityQueue();
-
-        foreach ($this->getRegistry()->getStore() as $object) {
-            $data   = $this->getRegistry()->getData($object);
-            $action = (($data['state'] == Registry::STATE_NEW || ($data['state'] == Registry::STATE_CHANGED && $data['action'] != Registry::ACTION_DELETE)) ? Registry::ACTION_SAVE : $data['action']);
-            if (empty($data['action'])) {
-                $this->getRegistry()->getChangedValues($object);
-                $data   = $this->getRegistry()->getData($object);
-            }
-
-            $ts     = ($data['ts_action'] == null ? \microtime(true) : $data['ts_action']);
-
-            if(empty($action))
-                continue;
-
-            $priority   = $ts;
-            switch ($action) {
-                case Registry::ACTION_DELETE:
-                    $worker = new DeleteEntityWorker($object);
-                    break;
-
-                case Registry::ACTION_SAVE:
-                    $worker = new SaveEntityWorker($object);
-                    break;
-
-                default:
-                    throw new \InvalidArgumentException(sprintf("Unknown registry action '%s'", $action));
-
-            }
-
-            if(isset($worker))
-                $queue->insert($worker, $priority);
-        }
-
-        return $queue;
     }
 }

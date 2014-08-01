@@ -1,6 +1,7 @@
 <?php
 
 namespace Fwk\Db;
+use Fwk\Db\Events\FreshEvent;
 
 /**
  * Test class for Registry.
@@ -30,6 +31,18 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(null, $this->object->get(array('keyOne' => 1, 'keyTwo' => 2)));
         $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2));
         $this->assertEquals($obj, $this->object->get(array('keyOne' => 1, 'keyTwo' => 2)));
+    }
+
+    public function testStoreWithListener()
+    {
+        $obj = new \stdClass();
+        $obj->listen = false;
+        $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2), Registry::STATE_NEW, array('listeners' => array('fresh' => function(FreshEvent $event) {
+            $event->getEntity()->listen = true;
+        })));
+        $this->assertFalse($obj->listen);
+        $this->object->getEventDispatcher($obj)->notify(new FreshEvent(new Connection(), new Table('test'), $obj));
+        $this->assertTrue($obj->listen);
     }
 
     /**
@@ -71,6 +84,19 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $this->object->count());
         $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2));
         $this->assertEquals(1, $this->object->count());
+    }
+
+
+    public function testRemoveUnknownEntity()
+    {
+        $this->setExpectedException('Fwk\Db\Exceptions\UnregisteredEntity');
+        $this->object->remove(new \stdClass());
+    }
+
+    public function testChangedValuesUnknownEntity()
+    {
+        $this->setExpectedException('Fwk\Db\Exceptions\UnregisteredEntity');
+        $this->object->getChangedValues(new \stdClass());
     }
 
     public function testGetTableName()

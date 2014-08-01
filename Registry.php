@@ -108,7 +108,7 @@ class Registry implements \Countable, \IteratorAggregate
             $identifiers = array('%hash%' => Accessor::factory($object)->hashCode());
         }
 
-        $data       = array_merge(array(
+        $data       = array_merge_recursive(array(
             'className'     => get_class($object),
             'identifiers'          => $identifiers,
             'state'                => $state,
@@ -126,7 +126,7 @@ class Registry implements \Countable, \IteratorAggregate
 
         if ($object instanceof EventSubscriber) {
             foreach ($object->getListeners() as $key => $listener) {
-                if (is_object($listener)) {
+                if (is_object($listener) && !is_callable($listener)) {
                     $dispatcher->addListener($listener);
                 } elseif (is_callable($listener)) {
                     $dispatcher->on($key, $listener);
@@ -135,7 +135,7 @@ class Registry implements \Countable, \IteratorAggregate
         }
 
         foreach ($data['listeners'] as $key => $listener) {
-            if (is_object($listener)) {
+            if (is_object($listener) && !is_callable($listener)) {
                 $dispatcher->addListener($listener);
             } elseif (is_callable($listener)) {
                 $dispatcher->on($key, $listener);

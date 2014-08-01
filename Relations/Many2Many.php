@@ -208,7 +208,7 @@ class Many2Many extends AbstractManyRelation implements Relation
                 'skipped'   => true,
              );
 
-            $query->join($this->foreignTable .' j', 'lazy.'. $this->foreignRefs, $this->foreignLink, Query::JOIN_LEFT, $join1);
+            $query->join($this->getForeignTable() .' j', 'lazy.'. $this->getForeignReference(), $this->getForeignLink(), Query::JOIN_LEFT, $join1);
             $query->where('j.'. $this->foreign .'=?');
             $params[]   = $this->parentRefs;
 
@@ -222,7 +222,7 @@ class Many2Many extends AbstractManyRelation implements Relation
                    foreach ($idKeys as $key) {
                        $ids[$key]   = $access->get($key);
                    }
-                   $this->add($result, $ids);
+                   parent::add($result, $ids);
             }
 
             $this->setFetched(true);
@@ -233,60 +233,16 @@ class Many2Many extends AbstractManyRelation implements Relation
 
     public function getForeignTable()
     {
-
         return $this->foreignTable;
     }
 
     public function getForeignLink()
     {
-
         return $this->foreignLink;
     }
 
     public function getForeignReference()
     {
-
         return $this->foreignRefs;
-    }
-
-    /**
-     *
-     * @return \SplPriorityQueue
-     */
-    public function getWorkersQueue()
-    {
-        $queue  = new \SplPriorityQueue();
-
-        foreach ($this->getRegistry()->getStore() as $object) {
-            $data   = $this->getRegistry()->getData($object);
-            $action = (($data['state'] == Registry::STATE_NEW || ($data['state'] == Registry::STATE_CHANGED && $data['action'] != Registry::ACTION_DELETE)) ? Registry::ACTION_SAVE : $data['action']);
-            if (empty($data['action'])) {
-                $this->getRegistry()->getChangedValues($object);
-                $data   = $this->getRegistry()->getData($object);
-            }
-
-            $ts     = ($data['ts_action'] == null ? \microtime(true) : $data['ts_action']);
-            if(empty($action))
-                continue;
-
-            $priority   = $ts;
-            switch ($action) {
-                case Registry::ACTION_DELETE:
-                    $worker = new DeleteEntityWorker($object);
-                    break;
-
-                case Registry::ACTION_SAVE:
-                    $worker = new SaveEntityWorker($object);
-                    break;
-
-                default:
-                    throw new \InvalidArgumentException(sprintf("Unknown registry action '%s'", $action));
-            }
-
-            if(isset($worker))
-                $queue->insert($worker, $priority);
-        }
-
-        return $queue;
     }
 }

@@ -2,7 +2,7 @@
 /**
  * Fwk
  *
- * Copyright (c) 2011-2012, Julien Ballestracci <julien@nitronet.org>.
+ * Copyright (c) 2011-2014, Julien Ballestracci <julien@nitronet.org>.
  * All rights reserved.
  *
  * For the full copyright and license information, please view the LICENSE
@@ -23,13 +23,13 @@
  *
  * PHP Version 5.3
  *
+ * @category   Database
  * @package    Fwk
  * @subpackage Db
- * @subpackage Relations
  * @author     Julien Ballestracci <julien@nitronet.org>
- * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
+ * @copyright  2011-2014 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://www.phpfwk.com
+ * @link       http://www.nitronet.org/fwk
  */
 namespace Fwk\Db\Relations;
 
@@ -39,36 +39,70 @@ use Fwk\Db\Accessor;
 
 /**
  * Abstract utility class for *Many Relations
+ *
+ * @category Relations
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.nitronet.org/fwk
  */
 abstract class AbstractManyRelation extends AbstractRelation implements
     \ArrayAccess, \Countable
 {
     /**
+     * Name of the column to be used as the index for this relation's entities
+     *
      * @var string
      */
     protected $reference;
 
     /**
+     * Name of the column to use for sorting this relation's entities
+     *
      * @var array
      */
     protected $orderBy;
 
+    /**
+     * Test if an entity is present in this relation.
+     * Triggers a fetch if the relation is FETCH_LAZY
+     *
+     * @param string|integer $offset The index key
+     *
+     * @return boolean
+     */
     public function offsetExists($offset)
     {
         $this->fetch();
-        $array  = $this->toArray();
+        $array = $this->toArray();
 
-        return \array_key_exists($offset, $array);
+        return array_key_exists($offset, $array);
     }
 
+    /**
+     * Returns the entity at the given index (reference) if any, or null.
+     * Triggers a fetch if the relation is FETCH_LAZY
+     *
+     * @param string|integer $offset The index key
+     *
+     * @return object|null
+     */
     public function offsetGet($offset)
     {
         $this->fetch();
         $array  = $this->toArray();
 
-        return (\array_key_exists($offset, $array) ? $array[$offset] : null);
+        return (array_key_exists($offset, $array) ? $array[$offset] : null);
     }
 
+    /**
+     * Adds an entity to this relation at the given index
+     *
+     * @param string|integer $offset The index key
+     * @param object         $value  The entity
+     *
+     * @return Relation|void
+     */
     public function offsetSet($offset, $value)
     {
         $this->fetch();
@@ -76,18 +110,32 @@ abstract class AbstractManyRelation extends AbstractRelation implements
         return $this->add($value);
     }
 
+    /**
+     * Removes an entity at the given index
+     * Triggers a fetch if the relation is FETCH_LAZY
+     *
+     * @param string|integer $offset The index key
+     *
+     * @return void
+     */
     public function offsetUnset($offset)
     {
         $this->fetch();
 
         $obj    = $this->offsetGet($offset);
-        if(null === $obj)
-
+        if (null === $obj) {
             return;
+        }
 
-        return parent::remove($obj);
+        parent::remove($obj);
     }
 
+    /**
+     * Count entities in this relation.
+     * Triggers a fetch if the relation is FETCH_LAZY
+     *
+     * @return int
+     */
     public function count()
     {
         $this->fetch();
@@ -96,9 +144,9 @@ abstract class AbstractManyRelation extends AbstractRelation implements
     }
 
      /**
-     * Sets a column to use as a reference
+     * Defines the column to use as index for this relation's entities
      *
-     * @param string $column
+     * @param string $column The column's name
       *
      * @return Relation
      */
@@ -110,9 +158,10 @@ abstract class AbstractManyRelation extends AbstractRelation implements
     }
 
     /**
+     * Defines the column to use to sort entities in this relation
      *
-     * @param type $column
-     * @param type $direction
+     * @param string $column    The column's name
+     * @param string $direction The direction (asc or desc)
      *
      * @return Relation
      */
@@ -124,29 +173,32 @@ abstract class AbstractManyRelation extends AbstractRelation implements
     }
 
     /**
+     * Returns the column used as reference (index)
      *
      * @return string
      */
     public function getReference()
     {
-
         return $this->reference;
     }
 
     /**
+     * Returns the orderBy for this relation
      *
      * @return array
      */
     public function getOrderBy()
     {
-
         return $this->orderBy;
     }
 
     /**
-     * Adds an object to the collection
+     * Adds an entity to the collection
      *
-     * @param mixed $object
+     * @param object $object      The entity
+     * @param array  $identifiers List of identifiers (PK) for this entity
+     *
+     * @return void
      */
     public function add($object, array $identifiers = array())
     {
@@ -161,14 +213,28 @@ abstract class AbstractManyRelation extends AbstractRelation implements
             $data['reference']  = $reference;
         }
 
-        $this->getRegistry()->store($object, $identifiers, Registry::STATE_NEW, $data);
+        $this->getRegistry()->store(
+            $object,
+            $identifiers,
+            Registry::STATE_NEW,
+            $data
+        );
     }
-    
+
+    /**
+     * Adds a set of objects to this relation
+     *
+     * @param array $objects List of entities
+     *
+     * @return Relation
+     */
     public function addAll(array $objects)
     {
         foreach ($objects as $object) {
             $this->add($object);
         }
+
+        return $this;
     }
 
     /**
@@ -184,7 +250,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
         $list = $this->getRegistry()->getStore();
         foreach ($list as $object) {
             $data = $this->getRegistry()->getData($object);
-            if($data['action'] == 'delete') {
+            if ($data['action'] == 'delete') {
                 continue;
             }
 

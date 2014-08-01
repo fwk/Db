@@ -2,7 +2,7 @@
 /**
  * Fwk
  *
- * Copyright (c) 2011-2012, Julien Ballestracci <julien@nitronet.org>.
+ * Copyright (c) 2011-2014, Julien Ballestracci <julien@nitronet.org>.
  * All rights reserved.
  *
  * For the full copyright and license information, please view the LICENSE
@@ -23,13 +23,13 @@
  *
  * PHP Version 5.3
  *
+ * @category   Database
  * @package    Fwk
  * @subpackage Db
- * @subpackage Relations
  * @author     Julien Ballestracci <julien@nitronet.org>
- * @copyright  2011-2012 Julien Ballestracci <julien@nitronet.org>
+ * @copyright  2011-2014 Julien Ballestracci <julien@nitronet.org>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://www.phpfwk.com
+ * @link       http://www.nitronet.org/fwk
  */
 namespace Fwk\Db\Relations;
 
@@ -39,9 +39,17 @@ use Fwk\Db\Relation,
     Fwk\Db\Connection,
     Fwk\Events\Dispatcher,
     \IteratorAggregate;
+use Fwk\Db\Workers\DeleteEntityWorker;
+use Fwk\Db\Workers\SaveEntityWorker;
 
 /**
  * Abstract utility class for Relations
+ *
+ * @category Relations
+ * @package  Fwk\Db
+ * @author   Julien Ballestracci <julien@nitronet.org>
+ * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link     http://www.nitronet.org/fwk
  */
 abstract class AbstractRelation implements IteratorAggregate
 {
@@ -124,31 +132,38 @@ abstract class AbstractRelation implements IteratorAggregate
     protected $tableName;
 
     /**
+     * List of entity listeners
+     *
      * @var array
      */
     protected $listeners = array();
 
     /**
+     * Constructor
      *
-     * @param string $local
-     * @param string $foreign
-     * @param string $table
-     * @param string $entity
+     * @param string $local     The local column's name
+     * @param string $foreign   The foreign column's name
+     * @param string $table     The foreign table name
+     * @param string $entity    The entity's class name
+     * @param array  $listeners List of entity listeners
+     *
+     * @return void
      */
-    public function __construct($local, $foreign, $table, $entity = null, array $entityListeners = array())
-    {
-        $this->tableName = $table;
-        $this->registry = new Registry($table);
-        $this->local    = $local;
-        $this->foreign  = $foreign;
-        $this->entity   = ($entity === null ? '\stdClass' : $entity);
-        $this->listeners = $entityListeners;
+    public function __construct($local, $foreign, $table, $entity = null,
+        array $listeners = array()
+    ) {
+        $this->tableName    = $table;
+        $this->registry     = new Registry($table);
+        $this->local        = $local;
+        $this->foreign      = $foreign;
+        $this->entity       = ($entity === null ? '\stdClass' : $entity);
+        $this->listeners    = $listeners;
     }
 
     /**
      * FETCH_EAGER -or- FETCH_LAZY
      *
-     * @param integer $mode
+     * @param integer $mode The fetch mode (@see constants)
      *
      * @return Relation
      */
@@ -160,8 +175,9 @@ abstract class AbstractRelation implements IteratorAggregate
     }
 
     /**
+     * Changes the fetched state of this relation
      *
-     * @param boolean $bool
+     * @param boolean $bool Is the data fetched yet?
      *
      * @return Relation
      */
@@ -171,7 +187,11 @@ abstract class AbstractRelation implements IteratorAggregate
         if ($this->fetched) {
             $table = $this->connection->table($this->tableName);
             foreach ($this->getRegistry()->getStore() as $object) {
-                $this->getRegistry()->defineInitialValues($object, $this->connection, $table);
+                $this->getRegistry()->defineInitialValues(
+                    $object,
+                    $this->connection,
+                    $table
+                );
             }
         }
 
@@ -202,7 +222,7 @@ abstract class AbstractRelation implements IteratorAggregate
     /**
      * Sets a connection for this relation (used for lazy loading)
      *
-     * @param Connection $connection
+     * @param Connection $connection The database connection instance
      *
      * @return Relation
      */
@@ -223,9 +243,9 @@ abstract class AbstractRelation implements IteratorAggregate
         foreach ($this->getRegistry()->getStore() as $obj) {
             $this->getRegistry()->getChangedValues($obj);
             $data   = $this->getRegistry()->getData($obj);
-            if($data['state'] != Registry::STATE_FRESH || !empty($data['action']))
-
+            if ($data['state'] != Registry::STATE_FRESH || !empty($data['action'])) {
                 return true;
+            }
         }
 
         return false;
@@ -238,27 +258,25 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isActive()
     {
-
         return isset($this->parentRefs);
     }
 
     /**
      * Tells if the specified object is in the relation
      *
-     * @param mixed $object
+     * @param object $object The object to test
      *
      * @return boolean
      */
     public function has($object)
     {
-
         return $this->getRegistry()->contains($object);
     }
 
     /**
      * Defines parent references
      *
-     * @param mixed $refs
+     * @param array $refs Defines parent's references (eg. Primary Keys)
      *
      * @return Relation
      */
@@ -270,9 +288,10 @@ abstract class AbstractRelation implements IteratorAggregate
     }
 
     /**
+     * Sets the parent entity of this relation
      *
-     * @param mixed      $object
-     * @param Dispatcher $evd
+     * @param object     $object The parent entity
+     * @param Dispatcher $evd    The Event Dispatcher for the parent entity.
      *
      * @return boolean true if parent has been changed/defined
      */
@@ -314,7 +333,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isEager()
     {
-
         return ($this->fetchMode === Relation::FETCH_EAGER);
     }
 
@@ -325,7 +343,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function getEntity()
     {
-
         return $this->entity;
     }
 
@@ -336,7 +353,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function getForeign()
     {
-
         return $this->foreign;
     }
 
@@ -347,22 +363,7 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function getLocal()
     {
-
         return $this->local;
-    }
-
-    /**
-     * Defines the column name for this relation on the parent entity
-     *
-     * @param string $columnName
-     *
-     * @return Relation
-     */
-    public function setColumnName($columnName)
-    {
-        $this->columnName   = $columnName;
-
-        return $this;
     }
 
     /**
@@ -387,14 +388,13 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function getRegistry()
     {
-
         return $this->registry;
     }
 
     /**
-     * Defines a registry for this relation
+     * Defines a Registry for this relation
      *
-     * @param Registry $registry
+     * @param Registry $registry The registry
      *
      * @return Relation
      */
@@ -416,37 +416,10 @@ abstract class AbstractRelation implements IteratorAggregate
     }
 
     /**
-     * Defines this relation's table name
-     *
-     * @param string $tableName
-     *
-     * @return Relation
-     */
-    public function setTableName($tableName)
-    {
-        $this->tableName = $tableName;
-
-        return $this;
-    }
-
-    /**
-     *
-     * @param string $entityClass
-     *
-     * @return Relation
-     */
-    public function setEntity($entityClass)
-    {
-        $this->entity   = $entityClass;
-
-        return $this;
-    }
-
-    /**
      * Add an entity to this relation
      *
-     * @param mixed $object
-     * @param array $identifiers
+     * @param object $object      The entity to add
+     * @param array  $identifiers Identifiers (PK) of this entity if any
      *
      * @return Relation
      */
@@ -464,7 +437,7 @@ abstract class AbstractRelation implements IteratorAggregate
     /**
      * Removes an entity from this relation
      *
-     * @param mixed $object
+     * @param object $object The entity to be removed
      *
      * @return Relation
      */
@@ -477,8 +450,19 @@ abstract class AbstractRelation implements IteratorAggregate
         return $this;
     }
 
+    /**
+     * Fetches data from database
+     *
+     * @return Relation
+     */
     abstract public function fetch();
 
+    /**
+     * Returns a list of all entities in this relations.
+     * Triggers a fetch() when fetchMode = FETCH_LAZY
+     *
+     * @return array
+     */
     abstract public function toArray();
 
     /**
@@ -495,10 +479,54 @@ abstract class AbstractRelation implements IteratorAggregate
     }
 
     /**
+     * Returns all entity-listeners for this relation
+     *
      * @return array
      */
     public function getListeners()
     {
         return $this->listeners;
+    }
+
+    /**
+     * Returns to-be-executed workers queue
+     *
+     * @return \SplPriorityQueue
+     */
+    protected function getWorkersQueue()
+    {
+        $queue  = new \SplPriorityQueue();
+
+        foreach ($this->getRegistry()->getStore() as $object) {
+            $data   = $this->getRegistry()->getData($object);
+
+            $action = $data['action'];
+
+            if ($data['state'] == Registry::STATE_NEW
+                || ($data['state'] == Registry::STATE_CHANGED
+                && $data['action'] != Registry::ACTION_DELETE)
+            ) {
+                $action = Registry::ACTION_SAVE;
+            }
+
+            if (empty($data['action'])) {
+                $this->getRegistry()->getChangedValues($object);
+                $data = $this->getRegistry()->getData($object);
+            }
+
+            $ts = (!$data['ts_action'] ? microtime(true) : $data['ts_action']);
+
+            if (empty($action)) {
+                continue;
+            }
+
+            if ($action === Registry::ACTION_DELETE) {
+                $queue->insert(new DeleteEntityWorker($object), $ts);
+            } elseif ($action === Registry::ACTION_SAVE) {
+                $queue->insert(new SaveEntityWorker($object), $ts);
+            }
+        }
+
+        return $queue;
     }
 }
