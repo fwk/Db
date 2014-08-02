@@ -655,7 +655,7 @@ class QueryBridge
 
         $this->handle->where($where);
 
-        if(!is_array($wheres) OR !count($wheres))
+        if(!is_array($wheres) or !count($wheres))
 
             return;
 

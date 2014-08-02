@@ -36,7 +36,7 @@ use \Exception as ExceptionBase;
 
 /**
  * Base exception class for Fwk\Db
- * 
+ *
  * @category Exceptions
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>

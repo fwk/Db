@@ -108,7 +108,6 @@ class Query extends \ArrayObject
 
     public function getFetchMode()
     {
-
         return $this->fetchMode;
     }
 

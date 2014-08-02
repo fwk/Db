@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category   Database
  * @package    Fwk\Db
  * @subpackage Workers
@@ -42,10 +42,10 @@ use Fwk\Db\Registry,
 
 /**
  * Save Entity Worker
- * 
- * This worker is used when an entity or relation have to be inserted or 
+ *
+ * This worker is used when an entity or relation have to be inserted or
  * updated.
- * 
+ *
  * @category Workers
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>
@@ -56,9 +56,9 @@ class SaveEntityWorker extends AbstractWorker implements Worker
 {
     /**
      * Executes the worker (SQL queries) and fire EntityEvents
-     * 
+     *
      * @param Connection $connection Database connection
-     * 
+     *
      * @return void
      */
     public function execute(Connection $connection)
@@ -77,24 +77,24 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         case Registry::STATE_UNKNOWN:
             throw new \LogicException(
                 sprintf(
-                    'Entity is in unknown state (%s)', 
+                    'Entity is in unknown state (%s)',
                     get_class($this->entity)
                 )
             );
-            
+
         case Registry::STATE_NEW:
             $registry->fireEvent(
-                $this->entity, 
+                $this->entity,
                 new Event(
-                    EntityEvents::BEFORE_SAVE, 
+                    EntityEvents::BEFORE_SAVE,
                     array(
-                        'object'        => $this->entity, 
+                        'object'        => $this->entity,
                         'connection'    => $connection,
                         'registry'      => $registry
                     )
                 )
             );
-            
+
             $query->insert($table->getName());
             $values     = $access->toArray();
             $columns    = $table->getColumns();
@@ -104,9 +104,9 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $default = $columnObj->getDefault();
                 $key = $columnObj->getName();
                 $value  = (array_key_exists($key, $values) ? $values[$key] : -1);
-                
+
                 if (-1 === $value) {
-                    if (!empty($default) || 
+                    if (!empty($default) ||
                         true === $columnObj->getAutoincrement()
                     ) {
                         $value = $default;
@@ -114,14 +114,14 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                     } elseif ($columnObj->getNotnull() === true) {
                         throw new \LogicException(
                             sprintf(
-                                'Column %s (%s) does not allow null value', 
-                                $key, 
+                                'Column %s (%s) does not allow null value',
+                                $key,
                                 $table->getName()
                             )
                         );
                     }
                 }
-                
+
                 $query->set($key, '?');
                 $queryParams[] = $value;
 
@@ -131,7 +131,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             if (!$setted) {
                 $exec = false;
             }
-            
+
             $event      = EntityEvents::AFTER_SAVE;
             break;
 
@@ -142,9 +142,9 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             $state      = $data['state'];
 
             $registry->fireEvent(
-                $this->entity, 
+                $this->entity,
                 new Event(
-                    EntityEvents::BEFORE_UPDATE, 
+                    EntityEvents::BEFORE_UPDATE,
                     array(
                         'object'        => $this->entity,
                         'registry'      => $registry,
@@ -152,7 +152,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                     )
                 )
             );
-            
+
             // reload changed values in case the event changed some...
             $changed    = $registry->getChangedValues($this->entity);
 
@@ -163,12 +163,12 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             if (!count($ids)) {
                 throw new \LogicException(
                     sprintf(
-                        'Entity %s lacks identifiers and cannot be saved.', 
+                        'Entity %s lacks identifiers and cannot be saved.',
                         get_class($this->entity)
                     )
                 );
             }
-            
+
             $setted     = 0;
             foreach ($changed as $key => $value) {
                 if ($table->hasColumn($key)) {
@@ -188,14 +188,14 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 if (!$value) {
                     throw new \RuntimeException(
                         sprintf(
-                            'Cannot save entity object (%s) because it lacks '. 
-                            'identifier (%s)', 
-                            get_class($this->entity), 
+                            'Cannot save entity object (%s) because it lacks '.
+                            'identifier (%s)',
+                            get_class($this->entity),
                             $key
                         )
                     );
                 }
-                
+
                 $queryParams[] = $value;
             }
 
@@ -208,12 +208,12 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         }
         $registry->defineInitialValues($this->entity);
         $registry->fireEvent(
-            $this->entity, 
+            $this->entity,
             new Event(
-                $event, 
+                $event,
                 array(
-                    'object'        => $this->entity, 
-                    'registry'      => $registry, 
+                    'object'        => $this->entity,
+                    'registry'      => $registry,
                     'connection'    => $connection
                 )
             )

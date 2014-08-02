@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category  Database
  * @package   Fwk\Db
  * @author    Julien Ballestracci <julien@nitronet.org>
@@ -33,10 +33,10 @@
 namespace Fwk\Db;
 
 /**
- * Finder 
- * 
+ * Finder
+ *
  * Utility class to "navigate" within a database table.
- * 
+ *
  * @category Library
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>
@@ -142,10 +142,10 @@ class Finder
     }
 
     /**
-     * Find one or more results according to the list of $identifiers. 
-     * 
+     * Find one or more results according to the list of $identifiers.
+     *
      * @param array $identifiers List of columns to search
-     * 
+     *
      * @throws Exception if Query already done
      * @return ResultSet
      */
@@ -167,10 +167,10 @@ class Finder
     }
 
     /**
-     * Finds one entry according to identifiers. 
-     * 
+     * Finds one entry according to identifiers.
+     *
      * @param mixed $identifiers List of/single identifiers
-     * 
+     *
      * @throws Exception if Query already done
      * @return mixed
      */
@@ -213,7 +213,7 @@ class Finder
 
     /**
      * Fetches all entries from the table
-     * 
+     *
      * @return ResultSet
      */
     public function all()
@@ -225,14 +225,14 @@ class Finder
 
     /**
      * Executes the query (if required) and returns the result set.
-     * 
+     *
      * @return ResultSet
      */
     public function getResultSet()
     {
         if (!isset($this->resultSet)) {
             $this->resultSet = $this->getConnection()->execute(
-                $this->query, 
+                $this->query,
                 $this->params
             );
         }
@@ -242,8 +242,8 @@ class Finder
 
     /**
      * Entity class name
-     * 
-     * @return string 
+     *
+     * @return string
      */
     public function getEntity()
     {
@@ -252,9 +252,9 @@ class Finder
 
     /**
      * Defines the entity that should be returned by this Finder
-     * 
+     *
      * @param string $entity The entity class name
-     * 
+     *
      * @return void
      */
     public function setEntity($entity)

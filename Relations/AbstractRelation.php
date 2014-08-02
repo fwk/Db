@@ -232,7 +232,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isActive()
     {
-
         return isset($this->parentRefs);
     }
 
@@ -245,7 +244,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function has($object)
     {
-
         return $this->getRegistry()->contains($object);
     }
 
@@ -288,7 +286,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isFetched()
     {
-
         return $this->fetched;
     }
 
@@ -299,7 +296,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isLazy()
     {
-
         return ($this->fetchMode === Relation::FETCH_LAZY);
     }
 
@@ -310,7 +306,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isEager()
     {
-
         return ($this->fetchMode === Relation::FETCH_EAGER);
     }
 
@@ -321,7 +316,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function getEntity()
     {
-
         return $this->entity;
     }
 
@@ -332,7 +326,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function getForeign()
     {
-
         return $this->foreign;
     }
 
@@ -343,7 +336,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function getLocal()
     {
-
         return $this->local;
     }
 
@@ -409,7 +401,6 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function getRegistry()
     {
-
         return $this->registry;
     }
 

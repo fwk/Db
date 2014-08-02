@@ -123,7 +123,7 @@ class One2Many extends AbstractManyRelation implements Relation
      * @param  \Fwk\Events\Event $event
      * @return void
      */
-    public function  onParentSave(\Fwk\Events\Event $event)
+    public function onParentSave(\Fwk\Events\Event $event)
     {
         $connection     = $event->connection;
         $parentRegistry = $event->registry;

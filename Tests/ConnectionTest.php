@@ -31,7 +31,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($this->object->isConnected());
         $this->assertFalse($this->object->isError());
     }
-    
+
     public function testConnectFail()
     {
         $this->setExpectedException('Fwk\Db\Exceptions\ConnectionError');
@@ -42,7 +42,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
             'autoConnect' => true
         ));
     }
-    
+
     public function testAutoConnect()
     {
         $this->object = new Connection(array(
@@ -54,7 +54,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
         // coverage
         $this->assertEquals(Connection::STATE_CONNECTED, $this->object->getState());
     }
-    
+
     public function testConnectFailErrorState()
     {
         try {
@@ -64,8 +64,8 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
                 'user'  => 'testEUH'
             ));
             $this->object->connect();
-        } catch(\Exception $e) { }
-        
+        } catch (\Exception $e) { }
+
         $this->assertTrue($this->object->isError());
     }
 
@@ -109,7 +109,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('\Fwk\Db\Exceptions\TableNotFound');
         $tbl = $this->object->table('nonExistant');
     }
- 
+
     public function testTable()
     {
         $this->prepareTestTable();
@@ -132,7 +132,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
         $myTable->setPrimaryKey(array("id"));
         $myTable->addUniqueIndex(array("username"));
     }
-    
+
     public function testTransaction()
     {
         // coverage
@@ -141,17 +141,17 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('Fwk\Db\Connection', $this->object->beginTransaction());
         $this->assertInstanceOf('Fwk\Db\Connection', $this->object->rollBack());
     }
-    
+
     public function testEventStopQuery()
     {
-        $this->object->on(ConnectionEvents::BEFORE_QUERY, function($e) {
+        $this->object->on(ConnectionEvents::BEFORE_QUERY, function ($e) {
             $e->stop();
             $e->results = "test";
         });
-        
+
         $query = Query::factory()->select()->from('fwkdb_test_users');
         $res = $this->object->execute($query);
-        
-        $this->assertEquals($res, "test"); 
+
+        $this->assertEquals($res, "test");
     }
 }

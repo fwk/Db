@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category   Database
  * @package    Fwk\Db
  * @subpackage Exceptions
@@ -38,7 +38,7 @@ use Fwk\Db\Exception;
 /**
  * Thrown by a Registry when trying to access properties of an unregistered
  * entity.
- * 
+ *
  * @category Exceptions
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>
