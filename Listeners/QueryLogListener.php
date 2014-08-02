@@ -12,28 +12,28 @@ class QueryLogListener implements LoggerAwareInterface
      * @var LoggerInterface
      */
     protected $logger;
-    
+
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
     }
-    
+
     public function onAfterQuery(Event $event)
     {
         $sql = $event->bridge->getQueryString();
         $this->logger->debug($sql);
     }
-    
+
     /**
      *
      * @return LoggerInterface
      */
-    public function getLogger() 
+    public function getLogger()
     {
         return $this->logger;
     }
 
-    public function setLogger(LoggerInterface $logger) 
+    public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
     }

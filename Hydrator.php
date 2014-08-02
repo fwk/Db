@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category  Database
  * @package   Fwk\Db
  * @author    Julien Ballestracci <julien@nitronet.org>
@@ -87,11 +87,11 @@ class Hydrator
 
     /**
      * Constructor
-     * 
+     *
      * @param Query      $query      Executed query
      * @param Connection $connection Database Connection
      * @param array      $columns    Columns description
-     * 
+     *
      * @return void
      */
     public function __construct(Query $query, Connection $connection, array $columns)
@@ -143,9 +143,9 @@ class Hydrator
                 if ($jointure) {
                     $tables[$table]['join'] = $joinOpt;
                 }
-                
-                $tables[$table]['entity']   = ($jointure ? 
-                    $joinOpt['options']['entity'] : 
+
+                $tables[$table]['entity']   = ($jointure ?
+                    $joinOpt['options']['entity'] :
                     ($it == 1 ? $query['entity'] : "\stdClass")
                 );
             }
@@ -161,10 +161,10 @@ class Hydrator
 
     /**
      * Transform raw results from database into ORM-style entities
-     * 
+     *
      * @param array $results Raw PDO results
-     * 
-     * @return array 
+     *
+     * @return array
      */
     public function hydrate(array $results)
     {
@@ -211,9 +211,9 @@ class Hydrator
                 $current = (isset($joinData[$idsHash . $columnName]) ?
                     $joinData[$idsHash . $columnName] :
                     $this->getRelationObject(
-                        $mainObj, 
-                        $columnName, 
-                        $infos['join'], 
+                        $mainObj,
+                        $columnName,
+                        $infos['join'],
                         $entityClass
                     )
                 );
@@ -225,7 +225,7 @@ class Hydrator
 
                 $tableObj   = $this->connection->table($mainObjTable);
                 $current->setParent(
-                    $mainObj, 
+                    $mainObj,
                     $tableObj->getRegistry()->getEventDispatcher($mainObj)
                 );
 
@@ -239,7 +239,7 @@ class Hydrator
             foreach ($relations as $columnName => $relation) {
                 $tableObj   = $this->connection->table($mainObjTable);
                 $relation->setParent(
-                    $mainObj, 
+                    $mainObj,
                     $tableObj->getRegistry()->getEventDispatcher($mainObj)
                 );
             }
@@ -253,16 +253,16 @@ class Hydrator
     }
 
     /**
-     * Return Relation object of an entity 
-     * 
+     * Return Relation object of an entity
+     *
      * @param mixed  $object      The entity
      * @param string $columnName  Relation's column name
      * @param array  $join        Join descriptor (array)
      * @param string $entityClass Relation's entity class name
-     * 
-     * @return Relation 
+     *
+     * @return Relation
      */
-    public function getRelationObject($object, $columnName, array $join, 
+    public function getRelationObject($object, $columnName, array $join,
         $entityClass = '\stdClass'
     ) {
         $access = new Accessor($object);
@@ -271,14 +271,14 @@ class Hydrator
         if ($test instanceof \Fwk\Db\Relation) {
             return $test;
         }
-        
+
         $ref    = new One2Many(
-            $join['local'], 
-            $join['foreign'], 
-            $join['table'], 
+            $join['local'],
+            $join['foreign'],
+            $join['table'],
             $entityClass
         );
-        
+
         if (!empty($join['options']['reference'])) {
             $ref->setReference($join['options']['reference']);
         }
@@ -288,11 +288,11 @@ class Hydrator
 
     /**
      * Transforms aliased results into results with real columns names
-     * 
+     *
      * @param array $columns   Columns description
      * @param array $resultSet Result set
-     * 
-     * @return array 
+     *
+     * @return array
      */
     public function getValuesFromSet(array $columns, array $resultSet)
     {
@@ -306,14 +306,14 @@ class Hydrator
 
     /**
      * Loads an entity
-     * 
+     *
      * @param string $tableName   Table's name
      * @param array  $identifiers Entity identifiers
      * @param string $entityClass Entity class name
-     * 
-     * @return mixed 
+     *
+     * @return mixed
      */
-    protected function loadEntityClass($tableName, array $identifiers, 
+    protected function loadEntityClass($tableName, array $identifiers,
         $entityClass = null
     ) {
         $tableObj   = $this->connection->table($tableName);
@@ -322,14 +322,14 @@ class Hydrator
         if ($entityClass === null) {
                 $entityClass = $tableObj->getDefaultEntity();
         }
-        
+
         $obj        = $registry->get($identifiers);
 
         if (null === $obj) {
             $obj = new $entityClass;
             $registry->store($obj, $identifiers, Registry::STATE_FRESH);
             $this->markAsFresh[] = array(
-                'registry' => $registry, 
+                'registry' => $registry,
                 'entity' => $obj
             );
         }
@@ -339,15 +339,15 @@ class Hydrator
 
     /**
      * Mark freshly built entities as fresh (aka "just fetched")
-     * 
-     * @return void 
+     *
+     * @return void
      */
     protected function markAsFresh()
     {
         if (!\is_array($this->markAsFresh) || !count($this->markAsFresh)) {
             return;
         }
-        
+
         foreach ($this->markAsFresh as $infos) {
             $infos['registry']->defineInitialValues($infos['entity']);
         }
@@ -360,7 +360,7 @@ class Hydrator
      *
      * @param string $tableName Table's name
      * @param array  $results   Raw PDO results
-     * 
+     *
      * @return array
      */
     protected function getIdentifiers($tableName, array $results)

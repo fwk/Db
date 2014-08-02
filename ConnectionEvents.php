@@ -34,7 +34,7 @@ namespace Fwk\Db;
 
 /**
  * A class that indexes all Connection events
- * 
+ *
  * @category Utils
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>

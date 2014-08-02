@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category   Database
  * @package    Fwk\Db
  * @subpackage Exceptions
@@ -37,7 +37,7 @@ use Fwk\Db\Exception;
 
 /**
  * Thrown when a table has no primary keys.
- * 
+ *
  * @category Exceptions
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>

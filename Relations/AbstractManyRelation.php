@@ -134,7 +134,6 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      */
     public function getReference()
     {
-
         return $this->reference;
     }
 
@@ -144,7 +143,6 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      */
     public function getOrderBy()
     {
-
         return $this->orderBy;
     }
 
@@ -168,7 +166,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
 
         $this->getRegistry()->store($object, $identifiers, Registry::STATE_NEW, $data);
     }
-    
+
     public function addAll(array $objects)
     {
         foreach ($objects as $object) {

@@ -12,7 +12,7 @@ class FinderTest extends \PHPUnit_Framework_TestCase
      * @var Finder
      */
     protected $object;
-    
+
     /**
      * @var Connection
      */
@@ -28,15 +28,16 @@ class FinderTest extends \PHPUnit_Framework_TestCase
             'memory' => true,
             'driver' => 'pdo_sqlite'
         ));
-        
+
         \FwkDbTestUtil::createTestDb($this->db);
         $this->object = new Finder(new Table('fwkdb_test_users'));
     }
 
-    protected function tearDown() {
+    protected function tearDown()
+    {
         \FwkDbTestUtil::dropTestDb($this->db);
     }
-    
+
     /**
      */
     public function testGetConnectionFail()
@@ -55,7 +56,7 @@ class FinderTest extends \PHPUnit_Framework_TestCase
         $this->object->setConnection($db);
         $this->assertEquals($db, $this->object->getConnection());
     }
-    
+
     public function testPreventDoubleExecute()
     {
         $this->object->setConnection($this->db);
@@ -64,7 +65,7 @@ class FinderTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('\Fwk\Db\Exception');
         $this->object->find(array('id' => 2));
     }
-    
+
     public function testPreventOneDoubleExecute()
     {
         $this->object = $this->db->table('fwkdb_test_users')->finder();
@@ -73,7 +74,7 @@ class FinderTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('\Fwk\Db\Exception');
         $this->object->one(2);
     }
-    
+
     public function testMissingIdentifiers()
     {
         $this->object = $this->db->table('fwkdb_test_users_emails')->finder();

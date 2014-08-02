@@ -118,7 +118,7 @@ class Many2Many extends AbstractManyRelation implements Relation
      * @param  \Fwk\Events\Event $event
      * @return void
      */
-    public function  onParentSave(\Fwk\Events\Event $event)
+    public function onParentSave(\Fwk\Events\Event $event)
     {
         $connection     = $event->connection;
         $parentRegistry = $event->registry;
@@ -247,19 +247,16 @@ class Many2Many extends AbstractManyRelation implements Relation
 
     public function getForeignTable()
     {
-
         return $this->foreignTable;
     }
 
     public function getForeignLink()
     {
-
         return $this->foreignLink;
     }
 
     public function getForeignReference()
     {
-
         return $this->foreignRefs;
     }
 

@@ -191,13 +191,13 @@ class TableTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('\Fwk\Db\Exceptions\TableLacksIdentifiers');
         $this->connection->table('test_table3')->getIdentifiersKeys();
     }
-    
+
     public function testSaveFail()
     {
         $this->setExpectedException('\InvalidArgumentException');
         $this->object->save(array(null));
     }
-    
+
     public function testDeleteFail()
     {
         $this->setExpectedException('\InvalidArgumentException');

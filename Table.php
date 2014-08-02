@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category  Database
  * @package   Fwk\Db
  * @author    Julien Ballestracci <julien@nitronet.org>
@@ -33,10 +33,10 @@
 namespace Fwk\Db;
 
 /**
- * Table 
- * 
- * Represents a database table. 
- * 
+ * Table
+ *
+ * Represents a database table.
+ *
  * @category Library
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>
@@ -84,7 +84,7 @@ class Table
      * Constructor
      *
      * @param string $tableName This table name
-     * 
+     *
      * @return void
      */
     public function __construct($tableName)
@@ -110,7 +110,7 @@ class Table
      * Defines a connection for this table
      *
      * @param Connection $connection Database connection
-     * 
+     *
      * @return Table
      */
     public function setConnection(Connection $connection)
@@ -123,7 +123,7 @@ class Table
     /**
      * Returns current connection for this table
      *
-     * @throws Exception If no connection is defined
+     * @throws Exception  If no connection is defined
      * @return Connection
      */
     public function getConnection()
@@ -131,7 +131,7 @@ class Table
         if (!isset($this->connection)) {
             throw new Exception(
                 sprintf(
-                    'No connection defined for table "%s"', 
+                    'No connection defined for table "%s"',
                     $this->name
                 )
             );
@@ -144,7 +144,7 @@ class Table
      * Returns a Finder instance to navigate into this table
      *
      * @param string $entity Entity class to be returned by this Finder
-     * 
+     *
      * @return Finder
      */
     public function finder($entity = null)
@@ -165,7 +165,6 @@ class Table
      */
     public function getName()
     {
-
         return $this->name;
     }
 
@@ -229,7 +228,7 @@ class Table
      * Returns an object representation of a given column
      *
      * @param string $columnName Column name
-     * 
+     *
      * @return \Doctrine\DBAL\Schema\Column
      */
     public function getColumn($columnName)
@@ -252,10 +251,10 @@ class Table
 
     /**
      * Tells if this table has a column named $columnName
-     * 
+     *
      * @param string $columnName Column name
-     * 
-     * @return boolean 
+     *
+     * @return boolean
      */
     public function hasColumn($columnName)
     {
@@ -266,22 +265,22 @@ class Table
 
     /**
      * Defines the default returned entity
-     * 
+     *
      * @param string $entityClass Entity class name
-     * 
-     * @return Table 
+     *
+     * @return Table
      */
     public function setDefaultEntity($entityClass)
     {
-        $this->defaultEntity = (string)$entityClass;
+        $this->defaultEntity = (string) $entityClass;
 
         return $this;
     }
 
     /**
      * Returns the default returned entity for this table
-     * 
-     * @return string 
+     *
+     * @return string
      */
     public function getDefaultEntity()
     {
@@ -294,17 +293,17 @@ class Table
 
     /**
      * Save one or more entities into this table
-     * 
-     * @param mixed $entity Entity or List of entities 
-     * 
-     * @return void 
+     *
+     * @param mixed $entity Entity or List of entities
+     *
+     * @return void
      */
     public function save($entity)
     {
         if (!\is_array($entity)) {
             $entity = array($entity);
         }
-        
+
         foreach ($entity as $object) {
             if (!\is_object($object) || is_null($object)) {
                 throw new \InvalidArgumentException(
@@ -313,7 +312,7 @@ class Table
                     )
                 );
             }
-            
+
             $this->getRegistry()->markForAction($object, Registry::ACTION_SAVE);
         }
 
@@ -322,10 +321,10 @@ class Table
 
     /**
      * Delete one or more entities from this table
-     * 
-     * @param mixed $entity Entity or List of entities 
-     * 
-     * @return void 
+     *
+     * @param mixed $entity Entity or List of entities
+     *
+     * @return void
      */
     public function delete($entity)
     {
@@ -343,7 +342,7 @@ class Table
             }
 
             $this->getRegistry()->markForAction(
-                $object, 
+                $object,
                 Registry::ACTION_DELETE
             );
         }
@@ -353,7 +352,7 @@ class Table
 
     /**
      * Executes all waiting workers
-     * 
+     *
      * @return void
      */
     protected function work()
@@ -368,8 +367,8 @@ class Table
 
     /**
      * Delete all entries from this table
-     * 
-     * @return void 
+     *
+     * @return void
      */
     public function deleteAll()
     {

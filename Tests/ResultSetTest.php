@@ -27,7 +27,7 @@ class ResultSetTest extends \PHPUnit_Framework_TestCase
         $this->object[] = $std;
         $this->object[] = $std2;
 
-        $res = $this->object->filter(function($o) { return ($o->test === "coucou"); });
+        $res = $this->object->filter(function ($o) { return ($o->test === "coucou"); });
         $this->assertInstanceOf(get_class($this->object), $res);
         $this->assertEquals(1, $res->count());
         $this->assertEquals($std2, $res[0]);
@@ -54,12 +54,12 @@ class ResultSetTest extends \PHPUnit_Framework_TestCase
             'test' => new \stdClass,
             'newTest' => array('coucou' => 'test', 'prop' => 'value')
         ));
-        
+
         $this->assertInstanceof('\stdClass', $this->object->offsetGet('newTest'));
-        $val = $this->object->filter(function($elem) { return true; });
+        $val = $this->object->filter(function ($elem) { return true; });
         $this->assertArrayHasKey('newTest', $val->toArray());
     }
-    
+
     /**
      * @todo Implement testOffsetGet().
      */
@@ -85,7 +85,7 @@ class ResultSetTest extends \PHPUnit_Framework_TestCase
 
         $this->object = new ResultSet();
         $this->object['test'] = $std;
-        
+
         $new = clone $std;
 
         $this->assertEquals($std, $this->object->offsetGet('test'));

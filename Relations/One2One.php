@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category  Database
  * @package   Fwk\Db
  * @author    Julien Ballestracci <julien@nitronet.org>
@@ -38,7 +38,7 @@ use Fwk\Db\Relation,
     Fwk\Db\EntityEvents,
     Fwk\Db\Registry,
     Fwk\Db\Workers\SaveEntityWorker,
-    Fwk\Db\Workers\DeleteEntityWorker, 
+    Fwk\Db\Workers\DeleteEntityWorker,
     Fwk\Events\Dispatcher;
 
 /**
@@ -63,7 +63,7 @@ class One2One extends AbstractRelation implements Relation
     public function prepare(Query $query, $columnName)
     {
         if ($this->isLazy()) {
-            return; 
+            return;
         }
 
         $this->columnName = $columnName;
@@ -76,18 +76,18 @@ class One2One extends AbstractRelation implements Relation
         );
 
         $query->join(
-            $this->tableName, 
-            $this->local, 
-            $this->foreign, 
-            Query::JOIN_LEFT, 
+            $this->tableName,
+            $this->local,
+            $this->foreign,
+            Query::JOIN_LEFT,
             $join
         );
     }
 
     /**
      * Fetches (if necessary) relation's entities
-     * 
-     * @return void 
+     *
+     * @return void
      */
     public function fetch()
     {
@@ -137,12 +137,12 @@ class One2One extends AbstractRelation implements Relation
 
     /**
      * Defines the $object as the One.
-     * 
+     *
      * If $object is null, the relation is canceled on the parent object
-     * 
+     *
      * @param mixed $object Entity
-     * 
-     * @return void 
+     *
+     * @return void
      */
     public function set($object = null)
     {
@@ -160,11 +160,11 @@ class One2One extends AbstractRelation implements Relation
     /**
      * Magic method to allow $parent->relation->propName;
      * Returns value from the linked object.
-     * 
+     *
      * @param string $key Property/Column name
-     * 
+     *
      * @throws \RuntimeException if relation is empty
-     * @return mixed 
+     * @return mixed
      */
     public function __get($key)
     {
@@ -172,17 +172,17 @@ class One2One extends AbstractRelation implements Relation
         if (!\is_object($obj)) {
             throw new \RuntimeException('Empty relation');
         }
-        
+
         return Accessor::factory($obj)->get($key);
     }
 
     /**
      * Magic method to allow $parent->relation->propName = "value"
-     * 
+     *
      * @param string $key   Property/Column name
      * @param mixed  $value The value
-     * 
-     * @return void 
+     *
+     * @return void
      */
     public function __set($key, $value)
     {
@@ -190,16 +190,16 @@ class One2One extends AbstractRelation implements Relation
         if (!\is_object($obj)) {
             throw new \RuntimeException('Empty relation');
         }
-        
+
         return Accessor::factory($obj)->set($key, $value);
     }
 
     /**
      * Magic method to allow isset($parent->relation->propName)
-     * 
+     *
      * @param string $key Property/Column name
-     * 
-     * @return boolean 
+     *
+     * @return boolean
      */
     public function __isset($key)
     {
@@ -207,7 +207,7 @@ class One2One extends AbstractRelation implements Relation
         if (!\is_object($obj)) {
             throw new \RuntimeException('Empty relation');
         }
-        
+
         $test = Accessor::factory($obj)->get($key);
 
         return ($test != false ? true : false);
@@ -215,11 +215,11 @@ class One2One extends AbstractRelation implements Relation
 
     /**
      * Magic method to allow calling methods like $parent->relation->call()
-     * 
+     *
      * @param string $name      Method name
      * @param array  $arguments Call arguments
-     * 
-     * @return mixed 
+     *
+     * @return mixed
      */
     public function __call($name, $arguments)
     {
@@ -227,7 +227,7 @@ class One2One extends AbstractRelation implements Relation
         if (!\is_object($obj)) {
             throw new \RuntimeException('Empty relation');
         }
-        
+
         $access = new Accessor($obj);
         try {
             $access->getReflector()->getMethod($name);
@@ -236,9 +236,9 @@ class One2One extends AbstractRelation implements Relation
         } catch (\ReflectionException $e) {
             throw new \RuntimeException(
                 sprintf(
-                    'Unable to call method %s::%s(): %s', 
-                    get_class($obj), 
-                    $name, 
+                    'Unable to call method %s::%s(): %s',
+                    get_class($obj),
+                    $name,
                     $e->getMessage()
                 )
             );
@@ -246,11 +246,11 @@ class One2One extends AbstractRelation implements Relation
     }
 
     /**
-     * Defines a parent object (the other One) 
-     * 
+     * Defines a parent object (the other One)
+     *
      * @param mixed      $object The parent object
      * @param Dispatcher $evd    The related Events Dispatcher
-     * 
+     *
      * @return void
      */
     public function setParent($object, Dispatcher $evd)
@@ -258,16 +258,16 @@ class One2One extends AbstractRelation implements Relation
         $return = parent::setParent($object, $evd);
         if ($return === true) {
             $evd->on(
-                EntityEvents::BEFORE_SAVE, 
+                EntityEvents::BEFORE_SAVE,
                 array(
-                    $this, 
+                    $this,
                     'onBeforeParentSave'
                 )
             );
             $evd->on(
-                EntityEvents::BEFORE_UPDATE, 
+                EntityEvents::BEFORE_UPDATE,
                 array(
-                    $this, 
+                    $this,
                     'onBeforeParentSave'
                 )
             );
@@ -278,7 +278,7 @@ class One2One extends AbstractRelation implements Relation
 
     /**
      * Returns to-be-executed workers queue
-     * 
+     *
      * @return \SplPriorityQueue
      */
     public function getWorkersQueue()
@@ -293,11 +293,11 @@ class One2One extends AbstractRelation implements Relation
                 $data = $this->getRegistry()->getData($object);
             }
 
-            $ts = ($data['ts_action'] == null ? 
-                    \microtime(true) : 
+            $ts = ($data['ts_action'] == null ?
+                    \microtime(true) :
                     $data['ts_action']
                   );
-            
+
             if (empty($action)) {
                 continue;
             }
@@ -330,10 +330,10 @@ class One2One extends AbstractRelation implements Relation
      * Listener executed when parent entity is saved
      *
      * @param \Fwk\Events\Event $event Dispatched event
-     * 
+     *
      * @return void
      */
-    public function  onBeforeParentSave(\Fwk\Events\Event $event)
+    public function onBeforeParentSave(\Fwk\Events\Event $event)
     {
         $connection     = $event->connection;
         $parent         = $event->object;

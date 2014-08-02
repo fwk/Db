@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category  Database
  * @package   Fwk\Db
  * @author    Julien Ballestracci <julien@nitronet.org>
@@ -31,8 +31,6 @@
  * @link      http://www.phpfwk.com
  */
 namespace Fwk\Db;
-
-use Fwk\Db\Relation;
 
 /**
  * This class is a simple accessor for values of objects
@@ -73,7 +71,7 @@ class Accessor
      * Constructor
      *
      * @param mixed $object The object we want to access
-     * 
+     *
      * @throws \InvalidArgumentException if $object is not an object
      * @return void
      */
@@ -82,7 +80,7 @@ class Accessor
         if (!is_object($object)) {
             throw new \InvalidArgumentException("Argument is not an object");
         }
-        
+
         $this->object   = $object;
     }
 
@@ -108,9 +106,9 @@ class Accessor
     /**
      * Static toArray() modifier to handle objects and relations.
      * {@see Accessor::toArray()}
-     * 
-     * @param mixed $value Actual value 
-     * 
+     *
+     * @param mixed $value Actual value
+     *
      * @return mixed Filtered value
      */
     public function everythingAsArrayModifier($value)
@@ -120,9 +118,9 @@ class Accessor
              * @todo Boucle infinie!!!  $value->hasChanged()
              */
             $value  = sprintf(
-                'relation:%s-%s', 
-                (string)\microtime(), 
-                (string)$value->isFetched()
+                'relation:%s-%s',
+                (string) \microtime(),
+                (string) $value->isFetched()
             );
         }
 
@@ -144,8 +142,8 @@ class Accessor
      * Try to retrieve a value from the object
      *
      * @param string $key Propertie's name
-     * 
-     * @return mixed Actual value if reached or false 
+     *
+     * @return mixed Actual value if reached or false
      */
     public function get($key)
     {
@@ -179,7 +177,7 @@ class Accessor
      *
      * @param string $key   Propertie's name
      * @param mixed  $value Desired value
-     * 
+     *
      * @return boolean true if successful
      */
     public function set($key, $value)
@@ -189,16 +187,19 @@ class Accessor
 
         if (\method_exists($obj, $setter) && \is_callable(array($obj, $setter))) {
             $obj->{$setter}($value);
+
             return true;
         }
 
         if ($obj instanceof \stdClass) {
             $obj->{$key}    = $value;
+
             return true;
         }
 
         if ($obj instanceof \ArrayAccess) {
             $obj->offsetSet($key, $value);
+
             return true;
         }
 
@@ -211,6 +212,7 @@ class Accessor
 
             if ($prop->isPublic() || $this->force === true) {
                 $prop->setValue($obj, $value);
+
                 return true;
             }
         } catch (\ReflectionException $e) {
@@ -250,9 +252,9 @@ class Accessor
     /**
      * Make an array of keys->values (eventually filtered by $modifier) from
      * object's properties.
-     * 
+     *
      * @param mixed $modifier Filtering callable
-     * 
+     *
      * @return array The resulting array
      */
     public function toArray($modifier = null)
@@ -277,7 +279,7 @@ class Accessor
      * Produces a unique hash code based on values
      *
      * @param string $algo Desired algorythm
-     * 
+     *
      * @return string
      */
     public function hashCode($algo  = 'md5')
@@ -299,7 +301,7 @@ class Accessor
 
     /**
      * Factory utility
-     * 
+     *
      * @param mixed $object The object we want to access
      *
      * @return Accessor
@@ -311,9 +313,9 @@ class Accessor
 
     /**
      * Should we force properties visibility ?
-     * 
+     *
      * @param boolean $bool yes or no
-     * 
+     *
      * @return void
      */
     public function overrideVisibility($bool)

@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category   Database
  * @package    Fwk\Db
  * @subpackage Workers
@@ -37,7 +37,7 @@ use Fwk\Db\Registry;
 
 /**
  * Base utility class for Workers
- * 
+ *
  * @category Workers
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>
@@ -55,16 +55,16 @@ abstract class AbstractWorker
 
     /**
      * Defined Registry to work with
-     * 
+     *
      * @var Registry
      */
     protected $registry;
 
     /**
      * Constructor
-     * 
+     *
      * @param mixed $entity The object involved with this worker
-     * 
+     *
      * @return void
      */
     public function __construct($entity)
@@ -74,20 +74,19 @@ abstract class AbstractWorker
 
     /**
      * Return the registry to be used by this worker
-     * 
+     *
      * @return Registry
      */
     public function getRegistry()
     {
-
         return $this->registry;
     }
 
     /**
      * Defines the Registry to work with.
-     * 
+     *
      * @param Registry $registry The registry to be used by this worker
-     * 
+     *
      * @return void
      */
     public function setRegistry(Registry $registry)
@@ -97,12 +96,11 @@ abstract class AbstractWorker
 
     /**
      * Return the defined entity
-     * 
+     *
      * @return mixed
      */
     public function getEntity()
     {
-
         return $this->entity;
     }
 }

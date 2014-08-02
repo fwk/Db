@@ -22,7 +22,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * PHP Version 5.3
- * 
+ *
  * @category   Database
  * @package    Fwk\Db
  * @subpackage Workers
@@ -42,9 +42,9 @@ use Fwk\Db\Registry,
 
 /**
  * Save Entity Worker
- * 
+ *
  * This worker is used when an entity or relation have to be deleted.
- * 
+ *
  * @category Workers
  * @package  Fwk\Db
  * @author   Julien Ballestracci <julien@nitronet.org>
@@ -55,9 +55,9 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
 {
     /**
      * Executes the worker (SQL queries) and fire EntityEvents
-     * 
+     *
      * @param Connection $connection Database connection
-     * 
+     *
      * @return void
      */
     public function execute(Connection $connection)
@@ -75,7 +75,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         case Registry::STATE_UNKNOWN:
             throw new \LogicException(
                 sprintf(
-                    'Entity is in unknown state (%s)', 
+                    'Entity is in unknown state (%s)',
                     get_class($this->entity)
                 )
             );
@@ -86,11 +86,11 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         case Registry::STATE_FRESH:
         case Registry::STATE_CHANGED:
             $registry->fireEvent(
-                $this->entity, 
+                $this->entity,
                 new Event(
-                    EntityEvents::BEFORE_DELETE, 
+                    EntityEvents::BEFORE_DELETE,
                     array(
-                        'object'        => $this->entity, 
+                        'object'        => $this->entity,
                         'connection'    => $connection
                     )
                 )
@@ -106,18 +106,18 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
             if (!count($ids)) {
                 throw new \LogicException(
                     sprintf(
-                        'Entity %s lacks identifiers and cannot be deleted.', 
+                        'Entity %s lacks identifiers and cannot be deleted.',
                         get_class($this->entity)
                     )
                 );
             }
-            
+
             foreach ($changed as $key => $value) {
                 if (\array_key_exists($key, $ids)) {
                     throw new \LogicException(
                         sprintf(
                             'Unable to delete entity because identifiers (%s) '.
-                            'have been modified', 
+                            'have been modified',
                             implode(', ', $ids)
                         )
                     );
@@ -130,9 +130,9 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
                 if (!$value) {
                     throw new \RuntimeException(
                         sprintf(
-                            'Cannot delete entity object (%s) because it '. 
-                            'lacks identifier (%s)', 
-                            get_class($this->entity), 
+                            'Cannot delete entity object (%s) because it '.
+                            'lacks identifier (%s)',
+                            get_class($this->entity),
                             $key
                         )
                     );
@@ -145,12 +145,12 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
 
         $connection->execute($query, $queryParams);
         $registry->fireEvent(
-            $this->entity, 
+            $this->entity,
             new Event(
-                EntityEvents::AFTER_DELETE, 
+                EntityEvents::AFTER_DELETE,
                 array(
-                    'object'        => $this->entity, 
-                    'registry'      => $registry, 
+                    'object'        => $this->entity,
+                    'registry'      => $registry,
                     'connection'    => $connection
                 )
             )
