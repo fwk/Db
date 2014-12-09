@@ -345,7 +345,7 @@ class Hydrator
             $entityClass = $tableObj->getDefaultEntity();
         }
         
-        $obj = $registry->get($identifiers, $entityClass);
+        $obj = $registry->get($identifiers, $entityClass, true);
 
         if (null === $obj) {
             $obj = new $entityClass;
