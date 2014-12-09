@@ -167,13 +167,15 @@ class Registry implements \Countable, \IteratorAggregate
      *
      * @return object|null
      */
-    public function get(array $identifiers, $entityClass = '\stdClass')
+    public function get(array $identifiers, $entityClass = '\stdClass', $strict = false)
     {
         \ksort($identifiers);
 
         foreach ($this->datas as $idx => $infos) {
-            if($infos['identifiers'] == $identifiers && $this->store[$idx] instanceof $entityClass) {
-                return $this->store[$idx];
+            if($infos['identifiers'] == $identifiers) {
+                if (!$strict || $this->store[$idx] instanceof $entityClass) {
+                    return $this->store[$idx];
+                }
             }
         }
 
