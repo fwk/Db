@@ -166,4 +166,20 @@ interface Relation
      * @return string
      */
     public function getTableName();
+
+    /**
+     * Returns this relation's registry
+     *
+     * @return Registry
+     */
+    public function getRegistry();
+
+    /**
+     * Defines a Registry for this relation
+     *
+     * @param Registry $registry The registry
+     *
+     * @return Relation
+     */
+    public function setRegistry(Registry $registry);
 }

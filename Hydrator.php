@@ -272,7 +272,14 @@ class Hydrator
         $access = new Accessor($object);
         $test   = $access->get($columnName);
 
+        if (strpos($join['table'], ' ') !== false) {
+            list($table, ) = explode(' ', $join['table']);
+        } else {
+            $table = $join['table'];
+        }
+
         if ($test instanceof \Fwk\Db\Relation) {
+            // $test->setRegistry($this->connection->table($table)->getRegistry());
             return $test;
         }
 
@@ -294,6 +301,7 @@ class Hydrator
             $ref->setReference($join['options']['reference']);
         }
 
+        // $ref->setRegistry($this->connection->table($table)->getRegistry());
         $ref->setConnection($this->connection);
 
         return $ref;
@@ -337,7 +345,7 @@ class Hydrator
             $entityClass = $tableObj->getDefaultEntity();
         }
         
-        $obj = $registry->get($identifiers);
+        $obj = $registry->get($identifiers, $entityClass);
 
         if (null === $obj) {
             $obj = new $entityClass;

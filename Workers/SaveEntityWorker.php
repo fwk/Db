@@ -73,9 +73,14 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         $queryParams = array();
         $access     = new Accessor($this->entity);
         $exec       = true;
+        $tableRegistry = $connection->table($registry->getTableName())->getRegistry();
 
         if (in_array($this->entity, static::$working, true)) {
             return;
+        }
+
+        if ($tableRegistry !== $registry && $tableRegistry->contains($this->entity)) {
+            $state = $tableRegistry->getState($this->entity);
         }
 
         switch ($state) {
@@ -129,7 +134,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $exec = false;
             }
 
-            $event = new AfterSaveEvent($connection, $table, $this->entity);;
+            $event = new AfterSaveEvent($connection, $table, $this->entity);
             break;
 
         case Registry::STATE_FRESH:
