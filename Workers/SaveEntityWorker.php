@@ -75,7 +75,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         $exec       = true;
         $tableRegistry = $connection->table($registry->getTableName())->getRegistry();
 
-        if (in_array($this->entity, static::$working, true)) {
+        if (in_array($this->entity, $this->working, true)) {
             return;
         }
 
@@ -90,7 +90,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             );
 
         case Registry::STATE_NEW:
-            array_push(static::$working, $this->entity);
+            array_push($this->working, $this->entity);
             foreach ($access->getRelations() as $relation) {
                 $relation->setParent(
                     $this->entity,
@@ -139,7 +139,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
 
         case Registry::STATE_FRESH:
         case Registry::STATE_CHANGED:
-            array_push(static::$working, $this->entity);
+            array_push($this->working, $this->entity);
 
             $registry->fireEvent(
                 $this->entity,
@@ -182,7 +182,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $query->andWhere(sprintf('`%s` = ?', $key));
                 $value = $access->get($key);
                 if (!$value) {
-                    static::removeFromSaving($this->entity);
+                    $this->removeFromWorking($this->entity);
                     throw new \RuntimeException(
                         sprintf(
                             'Cannot save entity object (%s) because it lacks '.
@@ -207,6 +207,6 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         if (isset($event)) {
             $registry->fireEvent($this->entity, $event);
         }
-        static::removeFromWorking($this->entity);
+        $this->removeFromWorking($this->entity);
     }
 }

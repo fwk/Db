@@ -151,13 +151,7 @@ class Registry implements \Countable, \IteratorAggregate
 
     protected function getObjectStorageIndex($object)
     {
-        foreach ($this->store as $idx => $obj) {
-            if ($obj === $object) {
-                return $idx;
-            }
-        }
-
-        return false;
+        return array_search($object, $this->store, true);
     }
 
     /**

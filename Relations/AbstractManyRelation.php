@@ -140,7 +140,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
     {
         $this->fetch();
 
-        return count($this->getRegistry()->getStore());
+        return $this->getRegistry()->count();
     }
 
      /**

@@ -203,6 +203,7 @@ class One2Many extends AbstractManyRelation implements Relation
             }
 
             $worker->execute($connection);
+
             if ($worker instanceof DeleteEntityWorker) {
                 parent::getRegistry()->remove($entity);
             }
