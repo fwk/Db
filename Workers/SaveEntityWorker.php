@@ -79,9 +79,14 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         $queryParams = array();
         $access     = new Accessor($this->entity);
         $exec       = true;
+        $tableRegistry = $connection->table($registry->getTableName())->getRegistry();
 
         if (in_array($this->entity, self::$working, true)) {
             return;
+        }
+
+        if ($tableRegistry !== $registry && $tableRegistry->contains($this->entity)) {
+            $state = $tableRegistry->getState($this->entity);
         }
 
         switch ($state) {
