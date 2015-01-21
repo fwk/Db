@@ -80,7 +80,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         $access     = new Accessor($this->entity);
         $exec       = true;
 
-        if (in_array($this->entity, static::$working, true)) {
+        if (in_array($this->entity, self::$working, true)) {
             return;
         }
 
@@ -89,7 +89,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             throw new \LogicException(sprintf('Entity is in unknown state (%s)', get_class($this->entity)));
 
         case RegistryState::REGISTERED:
-            array_push(static::$working, $this->entity);
+            array_push(self::$working, $this->entity);
             foreach ($access->getRelations() as $relation) {
                 $relation->setParent(
                     $this->entity,
@@ -138,7 +138,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
 
         case RegistryState::FRESH:
         case RegistryState::CHANGED:
-            array_push(static::$working, $this->entity);
+            array_push(self::$working, $this->entity);
 
             $registry->fireEvent(
                 $this->entity,

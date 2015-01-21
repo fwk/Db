@@ -65,7 +65,7 @@ abstract class AbstractWorker
      *
      * @var array
      */
-    protected $working = array();
+    protected static $working = array();
 
     /**
      * Constructor
@@ -122,9 +122,9 @@ abstract class AbstractWorker
      */
     protected function removeFromWorking($entity)
     {
-        $id = array_search($entity, $this->working, true);
+        $id = array_search($entity, static::$working, true);
         if ($id !== false) {
-            unset($this->working[$id]);
+            unset(static::$working[$id]);
         }
     }
 }

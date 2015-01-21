@@ -76,7 +76,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         $queryParams = array();
         $access     = new Accessor($this->entity);
 
-        if (in_array($this->entity, static::$working, true)) {
+        if (in_array($this->entity, self::$working, true)) {
             return;
         }
 
@@ -89,7 +89,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
 
         case RegistryState::FRESH:
         case RegistryState::CHANGED:
-            array_push(static::$working, $this->entity);
+            array_push(self::$working, $this->entity);
             $registry->fireEvent(
                 $this->entity, new BeforeDeleteEvent(
                     $connection,
