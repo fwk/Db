@@ -305,7 +305,7 @@ class Registry implements \Countable, \IteratorAggregate
     {
         $arr = array();
         foreach ($this->store as $entry) {
-            $arr[] =& $entry->getObject();
+            $arr[] = $entry->getObject();
         }
 
         return $arr;
