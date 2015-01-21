@@ -35,7 +35,9 @@ namespace Fwk\Db\Workers;
 
 use Fwk\Db\Events\AfterDeleteEvent;
 use Fwk\Db\Events\BeforeDeleteEvent;
-use Fwk\Db\Registry;
+use Fwk\Db\Exceptions\UnregisteredEntity;
+use Fwk\Db\Query;
+use Fwk\Db\Registry\RegistryState;
 use Fwk\Db\Worker;
 use Fwk\Db\Accessor;
 use Fwk\Db\Connection;
@@ -63,37 +65,30 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
     public function execute(Connection $connection)
     {
         $registry   = $this->getRegistry();
-        $data       = $registry->getData($this->entity);
-        $state      = $data['state'];
-        $table      = $connection->table($registry->getTableName());
+        $entry      = $registry->getEntry($this->entity);
+        if (false === $entry) {
+            throw new UnregisteredEntity('Unregistered entity: '. get_class($this->entity));
+        }
 
-        $query      = \Fwk\Db\Query::factory();
+        $state      = $entry->getState();
+        $table      = $connection->table($registry->getTableName());
+        $query      = Query::factory();
         $queryParams = array();
         $access     = new Accessor($this->entity);
-        $tableRegistry = $connection->table($registry->getTableName())->getRegistry();
 
         if (in_array($this->entity, static::$working, true)) {
             return;
         }
 
-        if ($tableRegistry !== $registry && $tableRegistry->contains($this->entity)) {
-            $state = $tableRegistry->getState($this->entity);
-        }
-
         switch ($state) {
-        case Registry::STATE_UNKNOWN:
-            throw new \LogicException(
-                sprintf(
-                    'Entity is in unknown state (%s)', 
-                    get_class($this->entity)
-                )
-            );
+        case RegistryState::UNKNOWN:
+            throw new \LogicException(sprintf('Entity is in unknown state (%s)', get_class($this->entity)));
 
-        case Registry::STATE_NEW:
+        case RegistryState::REGISTERED:
             return;
 
-        case Registry::STATE_FRESH:
-        case Registry::STATE_CHANGED:
+        case RegistryState::FRESH:
+        case RegistryState::CHANGED:
             array_push(static::$working, $this->entity);
             $registry->fireEvent(
                 $this->entity, new BeforeDeleteEvent(
@@ -104,18 +99,14 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
             );
 
             $changed    = $registry->getChangedValues($this->entity);
-            $data       = $registry->getData($this->entity);
-
             $query->delete($table->getName())->where('1 = 1');
-            $ids    = $data['identifiers'];
-            $idKeys = $table->getIdentifiersKeys();
+            $ids        = $entry->getIdentifiers();
+            $idKeys     = $table->getIdentifiersKeys();
+
             if (!count($ids)) {
                 static::removeFromWorking($this->entity);
                 throw new \LogicException(
-                    sprintf(
-                        'Entity %s lacks identifiers and cannot be deleted.', 
-                        get_class($this->entity)
-                    )
+                    sprintf('Entity %s lacks identifiers and cannot be deleted.', get_class($this->entity))
                 );
             }
             
@@ -124,8 +115,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
                     static::removeFromWorking($this->entity);
                     throw new \LogicException(
                         sprintf(
-                            'Unable to delete entity because identifiers (%s) '.
-                            'have been modified', 
+                            'Unable to delete entity because identifiers (%s) have been modified',
                             implode(', ', $ids)
                         )
                     );

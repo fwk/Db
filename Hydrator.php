@@ -32,6 +32,7 @@
  */
 namespace Fwk\Db;
 
+use Fwk\Db\Registry\RegistryState;
 use Fwk\Db\Relations\One2Many;
 
 /**
@@ -345,12 +346,12 @@ class Hydrator
             $entityClass = $tableObj->getDefaultEntity();
         }
         
-        $obj = $registry->get($identifiers, $entityClass, true);
+        $obj = $registry->get($identifiers, $entityClass);
 
         if (null === $obj) {
             $obj = new $entityClass;
             $registry->store(
-                $obj, $identifiers, Registry::STATE_FRESH, array(
+                $obj, $identifiers, RegistryState::FRESH, array(
                     'listeners' => $listeners
                 )
             );
@@ -371,14 +372,15 @@ class Hydrator
      */
     protected function markAsFresh()
     {
-        if (!\is_array($this->markAsFresh) || !count($this->markAsFresh)) {
+        if (!is_array($this->markAsFresh) || !count($this->markAsFresh)) {
             return;
         }
         
         foreach ($this->markAsFresh as $infos) {
             $infos['registry']->defineInitialValues(
                 $infos['entity'],
-                $this->connection, $infos['table']
+                $this->connection,
+                $infos['table']
             );
         }
 

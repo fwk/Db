@@ -1,7 +1,9 @@
 <?php
 
-namespace Fwk\Db;
+namespace Fwk\Db\Registry;
+use Fwk\Db\Connection;
 use Fwk\Db\Events\FreshEvent;
+use Fwk\Db\Table;
 
 /**
  * Test class for Registry.
@@ -37,7 +39,7 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
     {
         $obj = new \stdClass();
         $obj->listen = false;
-        $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2), Registry::STATE_NEW, array('listeners' => array('fresh' => function(FreshEvent $event) {
+        $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2), RegistryState::REGISTERED, array('listeners' => array('fresh' => function(FreshEvent $event) {
             $event->getEntity()->listen = true;
         })));
         $this->assertFalse($obj->listen);
@@ -49,9 +51,9 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
      */
     public function testGet()
     {
-         $obj   = new \stdClass();
-         $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2));
-         $this->assertEquals($obj, $this->object->get(array('keyOne' => 1, 'keyTwo' => 2)));
+        $obj   = new \stdClass();
+        $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2));
+        $this->assertEquals($obj, $this->object->get(array('keyOne' => 1, 'keyTwo' => 2)));
     }
 
     /**
@@ -107,9 +109,9 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
     public function testGetState()
     {
         $obj   = new \stdClass();
-        $this->assertEquals(Registry::STATE_UNREGISTERED, $this->object->getState($obj));
+        $this->assertEquals(RegistryState::UNREGISTERED, $this->object->getState($obj));
         $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2));
-        $this->assertEquals(Registry::STATE_UNKNOWN, $this->object->getState($obj));
+        $this->assertEquals(RegistryState::UNKNOWN, $this->object->getState($obj));
     }
 
     public function testIsChanged()
@@ -120,13 +122,13 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
 
         $this->object->store($obj, array('keyOne' => 1, 'keyTwo' => 2));
         $this->object->defineInitialValues($obj, null, null);
-        $this->assertEquals(Registry::STATE_FRESH, $this->object->getState($obj));
+        $this->assertEquals(RegistryState::FRESH, $this->object->getState($obj));
 
-        $this->assertFalse($this->object->isChanged($obj));
+        $this->assertFalse($this->object->getEntry($obj)->hasChanged());
 
         $obj->coucou    = "coucou";
-        $this->assertTrue($this->object->isChanged($obj));
-        $this->assertEquals(Registry::STATE_CHANGED, $this->object->getState($obj));
+        $this->assertTrue($this->object->getEntry($obj)->hasChanged());
+        $this->assertEquals(RegistryState::CHANGED, $this->object->getState($obj));
     }
 
     public function testToArray()
@@ -153,20 +155,6 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
         $obj   = new \stdClass();
         $this->setExpectedException('\Fwk\Db\Exceptions\UnregisteredEntity');
         $this->object->getEventDispatcher($obj);
-    }
-
-    public function testGetDataFail()
-    {
-        $this->setExpectedException('\Fwk\Db\Exceptions\UnregisteredEntity');
-        $obj = new \stdClass();
-        $this->object->getData($obj);
-    }
-
-    public function testSetDataFail()
-    {
-        $this->setExpectedException('\Fwk\Db\Exceptions\UnregisteredEntity');
-        $obj = new \stdClass();
-        $this->object->setData($obj, array('test' => 'fail'));
     }
 
     public function testUnknownAction()

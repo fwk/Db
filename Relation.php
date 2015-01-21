@@ -170,16 +170,16 @@ interface Relation
     /**
      * Returns this relation's registry
      *
-     * @return Registry
+     * @return \Fwk\Db\Registry\Registry
      */
     public function getRegistry();
 
     /**
      * Defines a Registry for this relation
      *
-     * @param Registry $registry The registry
+     * @param \Fwk\Db\Registry\Registry $registry The registry
      *
      * @return Relation
      */
-    public function setRegistry(Registry $registry);
+    public function setRegistry(\Fwk\Db\Registry\Registry $registry);
 }

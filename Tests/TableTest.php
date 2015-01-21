@@ -126,7 +126,7 @@ class TableTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetRegistry()
     {
-        $this->assertInstanceOf('\Fwk\Db\Registry', $this->object->getRegistry());
+        $this->assertInstanceOf('\Fwk\Db\Registry\Registry', $this->object->getRegistry());
     }
 
     /**

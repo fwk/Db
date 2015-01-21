@@ -33,8 +33,9 @@
  */
 namespace Fwk\Db\Relations;
 
+use Fwk\Db\Registry\RegistryState;
 use Fwk\Db\Relation,
-    Fwk\Db\Registry,
+    Fwk\Db\Registry\Registry,
     Fwk\Db\Exception,
     Fwk\Db\Connection,
     Fwk\Events\Dispatcher,
@@ -183,10 +184,11 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function setFetched($bool)
     {
-        $this->fetched = (bool) $bool;
-        if ($this->fetched) {
-            $table = $this->connection->table($this->tableName);
-            foreach ($this->getRegistry()->getStore() as $object) {
+        $this->fetched = (bool)$bool;
+        if ($this->fetched === true) {
+            $table  = $this->connection->table($this->tableName);
+            $objs   = $this->getRegistry()->toArray();
+            foreach ($objs as $object) {
                 $this->getRegistry()->defineInitialValues(
                     $object,
                     $this->connection,
@@ -240,10 +242,11 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function hasChanged()
     {
-        foreach ($this->getRegistry()->getStore() as $obj) {
-            $this->getRegistry()->getChangedValues($obj);
-            $data   = $this->getRegistry()->getData($obj);
-            if ($data['state'] != Registry::STATE_FRESH || !empty($data['action'])) {
+        foreach ($this->getRegistry()->getStore() as $entry) {
+            // trigger changedValues to ensure we have latest state
+            $entry->getChangedValues();
+
+            if (!$entry->isState(RegistryState::FRESH) || $entry->hasAction()) {
                 return true;
             }
         }
@@ -301,7 +304,7 @@ abstract class AbstractRelation implements IteratorAggregate
             return false;
         }
 
-        $this->parent       = $object;
+        $this->parent = $object;
 
         return true;
     }
@@ -373,9 +376,7 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function clear()
     {
-        foreach ($this->getRegistry()->getStore() as $object) {
-            $this->getRegistry()->remove($object);
-        }
+        $this->getRegistry()->clear();
         $this->fetched = false;
 
         return $this;
@@ -429,7 +430,7 @@ abstract class AbstractRelation implements IteratorAggregate
             return $this;
         }
 
-        $this->getRegistry()->store($object, $identifiers, Registry::STATE_NEW);
+        $this->getRegistry()->store($object, $identifiers, RegistryState::REGISTERED);
 
         return $this;
     }
@@ -497,33 +498,21 @@ abstract class AbstractRelation implements IteratorAggregate
     {
         $queue  = new \SplPriorityQueue();
 
-        foreach ($this->getRegistry()->getStore() as $object) {
-            $data   = $this->getRegistry()->getData($object);
+        foreach ($this->getRegistry()->getStore() as $entry) {
+            $entry->getChangedValues();
+            $action = $entry->getAction();
+            $state  = $entry->getState();
 
-            $action = $data['action'];
-
-            if ($data['state'] == Registry::STATE_NEW
-                || ($data['state'] == Registry::STATE_CHANGED
-                && $data['action'] != Registry::ACTION_DELETE)
+            if ($state === RegistryState::REGISTERED
+                || ($state === RegistryState::CHANGED && $action !== Registry::ACTION_DELETE)
             ) {
                 $action = Registry::ACTION_SAVE;
             }
 
-            if (empty($data['action'])) {
-                $this->getRegistry()->getChangedValues($object);
-                $data = $this->getRegistry()->getData($object);
-            }
-
-            $ts = (!$data['ts_action'] ? microtime(true) : $data['ts_action']);
-
-            if (empty($action)) {
-                continue;
-            }
-
             if ($action === Registry::ACTION_DELETE) {
-                $queue->insert(new DeleteEntityWorker($object), $ts);
+                $queue->insert(new DeleteEntityWorker($entry->getObject()), $entry->getActionPriority());
             } elseif ($action === Registry::ACTION_SAVE) {
-                $queue->insert(new SaveEntityWorker($object), $ts);
+                $queue->insert(new SaveEntityWorker($entry->getObject()), $entry->getActionPriority());
             }
         }
 

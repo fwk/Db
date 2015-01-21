@@ -49,18 +49,18 @@ interface Worker
     /**
      * Return the registry to be used by this worker
      * 
-     * @return \Fwk\Db\Registry
+     * @return \Fwk\Db\Registry\Registry
      */
     public function getRegistry();
 
     /**
      * Defines the Registry to work with.
      * 
-     * @param \Fwk\Db\Registry $registry The registry to be used by this worker
+     * @param \Fwk\Db\Registry\Registry $registry The registry to be used by this worker
      * 
      * @return void
      */
-    public function setRegistry(\Fwk\Db\Registry $registry);
+    public function setRegistry(\Fwk\Db\Registry\Registry $registry);
 
     /**
      * Return the defined entity

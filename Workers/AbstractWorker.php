@@ -33,7 +33,7 @@
  */
 namespace Fwk\Db\Workers;
 
-use Fwk\Db\Registry;
+use Fwk\Db\Registry\Registry;
 
 /**
  * Base utility class for Workers

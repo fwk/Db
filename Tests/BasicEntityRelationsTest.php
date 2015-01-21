@@ -194,7 +194,7 @@ class BasicEntityRelationsTest extends \PHPUnit_Framework_TestCase
         $this->assertNotNull($user);
         $this->assertInstanceOf('\stdClass', $user->phone->get());
 
-        $u->phone->set();
+        $user->phone->set();
         $this->connection->table('fwkdb_test_users')->save($user);
 
         $this->assertEquals(1, count($this->connection->table('fwkdb_test_users')->finder()->all()));

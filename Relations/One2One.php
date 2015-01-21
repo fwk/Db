@@ -38,7 +38,7 @@ use Fwk\Db\Events\BeforeUpdateEvent;
 use Fwk\Db\Relation;
 use Fwk\Db\Query;
 use Fwk\Db\Accessor;
-use Fwk\Db\Registry;
+use Fwk\Db\Registry\Registry;
 use Fwk\Db\Workers\SaveEntityWorker;
 use Fwk\Db\Workers\DeleteEntityWorker;
 use Fwk\Events\Dispatcher;
@@ -130,8 +130,8 @@ class One2One extends AbstractRelation implements Relation
     {
         $this->fetch();
 
-        foreach ($this->getRegistry()->getStore() as $obj) {
-            return $obj;
+        foreach ($this->getRegistry()->getStore() as $entry) {
+            return $entry->getObject();
         }
 
         return null;
@@ -149,8 +149,8 @@ class One2One extends AbstractRelation implements Relation
     public function set($object = null)
     {
         if (null === $object) {
-            foreach ($this->getRegistry()->getStore() as $obj) {
-                $this->remove($obj);
+            foreach ($this->getRegistry()->getStore() as $entry) {
+                $this->remove($entry->getObject());
             }
 
             return;
@@ -259,12 +259,8 @@ class One2One extends AbstractRelation implements Relation
     {
         $return = parent::setParent($object, $evd);
         if ($return === true) {
-            $evd->on(
-                BeforeSaveEvent::EVENT_NAME, array($this, 'onBeforeParentSave')
-            );
-            $evd->on(
-                BeforeUpdateEvent::EVENT_NAME, array($this, 'onBeforeParentSave')
-            );
+            $evd->on(BeforeSaveEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));
+            $evd->on(BeforeUpdateEvent::EVENT_NAME, array($this, 'onBeforeParentSave'));
         }
 
         return $return;
@@ -299,7 +295,7 @@ class One2One extends AbstractRelation implements Relation
 
             if ($worker instanceof DeleteEntityWorker) {
                 Accessor::factory($parent)->set($this->local, null);
-                parent::remove($entity);
+                $this->getRegistry()->remove($entity);
             }
         }
     }
@@ -315,13 +311,12 @@ class One2One extends AbstractRelation implements Relation
 
         $final = array();
         $list = $this->getRegistry()->getStore();
-        foreach ($list as $object) {
-            $data = $this->getRegistry()->getData($object);
-            if ($data['action'] == 'delete') {
+        foreach ($list as $entry) {
+            if ($entry->getAction() == Registry::ACTION_DELETE) {
                 continue;
             }
 
-            $final[] = $object;
+            $final[] = $entry->getObject();
         }
 
         return $final;

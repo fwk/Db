@@ -33,8 +33,9 @@
  */
 namespace Fwk\Db\Relations;
 
+use Fwk\Db\Registry\Registry;
 use Fwk\Db\Relation;
-use Fwk\Db\Registry;
+use Fwk\Db\Registry\RegistryState;
 use Fwk\Db\Accessor;
 
 /**
@@ -140,7 +141,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
     {
         $this->fetch();
 
-        return count($this->getRegistry()->getStore());
+        return $this->getRegistry()->count();
     }
 
      /**
@@ -216,7 +217,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
         $this->getRegistry()->store(
             $object,
             $identifiers,
-            Registry::STATE_NEW,
+            RegistryState::REGISTERED,
             $data
         );
     }
@@ -248,19 +249,18 @@ abstract class AbstractManyRelation extends AbstractRelation implements
 
         $final = array();
         $list = $this->getRegistry()->getStore();
-        foreach ($list as $object) {
-            $data = $this->getRegistry()->getData($object);
-            if ($data['action'] == 'delete') {
+        foreach ($list as $entry) {
+            if ($entry->getAction() == Registry::ACTION_DELETE) {
                 continue;
             }
 
             if (empty($this->reference)) {
-                $final[] = $object;
+                $final[] = $entry->getObject();
                 continue;
             }
 
-            $ref    = (isset($data['reference']) ? $data['reference'] : null);
-            $final[$ref]  = $object;
+            $ref    = $entry->data('reference', null);
+            $final[$ref]  = $entry->getObject();
         }
 
         return $final;

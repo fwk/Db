@@ -32,6 +32,8 @@
  */
 namespace Fwk\Db;
 
+use Fwk\Db\Registry\Registry;
+
 /**
  * Table 
  * 

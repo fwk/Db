@@ -37,7 +37,9 @@ use Fwk\Db\Events\AfterSaveEvent;
 use Fwk\Db\Events\AfterUpdateEvent;
 use Fwk\Db\Events\BeforeSaveEvent;
 use Fwk\Db\Events\BeforeUpdateEvent;
-use Fwk\Db\Registry;
+use Fwk\Db\Exceptions\UnregisteredEntity;
+use Fwk\Db\Query;
+use Fwk\Db\Registry\RegistryState;
 use Fwk\Db\Worker;
 use Fwk\Db\Accessor;
 use Fwk\Db\Connection;
@@ -66,30 +68,27 @@ class SaveEntityWorker extends AbstractWorker implements Worker
     public function execute(Connection $connection)
     {
         $registry   = $this->getRegistry();
-        $data       = $registry->getData($this->entity);
-        $state      = $data['state'];
+        $entry      = $registry->getEntry($this->entity);
+        if (false === $entry) {
+            throw new UnregisteredEntity('Unregistered entity: '. get_class($this->entity));
+        }
+
+        $state      = $entry->getState();
         $table      = $connection->table($registry->getTableName());
-        $query      = \Fwk\Db\Query::factory();
+        $query      = Query::factory();
         $queryParams = array();
         $access     = new Accessor($this->entity);
         $exec       = true;
-        $tableRegistry = $connection->table($registry->getTableName())->getRegistry();
 
         if (in_array($this->entity, static::$working, true)) {
             return;
         }
 
-        if ($tableRegistry !== $registry && $tableRegistry->contains($this->entity)) {
-            $state = $tableRegistry->getState($this->entity);
-        }
-
         switch ($state) {
-        case Registry::STATE_UNKNOWN:
-            throw new \LogicException(
-                sprintf('Entity is in unknown state (%s)', get_class($this->entity))
-            );
+        case RegistryState::UNKNOWN:
+            throw new \LogicException(sprintf('Entity is in unknown state (%s)', get_class($this->entity)));
 
-        case Registry::STATE_NEW:
+        case RegistryState::REGISTERED:
             array_push(static::$working, $this->entity);
             foreach ($access->getRelations() as $relation) {
                 $relation->setParent(
@@ -137,8 +136,8 @@ class SaveEntityWorker extends AbstractWorker implements Worker
             $event = new AfterSaveEvent($connection, $table, $this->entity);
             break;
 
-        case Registry::STATE_FRESH:
-        case Registry::STATE_CHANGED:
+        case RegistryState::FRESH:
+        case RegistryState::CHANGED:
             array_push(static::$working, $this->entity);
 
             $registry->fireEvent(
@@ -146,22 +145,17 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 new BeforeUpdateEvent($connection, $table, $this->entity)
             );
 
-            $data       = $registry->getData($this->entity);
+            $query->update($table->getName())->where('1 = 1');
 
             // reload changed values in case the event changed some...
             $changed    = $registry->getChangedValues($this->entity);
-
-            $query->update($table->getName())->where('1 = 1');
-            $ids    = $data['identifiers'];
-            $idKeys = $table->getIdentifiersKeys();
+            $ids        = $entry->getIdentifiers();
+            $idKeys     = $table->getIdentifiersKeys();
 
             if (!count($ids)) {
-                static::removeFromSaving($this->entity);
+                static::removeFromWorking($this->entity);
                 throw new \LogicException(
-                    sprintf(
-                        'Entity %s lacks identifiers and cannot be saved.',
-                        get_class($this->entity)
-                    )
+                    sprintf('Entity %s lacks identifiers and cannot be saved.', get_class($this->entity))
                 );
             }
 
@@ -182,7 +176,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
                 $query->andWhere(sprintf('`%s` = ?', $key));
                 $value = $access->get($key);
                 if (!$value) {
-                    static::removeFromSaving($this->entity);
+                    static::removeFromWorking($this->entity);
                     throw new \RuntimeException(
                         sprintf(
                             'Cannot save entity object (%s) because it lacks '.

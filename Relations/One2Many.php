@@ -39,7 +39,7 @@ use Fwk\Db\Events\AfterUpdateEvent;
 use Fwk\Db\Relation;
 use Fwk\Db\Query;
 use Fwk\Db\Accessor;
-use Fwk\Db\Registry;
+use Fwk\Db\Registry\Registry;
 use Fwk\Db\Workers\SaveEntityWorker;
 use Fwk\Db\Workers\DeleteEntityWorker;
 use Fwk\Events\Dispatcher;
@@ -175,9 +175,9 @@ class One2Many extends AbstractManyRelation implements Relation
                     );
                 }
 
-                $access = new Accessor($this->parent);
-                $data   = $parentRegistry->getData($this->parent);
-                $ids    = $data['identifiers'];
+                $access     = new Accessor($this->parent);
+                $entry      = $parentRegistry->getEntry($this->parent);
+                $ids        = $entry->getIdentifiers();
                 if (!count($ids)) {
                     throw new \RuntimeException(
                         sprintf(

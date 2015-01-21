@@ -39,7 +39,8 @@ use Fwk\Db\Events\AfterUpdateEvent;
 use Fwk\Db\Relation;
 use Fwk\Db\Query;
 use Fwk\Db\Accessor;
-use Fwk\Db\Registry;
+use Fwk\Db\Registry\Registry;
+use Fwk\Db\Registry\RegistryState;
 use Fwk\Db\Workers\SaveEntityWorker;
 use Fwk\Db\Workers\DeleteEntityWorker;
 
@@ -130,9 +131,11 @@ class Many2Many extends AbstractManyRelation implements Relation
         foreach ($this->getWorkersQueue() as $worker) {
             $worker->setRegistry($registry);
             $entity     = $worker->getEntity();
-            $access = new Accessor($this->parent);
-            $data   = $parentRegistry->getData($this->parent);
-            $ids    = $data['identifiers'];
+            $access     = new Accessor($this->parent);
+
+            $entry      = $parentRegistry->getEntry($this->parent);
+            $ids        = $entry->getIdentifiers();
+
             if (!count($ids)) {
                 throw new \RuntimeException (sprintf('Parent (%s) have no identifiers defined', get_class($this->parent)));
             }
@@ -175,7 +178,7 @@ class Many2Many extends AbstractManyRelation implements Relation
 
             $worker->execute($connection);
 
-            if ($worker instanceof SaveEntityWorker && $this->getRegistry()->getState($entity) == Registry::STATE_NEW) {
+            if ($worker instanceof SaveEntityWorker && $this->getRegistry()->getState($entity) == RegistryState::REGISTERED) {
                 $connection->execute(
                     Query::factory()
                         ->insert($this->foreignTable)
