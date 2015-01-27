@@ -59,8 +59,6 @@ $db->table('users')->save($user); // UPDATE users SET ... WHERE id = 1
 Delete from table:
 
 ``` php
-$user->password = 'changed password';
-
 $db->table('users')->delete($user); // DELETE FROM users WHERE id = 1
 ```
 
