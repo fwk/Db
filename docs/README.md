@@ -10,49 +10,57 @@ Fwk\Db tries to mimic a database ORM (Object Relational Mapper) without carrying
 - **[Event-Driven Engine](./events.md)**: Intercept any Event and customize the behavior the way you like. Even on ```stdClass``` Models.
 - **Proven Foundation**: Built on top of the famous [DataBase Abstraction Layer](http://www.doctrine-project.org/projects/dbal.html) by the [Doctrine Project](http://www.doctrine-project.org) ([DBAL](https://github.com/doctrine/dbal)).
 
+
 ## Examples
 
+First, we initialize the database connection object:
 
 ``` php
-<?php
+use Fwk\Db\Connection;
 
-$db = new \Fwk\Db\Connection(array(
+$db = new Connection(array(
    'driver' => 'pdo_mysql',
    'host' => 'localhost',
    'user' => 'username',
    'password' => 'passwd',
-   'dbname' => 'exemple'
+   'dbname' => 'example'
 ));
 ```
 
-Voilà ! Vous pouvez dès à présent utiliser [fwk/Db](http://github.com/fwk/Db) sans avoir à créer des fichiers de configuration/entités/schémas supplémentaires.
+### Basic CRUD
 
-## Recherche dans une table
-
-[fwk/Db](http://github.com/fwk/Db) est fourni avec un objet ```Finder``` permettant de chercher des données dans une table. Cet objet se récupère depuis l'objet ```Table```.
+Create a new object:
 
 ``` php
-<?php
+$user = (object)array(
+   'id' => null,
+   'username' => 'neiluJ',
+   'email' => 'julien@nitronet.org',
+   'password' => 'abcdef'
+);
 
-$usersTable = $db->table('users');
+$db->table('users')->save($user); // INSERT INTO users ...
 ```
 
-### Utilisation du Finder
+Read table:
 
 ``` php
-<?php
-
-$finder = $usersTable->finder();
-$finderUser = $usersTable->finder('App\models\User'); // retournera l'entité App\models\User au lieu de \stdClass
-$allUsers = $finder->all(); /* retourne tous les utilisateurs */
+$user = $db->table('users')->finder()->one(1); // SELECT * FROM users WHERE id = 1
 ```
 
-```Finder``` comprend la structure d'une table et permet donc de faire des requêtes précises sur les clés primaires d'une table. 
-
-Dans le cas d'une clé primaire unique (généralement "ID"):
+Update table:
 
 ``` php
-<?php
+$user->password = 'changed password';
 
-$myUser = $finder->one(2); /* retourne user ID: 2 */
+$db->table('users')->save($user); // UPDATE users SET ... WHERE id = 1
 ```
+
+Delete from table:
+
+``` php
+$user->password = 'changed password';
+
+$db->table('users')->delete($user); // DELETE FROM users WHERE id = 1
+```
+
