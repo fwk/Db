@@ -4,7 +4,7 @@ Fwk\Db tries to mimic a database ORM (Object Relational Mapper) without carrying
 
 ## Features
 
-- **[Per-query Models](./query.md)**: Switch from a [Model](./models.md) to another depending on what's needed.
+- **[Per-query Models](./finder.md)**: Switch from a [Model](./models.md) to another depending on what's needed.
 - **No Model** required at all: ```stdClass``` is minimalist's best friend.
 - **No new SQL language**: use a clean **[Object-oriented Query API](./query.md)** or just SQL itself.
 - **[Event-Driven Engine](./events.md)**: Intercept any Event and customize the behavior the way you like. Even on ```stdClass``` Models.
