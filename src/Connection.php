@@ -351,7 +351,7 @@ class Connection extends Dispatcher
         $aevent = new AfterQueryEvent($this, $query, $params, $options, $results);
         $this->notify($aevent);
 
-        return $aevent->results;
+        return $aevent->getResults();
     }
 
     /**

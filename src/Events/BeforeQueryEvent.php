@@ -51,11 +51,6 @@ class BeforeQueryEvent extends Event
 {
     const EVENT_NAME = 'beforeQuery';
 
-    protected $query;
-    protected $queryOptions = array();
-    protected $queryParameters = array();
-    protected $results = null;
-
     /**
      * Constructor
      *
@@ -69,7 +64,7 @@ class BeforeQueryEvent extends Event
      */
     public function __construct(Connection $connection, Query $query,
         array $queryParams = array(), array $queryOptions = array(),
-        $results = array()
+        $results = null
     ) {
         parent::__construct(
             static::EVENT_NAME, array(
@@ -77,7 +72,7 @@ class BeforeQueryEvent extends Event
                 'query'         => $query,
                 'queryParameters'   => (array)$queryParams,
                 'queryOptions'  => (array)$queryOptions,
-                'results'       => &$results,
+                'results'       => $results,
                 'bridge'        => null
             )
         );
