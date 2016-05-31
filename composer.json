@@ -1,9 +1,9 @@
 {
-    "name": "fwk/Db",
-    "description": "Fwk Database Tool",
+    "name": "fwk/db",
+    "description": "Lightweight Database ORM for Happy Developers",
     "type": "library",
-    "keywords": ["framework", "orm", "database", "mysql", "tool"],
-    "license": "BSD",
+    "keywords": ["library", "orm", "db", "database", "mysql", "tool", "lightweight", "fast"],
+    "license": "BSD-3-Clause",
     "authors": [
         {
             "name": "neiluJ",
@@ -11,14 +11,18 @@
         }
     ],
     "require": {
-        "php": ">=5.3.3",
+        "php": ">=5.5",
         "fwk/events": "dev-master",
-        "doctrine/dbal": "v2.4.2"
+        "doctrine/dbal": "v2.4.5"
     },
     "autoload": {
-        "psr-0": {
-            "Fwk\\Db": ""
+        "psr-4": {
+            "Fwk\\Db\\": "src"
         }
     },
-    "target-dir": "Fwk/Db"
+    "autoload-dev": {
+        "classmap": [
+            "tests/"
+        ]
+    }
 }
