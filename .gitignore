@@ -1,6 +1,8 @@
 vendor
 phpunit.xml
 test.php
-build
 bin
 .idea
+composer.lock
+phpunit.xml.dist
+build.xml
