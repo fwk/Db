@@ -35,15 +35,15 @@ namespace Fwk\Db\Workers;
 
 use Fwk\Db\Events\AfterDeleteEvent;
 use Fwk\Db\Events\BeforeDeleteEvent;
-use Fwk\Db\Exceptions\UnregisteredEntity;
+use Fwk\Db\Exceptions\UnregisteredEntityException;
 use Fwk\Db\Query;
 use Fwk\Db\Registry\RegistryState;
-use Fwk\Db\Worker;
+use Fwk\Db\WorkerInterface;
 use Fwk\Db\Accessor;
 use Fwk\Db\Connection;
 
 /**
- * Save Entity Worker
+ * Save Entity WorkerInterface
  * 
  * This worker is used when an entity or relation have to be deleted.
  * 
@@ -53,7 +53,7 @@ use Fwk\Db\Connection;
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link     http://www.phpfwk.com
  */
-class DeleteEntityWorker extends AbstractWorker implements Worker
+class DeleteEntityWorker extends AbstractWorker implements WorkerInterface
 {
     /**
      * Executes the worker (SQL queries) and fire EntityEvents
@@ -67,7 +67,7 @@ class DeleteEntityWorker extends AbstractWorker implements Worker
         $registry   = $this->getRegistry();
         $entry      = $registry->getEntry($this->entity);
         if (false === $entry) {
-            throw new UnregisteredEntity('Unregistered entity: '. get_class($this->entity));
+            throw new UnregisteredEntityException('Unregistered entity: '. get_class($this->entity));
         }
 
         $state      = $entry->getState();

@@ -134,7 +134,7 @@ class TableTest extends \PHPUnit_Framework_TestCase
     public function testGetColumnFail()
     {
         $this->object->setConnection($this->connection);
-        $this->setExpectedException('\Fwk\Db\Exceptions\TableColumnNotFound');
+        $this->setExpectedException('\Fwk\Db\Exceptions\TableColumnNotFoundException');
         $this->object->getColumn('test');
     }
 
@@ -182,13 +182,13 @@ class TableTest extends \PHPUnit_Framework_TestCase
 
     public function testTableLacksIdentifiers()
     {
-        $this->setExpectedException('\Fwk\Db\Exceptions\TableLacksIdentifiers');
+        $this->setExpectedException('\Fwk\Db\Exceptions\TableLacksIdentifiersException');
         $this->connection->table('test_table2')->getIdentifiersKeys();
     }
 
     public function testTableLacksIdentifiers2()
     {
-        $this->setExpectedException('\Fwk\Db\Exceptions\TableLacksIdentifiers');
+        $this->setExpectedException('\Fwk\Db\Exceptions\TableLacksIdentifiersException');
         $this->connection->table('test_table3')->getIdentifiersKeys();
     }
     

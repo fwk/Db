@@ -135,7 +135,7 @@ class Connection extends Dispatcher
     /**
      * Establish connection to database
      *
-     * @throws Exceptions\ConnectionError when failing to connect
+     * @throws Exceptions\ConnectionErrorException when failing to connect
      * @return boolean
      */
     public function connect()
@@ -147,7 +147,7 @@ class Connection extends Dispatcher
             } catch (\Doctrine\DBAL\DBALException $e) {
             } catch (\PDOException $e) {
                 throw $this->setErrorException(
-                    new Exceptions\ConnectionError($e->getMessage())
+                    new Exceptions\ConnectionErrorException($e->getMessage())
                 );
             }
             
@@ -161,7 +161,7 @@ class Connection extends Dispatcher
     /**
      * End connection to database
      *
-     * @throws Exceptions\ConnectionError when failing to disconnect (?) 
+     * @throws Exceptions\ConnectionErrorException when failing to disconnect (?)
      * @return boolean
      */
     public function disconnect()
@@ -414,7 +414,7 @@ class Connection extends Dispatcher
      *
      * @param string $tableName Table name
      *
-     * @throws Exceptions\TableNotFound if table is not found
+     * @throws Exceptions\TableNotFoundException if table is not found
      * @return Table
      */
     public function table($tableName)
@@ -432,7 +432,7 @@ class Connection extends Dispatcher
         }
 
         throw $this->setErrorException(
-            new Exceptions\TableNotFound(
+            new Exceptions\TableNotFoundException(
                 sprintf(
                     'Inexistant table "%s"', 
                     $tableName

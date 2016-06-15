@@ -4,7 +4,7 @@ namespace Fwk\Db;
 
 use Fwk\Db\Listeners\Typable;
 
-class User4 extends \stdClass implements EventSubscriber
+class User4 extends \stdClass implements EventSubscriberInterface
 {
     public $created_at;
 

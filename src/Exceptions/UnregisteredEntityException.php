@@ -36,7 +36,8 @@ namespace Fwk\Db\Exceptions;
 use Fwk\Db\Exception;
 
 /**
- * Thrown when a table has no primary keys.
+ * Thrown by a Registry when trying to access properties of an unregistered
+ * entity.
  * 
  * @category Exceptions
  * @package  Fwk\Db
@@ -44,6 +45,6 @@ use Fwk\Db\Exception;
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link     http://www.phpfwk.com
  */
-class TableLacksIdentifiers extends Exception
+class UnregisteredEntityException extends Exception
 {
 }

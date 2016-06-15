@@ -35,7 +35,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
     
     public function testConnectFail()
     {
-        $this->setExpectedException('Fwk\Db\Exceptions\ConnectionError');
+        $this->setExpectedException('Fwk\Db\Exceptions\ConnectionErrorException');
         $this->object = new Connection(array(
             'driver'    => 'pdo_mysql',
             'host'  => 'inexistant.example.com-no',
@@ -107,7 +107,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
 
     public function testTableNotExists()
     {
-        $this->setExpectedException('\Fwk\Db\Exceptions\TableNotFound');
+        $this->setExpectedException('\Fwk\Db\Exceptions\TableNotFoundException');
         $tbl = $this->object->table('nonExistant');
     }
  

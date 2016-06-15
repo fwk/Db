@@ -204,7 +204,7 @@ class Finder
 
         foreach ($ids as $key) {
             if (!isset($identifiers[$key])) {
-                 throw new Exceptions\MissingIdentifier(
+                 throw new Exceptions\MissingIdentifierException(
                      sprintf('Missing required identifier "%s"', $key)
                  );
             }

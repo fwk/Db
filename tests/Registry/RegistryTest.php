@@ -91,13 +91,13 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
 
     public function testRemoveUnknownEntity()
     {
-        $this->setExpectedException('Fwk\Db\Exceptions\UnregisteredEntity');
+        $this->setExpectedException('Fwk\Db\Exceptions\UnregisteredEntityException');
         $this->object->remove(new \stdClass());
     }
 
     public function testChangedValuesUnknownEntity()
     {
-        $this->setExpectedException('Fwk\Db\Exceptions\UnregisteredEntity');
+        $this->setExpectedException('Fwk\Db\Exceptions\UnregisteredEntityException');
         $this->object->getChangedValues(new \stdClass());
     }
 
@@ -153,7 +153,7 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
     public function testGetEventDispatcherFail()
     {
         $obj   = new \stdClass();
-        $this->setExpectedException('\Fwk\Db\Exceptions\UnregisteredEntity');
+        $this->setExpectedException('\Fwk\Db\Exceptions\UnregisteredEntityException');
         $this->object->getEventDispatcher($obj);
     }
 

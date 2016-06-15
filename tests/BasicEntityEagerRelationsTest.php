@@ -21,7 +21,7 @@ class User7 extends \stdClass
                 'email_id',
                 'Fwk\Db\Email7'
         );
-        $this->emails->setFetchMode(Relation::FETCH_EAGER);
+        $this->emails->setFetchMode(RelationInterface::FETCH_EAGER);
         $this->emails->setOrderBy('email');
 
         $this->metas = new Relations\One2Many(
@@ -30,10 +30,10 @@ class User7 extends \stdClass
                 'fwkdb_test_users_metas'
         );
         $this->metas->setReference('name');
-        $this->metas->setFetchMode(Relation::FETCH_EAGER);
+        $this->metas->setFetchMode(RelationInterface::FETCH_EAGER);
 
         $this->phone = new Relations\One2One('phone_id', 'id', 'fwkdb_test_phones');
-        $this->phone->setFetchMode(Relation::FETCH_EAGER);
+        $this->phone->setFetchMode(RelationInterface::FETCH_EAGER);
     }
 }
 

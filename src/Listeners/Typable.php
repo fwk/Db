@@ -39,7 +39,7 @@ use Fwk\Db\Events\AfterUpdateEvent;
 use Fwk\Db\Events\BeforeSaveEvent;
 use Fwk\Db\Events\BeforeUpdateEvent;
 use Fwk\Db\Events\FreshEvent;
-use Fwk\Db\Relation;
+use Fwk\Db\RelationInterface;
 use Fwk\Db\Table;
 
 /**
@@ -149,7 +149,7 @@ class Typable
         $array      = $accessor->toArray();
         $platform   = $table->getConnection()->getDriver()->getDatabasePlatform();
         foreach ($array as $key => $value) {
-            if (in_array($key, $this->skipColumns) || $value instanceof Relation) {
+            if (in_array($key, $this->skipColumns) || $value instanceof RelationInterface) {
                 continue;
             }
 
@@ -176,7 +176,7 @@ class Typable
         $array      = $accessor->toArray();
         $platform   = $table->getConnection()->getDriver()->getDatabasePlatform();
         foreach ($array as $key => $value) {
-            if (in_array($key, $this->skipColumns) || $value instanceof Relation) {
+            if (in_array($key, $this->skipColumns) || $value instanceof RelationInterface) {
                 continue;
             }
 

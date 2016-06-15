@@ -36,7 +36,7 @@ namespace Fwk\Db\Exceptions;
 use Fwk\Db\Exception;
 
 /**
- * Thrown when the connection couldn't be established.
+ * Thrown when a table has no primary keys.
  * 
  * @category Exceptions
  * @package  Fwk\Db
@@ -44,6 +44,6 @@ use Fwk\Db\Exception;
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link     http://www.phpfwk.com
  */
-class ConnectionError extends Exception
+class TableLacksIdentifiersException extends Exception
 {
 }

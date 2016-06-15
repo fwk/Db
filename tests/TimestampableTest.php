@@ -3,7 +3,7 @@ namespace Fwk\Db;
 
 use Fwk\Db\Listeners\Timestampable;
 
-class User3 extends \stdClass implements EventSubscriber
+class User3 extends \stdClass implements EventSubscriberInterface
 {
     public $created_at;
 

@@ -36,7 +36,7 @@ namespace Fwk\Db\Relations;
 use Fwk\Db\Events\AbstractEntityEvent;
 use Fwk\Db\Events\AfterSaveEvent;
 use Fwk\Db\Events\AfterUpdateEvent;
-use Fwk\Db\Relation;
+use Fwk\Db\RelationInterface;
 use Fwk\Db\Query;
 use Fwk\Db\Accessor;
 use Fwk\Db\Registry\Registry;
@@ -45,7 +45,7 @@ use Fwk\Db\Workers\DeleteEntityWorker;
 use Fwk\Events\Dispatcher;
 
 /**
- * One to Many Relation
+ * One to Many RelationInterface
  *
  * Represents a 1-n relation in the database
  *
@@ -55,7 +55,7 @@ use Fwk\Events\Dispatcher;
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link     http://www.nitronet.org/fwk
  */
-class One2Many extends AbstractManyRelation implements Relation
+class One2Many extends AbstractManyRelation implements RelationInterface
 {
     /**
      * Prepares a Query to fetch this relation (if FETCH_EAGER)
@@ -92,7 +92,7 @@ class One2Many extends AbstractManyRelation implements Relation
     /**
      * Fetches data from the database an fills this relation
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function fetch()
     {

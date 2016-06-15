@@ -74,7 +74,7 @@ class Book extends \stdClass
 }
 ```
 
-Maintenant, l'entité représentant la catégorie du livre est disponible via ```$book->category->get()```. En fait, il est possible d'accéder directement aux propriétés et méthodes de l'entité (comme dans l'exemple ci-dessous) mais ```$book->category``` doit impérativement rester une instance de ```Fwk\Db\Relation```. Pour changer l'entité liée il faut utiliser la méthode ```$book->category->set($obj)```.
+Maintenant, l'entité représentant la catégorie du livre est disponible via ```$book->category->get()```. En fait, il est possible d'accéder directement aux propriétés et méthodes de l'entité (comme dans l'exemple ci-dessous) mais ```$book->category``` doit impérativement rester une instance de ```Fwk\Db\RelationInterface```. Pour changer l'entité liée il faut utiliser la méthode ```$book->category->set($obj)```.
 
 ``` php
 <?php

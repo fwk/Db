@@ -33,9 +33,9 @@
 namespace Fwk\Db;
 
 /**
- * Relation Interface
+ * RelationInterface Interface
  * 
- * A Relation describes a database relation between entities. Usually, Relations
+ * A RelationInterface describes a database relation between entities. Usually, Relations
  * and Foreign Keys work together to keep data integrity.
  * 
  * @category Interfaces
@@ -44,7 +44,7 @@ namespace Fwk\Db;
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link     http://www.phpfwk.com
  */
-interface Relation
+interface RelationInterface
 {
     /**
      * Fetch relation on top query
@@ -139,7 +139,7 @@ interface Relation
     /**
      * Defines this relation as EAGER or LAZY.
      * 
-     * @param string $mode Fetch mode {@see Relation::FETCH_ Constants}
+     * @param string $mode Fetch mode {@see RelationInterface::FETCH_ Constants}
      * 
      * @return void
      */
@@ -179,7 +179,7 @@ interface Relation
      *
      * @param \Fwk\Db\Registry\Registry $registry The registry
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function setRegistry(\Fwk\Db\Registry\Registry $registry);
 }

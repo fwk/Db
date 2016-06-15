@@ -13,7 +13,7 @@ class TestListener
     }
 }
 
-class User2 extends \stdClass implements EventSubscriber
+class User2 extends \stdClass implements EventSubscriberInterface
 {
     public $emails;
 

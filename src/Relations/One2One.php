@@ -35,7 +35,7 @@ namespace Fwk\Db\Relations;
 use Fwk\Db\Events\AbstractEntityEvent;
 use Fwk\Db\Events\BeforeSaveEvent;
 use Fwk\Db\Events\BeforeUpdateEvent;
-use Fwk\Db\Relation;
+use Fwk\Db\RelationInterface;
 use Fwk\Db\Query;
 use Fwk\Db\Accessor;
 use Fwk\Db\Registry\Registry;
@@ -52,7 +52,7 @@ use Fwk\Events\Dispatcher;
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link     http://www.phpfwk.com
  */
-class One2One extends AbstractRelation implements Relation
+class One2One extends AbstractRelation implements RelationInterface
 {
     /**
      * Prepares a Query to fetch this relation (only FETCH_EAGER)

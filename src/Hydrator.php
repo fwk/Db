@@ -260,14 +260,14 @@ class Hydrator
     }
 
     /**
-     * Return Relation object of an entity
+     * Return RelationInterface object of an entity
      *
      * @param mixed  $object      The entity
-     * @param string $columnName  Relation's column name
+     * @param string $columnName  RelationInterface's column name
      * @param array  $join        Join descriptor (array)
-     * @param string $entityClass Relation's entity class name
+     * @param string $entityClass RelationInterface's entity class name
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function getRelationObject($object, $columnName, array $join,
                                       $entityClass = null
@@ -281,7 +281,7 @@ class Hydrator
             $table = $join['table'];
         }
 
-        if ($test instanceof \Fwk\Db\Relation && $entityClass == $test->getEntity()) {
+        if ($test instanceof \Fwk\Db\RelationInterface && $entityClass == $test->getEntity()) {
             if ($test instanceof One2One) {
                 return $test;
             } elseif ($test instanceof AbstractManyRelation && $join['options']['reference'] == $test->getReference()) {

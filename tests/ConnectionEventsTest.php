@@ -7,7 +7,7 @@ use Fwk\Db\Events\ConnectEvent;
 use Fwk\Db\Events\ConnectionErrorEvent;
 use Fwk\Db\Events\ConnectionStateChangeEvent;
 use Fwk\Db\Events\DisconnectEvent;
-use Fwk\Db\Exceptions\ConnectionError;
+use Fwk\Db\Exceptions\ConnectionErrorException;
 
 
 class TestConnectionListener
@@ -111,7 +111,7 @@ class ConnectionEventsTest extends \PHPUnit_Framework_TestCase
     {
         try {
             \FwkDbTestUtil::dropTestDb($this->object);
-        } catch(ConnectionError $exp) {
+        } catch(ConnectionErrorException $exp) {
         }
     }
 
@@ -134,7 +134,7 @@ class ConnectionEventsTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($this->object->isConnected());
         $this->assertFalse($this->listener->hasErrored);
 
-        $this->setExpectedException('\Fwk\Db\Exceptions\ConnectionError');
+        $this->setExpectedException('\Fwk\Db\Exceptions\ConnectionErrorException');
         $this->object->connect();
 
         $this->assertTrue(($this->listener->hasErrored instanceof Exception));
@@ -152,7 +152,7 @@ class ConnectionEventsTest extends \PHPUnit_Framework_TestCase
         $connx->addListener($this->listener2 = new TestConnectionListener());
 
         $this->assertEquals(0, $this->listener2->states);
-        $this->setExpectedException('\Fwk\Db\Exceptions\ConnectionError');
+        $this->setExpectedException('\Fwk\Db\Exceptions\ConnectionErrorException');
         $connx->connect();
 
         $this->assertEquals(2 /* connect + error */, $this->listener2->states);

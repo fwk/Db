@@ -34,7 +34,7 @@
 namespace Fwk\Db\Relations;
 
 use Fwk\Db\Registry\Registry;
-use Fwk\Db\Relation;
+use Fwk\Db\RelationInterface;
 use Fwk\Db\Registry\RegistryState;
 use Fwk\Db\Accessor;
 
@@ -102,7 +102,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      * @param string|integer $offset The index key
      * @param object         $value  The entity
      *
-     * @return Relation|void
+     * @return RelationInterface|void
      */
     public function offsetSet($offset, $value)
     {
@@ -149,7 +149,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      *
      * @param string $column The column's name
       *
-     * @return Relation
+     * @return RelationInterface
      */
     public function setReference($column)
     {
@@ -164,7 +164,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      * @param string $column    The column's name
      * @param string $direction The direction (asc or desc)
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function setOrderBy($column, $direction = null)
     {
@@ -227,7 +227,7 @@ abstract class AbstractManyRelation extends AbstractRelation implements
      *
      * @param array $objects List of entities
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function addAll(array $objects)
     {

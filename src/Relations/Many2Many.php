@@ -36,7 +36,7 @@ namespace Fwk\Db\Relations;
 use Fwk\Db\Events\AbstractEntityEvent;
 use Fwk\Db\Events\AfterSaveEvent;
 use Fwk\Db\Events\AfterUpdateEvent;
-use Fwk\Db\Relation;
+use Fwk\Db\RelationInterface;
 use Fwk\Db\Query;
 use Fwk\Db\Accessor;
 use Fwk\Db\Registry\Registry;
@@ -44,7 +44,7 @@ use Fwk\Db\Registry\RegistryState;
 use Fwk\Db\Workers\SaveEntityWorker;
 use Fwk\Db\Workers\DeleteEntityWorker;
 
-class Many2Many extends AbstractManyRelation implements Relation
+class Many2Many extends AbstractManyRelation implements RelationInterface
 {
     protected $foreignTable;
 

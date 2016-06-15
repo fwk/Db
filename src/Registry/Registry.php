@@ -6,9 +6,9 @@ use Fwk\Db\Connection;
 use Fwk\Db\Events\AbstractEntityEvent;
 use Fwk\Db\Events\AfterSaveEvent;
 use Fwk\Db\Events\FreshEvent;
-use Fwk\Db\EventSubscriber;
+use Fwk\Db\EventSubscriberInterface;
 use Fwk\Db\Exception;
-use Fwk\Db\Exceptions\UnregisteredEntity;
+use Fwk\Db\Exceptions\UnregisteredEntityException;
 use Fwk\Db\Table;
 use Fwk\Db\Workers\DeleteEntityWorker;
 use Fwk\Db\Workers\SaveEntityWorker;
@@ -77,7 +77,7 @@ class Registry implements \Countable, \IteratorAggregate
         $dispatcher->on(AfterSaveEvent::EVENT_NAME, array($this, 'getLastInsertId'));
 
         $dispatcher->addListener($object);
-        if ($object instanceof EventSubscriber) {
+        if ($object instanceof EventSubscriberInterface) {
             foreach ($object->getListeners() as $key => $listener) {
                 if (is_object($listener) && !is_callable($listener)) {
                     $dispatcher->addListener($listener);
@@ -165,13 +165,13 @@ class Registry implements \Countable, \IteratorAggregate
      * Returns an Event Dispatcher attached to a stored object
      *
      * @return Dispatcher
-     * @throws UnregisteredEntity if the $object is not registered
+     * @throws UnregisteredEntityException if the $object is not registered
      */
     public function getEventDispatcher($object)
     {
         $entry = $this->getEntry($object);
         if ($entry === false) {
-            throw new UnregisteredEntity(sprintf('Unregistered entity (%s)', get_class($object)));
+            throw new UnregisteredEntityException(sprintf('Unregistered entity (%s)', get_class($object)));
         }
 
         return $entry->data('dispatcher', new Dispatcher());
@@ -234,13 +234,13 @@ class Registry implements \Countable, \IteratorAggregate
      * @param  mixed $object
      *
      * @return Registry
-     * @throws UnregisteredEntity if the $object is not registered
+     * @throws UnregisteredEntityException if the $object is not registered
      */
     public function remove($object)
     {
         $entry = $this->getEntry($object);
         if ($entry === false) {
-            throw new UnregisteredEntity(sprintf('Unregistered entity (%s)', get_class($object)));
+            throw new UnregisteredEntityException(sprintf('Unregistered entity (%s)', get_class($object)));
         }
 
         $this->store->detach($entry);
@@ -285,7 +285,7 @@ class Registry implements \Countable, \IteratorAggregate
      * @param object $object
      *
      * @return integer
-     * @throws UnregisteredEntity
+     * @throws UnregisteredEntityException
      */
     public function getState($object)
     {
@@ -394,7 +394,7 @@ class Registry implements \Countable, \IteratorAggregate
     {
         $entry = $this->getEntry($object);
         if (false === $entry) {
-            throw new UnregisteredEntity(sprintf('Unregistered entity (%s)', get_class($object)));
+            throw new UnregisteredEntityException(sprintf('Unregistered entity (%s)', get_class($object)));
         }
 
         $entry->fresh();
@@ -414,7 +414,7 @@ class Registry implements \Countable, \IteratorAggregate
     {
         $entry = $this->getEntry($object);
         if (false === $entry) {
-            throw new UnregisteredEntity(sprintf('Unregistered entity (%s)', get_class($object)));
+            throw new UnregisteredEntityException(sprintf('Unregistered entity (%s)', get_class($object)));
         }
 
         return $entry->getChangedValues();

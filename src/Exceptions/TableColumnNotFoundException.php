@@ -36,7 +36,7 @@ namespace Fwk\Db\Exceptions;
 use Fwk\Db\Exception;
 
 /**
- * Thrown when we're trying to access an inexistant table.
+ * Thrown when a table column is missing.
  * 
  * @category Exceptions
  * @package  Fwk\Db
@@ -44,6 +44,6 @@ use Fwk\Db\Exception;
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link     http://www.phpfwk.com
  */
-class TableNotFound extends Exception
+class TableColumnNotFoundException extends Exception
 {
 }

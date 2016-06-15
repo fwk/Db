@@ -36,8 +36,7 @@ namespace Fwk\Db\Exceptions;
 use Fwk\Db\Exception;
 
 /**
- * Thrown by a Registry when trying to access properties of an unregistered
- * entity.
+ * Thrown when a table identifier is missing while trying to query the database.
  * 
  * @category Exceptions
  * @package  Fwk\Db
@@ -45,6 +44,6 @@ use Fwk\Db\Exception;
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link     http://www.phpfwk.com
  */
-class UnregisteredEntity extends Exception
+class MissingIdentifierException extends Exception
 {
 }

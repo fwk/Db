@@ -180,7 +180,7 @@ class Table
     /**
      * Returns primary identifiers keys for this table
      *
-     * @throws Exceptions\TableLacksIdentifiers
+     * @throws Exceptions\TableLacksIdentifiersException
      *
      * @return array
      */
@@ -194,7 +194,7 @@ class Table
                 ->getIndexes();
 
             if (!count($idx)) {
-                throw new Exceptions\TableLacksIdentifiers(
+                throw new Exceptions\TableLacksIdentifiersException(
                     sprintf('"%s" has no indexes', $this->name)
                 );
             }
@@ -208,7 +208,7 @@ class Table
 
             $final = array_unique($final);
             if (!count($final)) {
-                throw new Exceptions\TableLacksIdentifiers(
+                throw new Exceptions\TableLacksIdentifiersException(
                     sprintf('"%s" has no identifiers key(s)', $this->name)
                 );
             }
@@ -243,7 +243,7 @@ class Table
     public function getColumn($columnName)
     {
         if (!$this->hasColumn($columnName)) {
-            throw new Exceptions\TableColumnNotFound(
+            throw new Exceptions\TableColumnNotFoundException(
                 sprintf(
                     'Unknown Column "%s" on table %s',
                     $columnName,

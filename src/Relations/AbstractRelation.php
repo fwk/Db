@@ -34,7 +34,7 @@
 namespace Fwk\Db\Relations;
 
 use Fwk\Db\Registry\RegistryState;
-use Fwk\Db\Relation,
+use Fwk\Db\RelationInterface,
     Fwk\Db\Registry\Registry,
     Fwk\Db\Exception,
     Fwk\Db\Connection,
@@ -70,11 +70,11 @@ abstract class AbstractRelation implements IteratorAggregate
 
     /**
      * Fetch mode
-     * {@see Relation::FETCH_LAZY} and {@see Relation::FETCH_EAGER}
+     * {@see RelationInterface::FETCH_LAZY} and {@see RelationInterface::FETCH_EAGER}
      *
      * @var integer
      */
-    protected $fetchMode = Relation::FETCH_LAZY;
+    protected $fetchMode = RelationInterface::FETCH_LAZY;
 
     /**
      * Entity classname for this relation
@@ -119,7 +119,7 @@ abstract class AbstractRelation implements IteratorAggregate
     protected $parent;
 
     /**
-     * Relation's own registry
+     * RelationInterface's own registry
      *
      * @var Registry
      */
@@ -166,7 +166,7 @@ abstract class AbstractRelation implements IteratorAggregate
      *
      * @param integer $mode The fetch mode (@see constants)
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function setFetchMode($mode)
     {
@@ -180,7 +180,7 @@ abstract class AbstractRelation implements IteratorAggregate
      *
      * @param boolean $bool Is the data fetched yet?
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function setFetched($bool)
     {
@@ -226,7 +226,7 @@ abstract class AbstractRelation implements IteratorAggregate
      *
      * @param Connection $connection The database connection instance
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function setConnection(Connection $connection)
     {
@@ -281,7 +281,7 @@ abstract class AbstractRelation implements IteratorAggregate
      *
      * @param array $refs Defines parent's references (eg. Primary Keys)
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function setParentRefs($refs)
     {
@@ -326,7 +326,7 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isLazy()
     {
-        return ($this->fetchMode === Relation::FETCH_LAZY);
+        return ($this->fetchMode === RelationInterface::FETCH_LAZY);
     }
 
     /**
@@ -336,7 +336,7 @@ abstract class AbstractRelation implements IteratorAggregate
      */
     public function isEager()
     {
-        return ($this->fetchMode === Relation::FETCH_EAGER);
+        return ($this->fetchMode === RelationInterface::FETCH_EAGER);
     }
 
     /**
@@ -372,7 +372,7 @@ abstract class AbstractRelation implements IteratorAggregate
     /**
      * Removes all objects
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function clear()
     {
@@ -397,7 +397,7 @@ abstract class AbstractRelation implements IteratorAggregate
      *
      * @param Registry $registry The registry
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function setRegistry(Registry $registry)
     {
@@ -422,7 +422,7 @@ abstract class AbstractRelation implements IteratorAggregate
      * @param object $object      The entity to add
      * @param array  $identifiers Identifiers (PK) of this entity if any
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function add($object, array $identifiers = array())
     {
@@ -440,7 +440,7 @@ abstract class AbstractRelation implements IteratorAggregate
      *
      * @param object $object The entity to be removed
      *
-     * @return Relation
+     * @return RelationInterface
      */
     public function remove($object)
     {
@@ -454,7 +454,7 @@ abstract class AbstractRelation implements IteratorAggregate
     /**
      * Fetches data from database
      *
-     * @return Relation
+     * @return RelationInterface
      */
     abstract public function fetch();
 

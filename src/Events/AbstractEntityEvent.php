@@ -40,7 +40,7 @@ use Fwk\Db\Connection;
 /**
  * Abstract class for Entity-events.
  *
- * Entity-events are events catchable by an EventSubscriber entity.
+ * Entity-events are events catchable by an EventSubscriberInterface entity.
  *
  * @category Events
  * @package  Fwk\Db

@@ -32,7 +32,7 @@
  */
 namespace Fwk\Db;
 
-use Fwk\Db\Relation;
+use Fwk\Db\RelationInterface;
 
 /**
  * This class is a simple accessor for values of objects
@@ -89,7 +89,7 @@ class Accessor
     /**
      * Returns all relations from an entity
      *
-     * @return array<Relation> Found relations
+     * @return array<RelationInterface> Found relations
      */
     public function getRelations()
     {
@@ -97,7 +97,7 @@ class Accessor
         $final      = array();
 
         foreach ($values as $key => $value) {
-            if ($value instanceof Relation) {
+            if ($value instanceof RelationInterface) {
                 $final[$key]   = $value;
             }
         }
@@ -115,7 +115,7 @@ class Accessor
      */
     public function everythingAsArrayModifier($value)
     {
-        if ($value instanceof Relation) {
+        if ($value instanceof RelationInterface) {
             /**
              * @todo Boucle infinie!!!  $value->hasChanged()
              */

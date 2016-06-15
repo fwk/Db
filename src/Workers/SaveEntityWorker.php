@@ -37,15 +37,15 @@ use Fwk\Db\Events\AfterSaveEvent;
 use Fwk\Db\Events\AfterUpdateEvent;
 use Fwk\Db\Events\BeforeSaveEvent;
 use Fwk\Db\Events\BeforeUpdateEvent;
-use Fwk\Db\Exceptions\UnregisteredEntity;
+use Fwk\Db\Exceptions\UnregisteredEntityException;
 use Fwk\Db\Query;
 use Fwk\Db\Registry\RegistryState;
-use Fwk\Db\Worker;
+use Fwk\Db\WorkerInterface;
 use Fwk\Db\Accessor;
 use Fwk\Db\Connection;
 
 /**
- * Save Entity Worker
+ * Save Entity WorkerInterface
  * 
  * This worker is used when an entity or relation have to be inserted or 
  * updated.
@@ -56,7 +56,7 @@ use Fwk\Db\Connection;
  * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link     http://www.phpfwk.com
  */
-class SaveEntityWorker extends AbstractWorker implements Worker
+class SaveEntityWorker extends AbstractWorker implements WorkerInterface
 {
     /**
      * Executes the worker (SQL queries) and fire EntityEvents
@@ -70,7 +70,7 @@ class SaveEntityWorker extends AbstractWorker implements Worker
         $registry   = $this->getRegistry();
         $entry      = $registry->getEntry($this->entity);
         if (false === $entry) {
-            throw new UnregisteredEntity('Unregistered entity: '. get_class($this->entity));
+            throw new UnregisteredEntityException('Unregistered entity: '. get_class($this->entity));
         }
 
         $state      = $entry->getState();
