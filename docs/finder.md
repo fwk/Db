@@ -8,7 +8,7 @@ $finder = $db->table('users')->finder();
 
 ### Configuration
 
-You may specify a [Model](./models.md) class name and/or [Listeners](./events.md) you wish for your results.
+You may specify an [Entity](./entities.md) class name and/or [Listeners](./events.md) you wish for your results.
 
 ``` php
 use Fwk\Db\Listeners\Typable;

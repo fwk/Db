@@ -6,3 +6,4 @@ bin
 composer.lock
 phpunit.xml.dist
 build.xml
+build

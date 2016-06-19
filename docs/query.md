@@ -32,7 +32,7 @@ join($table, $localColumn, $foreignColumn = null, $type = Query::JOIN_LEFT, $opt
   - *entityListeners* : ```(array)``` Entity listeners you'd like to use 
   - *skipped* : ```(boolean)``` Data from this table will be skipped 
 
-### Choosing a [Model](./models.md) and/or [Listeners](./events.md) 
+### Choosing an [Entity](./entities.md) and/or [Listeners](./events.md) 
 
 Specify the Model you need:
 ``` php

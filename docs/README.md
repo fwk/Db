@@ -4,12 +4,11 @@ Fwk\Db tries to mimic a database ORM (Object Relational Mapper) without carrying
 
 ## Features
 
-- **[Per-query Models](./finder.md)**: Switch from a [Model](./models.md) to another depending on what's needed.
-- **No Model** required at all: ```stdClass``` is minimalist's best friend.
+- **[Per-query Models](./finder.md)**: Switch from an [Entity](./entities.md) to another depending on what's needed.
+- **No Entity** required at all: ```stdClass``` is minimalist's best friend.
 - **No new SQL language**: use a clean **[Object-oriented Query API](./query.md)** or just SQL itself.
 - **[Event-Driven Engine](./events.md)**: Intercept any Event and customize the behavior the way you like. Even on ```stdClass``` Models.
 - **Proven Foundation**: Built on top of the famous [DataBase Abstraction Layer](http://www.doctrine-project.org/projects/dbal.html) by the [Doctrine Project](http://www.doctrine-project.org) ([DBAL](https://github.com/doctrine/dbal)).
-
 
 ## Examples
 
@@ -62,3 +61,4 @@ Delete from table:
 $db->table('users')->delete($user); // DELETE FROM users WHERE id = 1
 ```
 
+[View more exemples here](./exemples.md).

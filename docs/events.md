@@ -53,7 +53,7 @@ $db->on('connect', function($event) {
 
 ## Entity Events
 
-These events are notified from any [Model](./models.md) object.
+These events are notified from any [Entity](./entities.md) object.
 
 | Event                 |      Class                 |  Context                                           |
 |-----------------------| ---------------------------|----------------------------------------------------|
