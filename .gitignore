@@ -1,6 +1,9 @@
 vendor
-/phpunit.xml
-/test.php
-/coverage/
-/build/
-/hljs/
+phpunit.xml
+test.php
+bin
+.idea
+composer.lock
+phpunit.xml.dist
+build.xml
+build
