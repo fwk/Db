@@ -4,6 +4,7 @@ namespace Fwk\Db;
 use Fwk\Db\Events\FreshEvent;
 use Fwk\Db\Listeners\Timestampable;
 use Fwk\Db\Listeners\Typable;
+use Fwk\Db\EventSubscriberInterface;
 
 class TestListener
 {
